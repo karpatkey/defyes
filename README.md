@@ -20,9 +20,11 @@
 ## Installing from repository
 
 ```bash
-pip3 install git+https://github.com/KarpatkeyDAO/defi-protocols.git#egg=defi_protocols
+pip3 install git+https://github.com/KarpatkeyDAO/defi-protocols.git
 pip3 install -r requirements.txt
 ```
+
+You can add `@commit_hash` or `@tag` (e.g. `@v0.0.0.9`) at the end of the url to get a specific commit/tag.
 
 ## Installing latest version available on pypi
 
@@ -4066,14 +4068,18 @@ pip3 install -r requirements.txt
 
   </details>
 
-## Running the test
 
+## Running the tests
+
+Example using a virtualenv `venv` on the repo root dir:
+
+```console
+python3 -m venv venv
+venv/bin/pip install -r requirements.txt
+venv/bin/pip install -r requirements-dev.txt
+PYTHONPATH=. venv/bin/pytest -vs tests/
 ```
-pip install -r requirements-dev.txt
 
-pytest -vs tests/
-
-```
 
 ## 💙 Contributing
 
