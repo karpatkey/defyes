@@ -1,0 +1,28 @@
+name: Defi Protocols
+
+on: [push]
+
+jobs:
+  Test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run tests
+        run: |
+          pip install -r requirements-dev.txt
+          cat defi_protocols/config.json |\
+            jq --arg node_eth ${{ secrets.NODE_ETH }} '.nodes.ethereum.latest = [$node_eth]' \
+            > /tmp/tmp_config.json
+          PYTHONPATH=${PYTHONPATH}:. CONFIG_PATH=/tmp/tmp_config.json pytest -vs

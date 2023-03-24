@@ -475,7 +475,7 @@ def get_staking_apr(block, blockchain, web3=None, execution=1, index=0, apy=Fals
     except:
         return get_staking_apr(block, blockchain, apy=apy, index=index + 1, execution=execution)
 
-def get_staking_balance(wallet: str, block: Union[int, str], blockchain: str, web3=None, execution: int = 1, index: int = 0, decimals: bool = True) -> list:
+def get_staked(wallet: str, block: Union[int, str], blockchain: str, web3=None, execution: int = 1, index: int = 0, decimals: bool = True) -> list:
     """
 
     :param block:
@@ -492,7 +492,7 @@ def get_staking_balance(wallet: str, block: Union[int, str], blockchain: str, we
         if web3 is None:
             web3 = get_node(blockchain, block=block, index=index)
 
-        agave_wallet = web3.toChecksumAddress(wallet)
+        agave_wallet = web3.to_checksum_address(wallet)
 
         stk_agave_address = get_stkagave_address(blockchain)
         stkagave_contract = get_contract(stk_agave_address, blockchain, web3=web3, abi=ABI_STKAGAVE, block=block)
@@ -508,7 +508,7 @@ def get_staking_balance(wallet: str, block: Union[int, str], blockchain: str, we
 
 
     except GetNodeIndexError:
-        return get_staking_balance(wallet, block, blockchain, web3=web3, index=0, execution=execution + 1)
+        return get_staked(wallet, block, blockchain, web3=web3, index=0, execution=execution + 1)
 
     except:
-        return get_staking_balance(wallet, block, blockchain, web3=web3, index=index + 1, execution=execution)
+        return get_staked(wallet, block, blockchain, web3=web3, index=index + 1, execution=execution)
