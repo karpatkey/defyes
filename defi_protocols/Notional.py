@@ -1,5 +1,5 @@
-from defi_protocols.functions import *
-from defi_protocols.constants import *
+from defi_protocols.functions import get_node, get_contract, block_to_timestamp, get_decimals, GetNodeIndexError
+from defi_protocols.constants import MAX_EXECUTIONS, ETHEREUM, SNOTE_ETH
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # NPROXY

@@ -23,6 +23,8 @@ jobs:
         run: |
           pip install -r requirements-dev.txt
           cat defi_protocols/config.json |\
-            jq --arg node_eth ${{ secrets.NODE_ETH }} '.nodes.ethereum.latest = [$node_eth]' \
+            jq --arg node_eth ${{ secrets.NODE_ETH }} \
+               --arg node_xdai ${{ secrets.NODE_XDAI }} \
+              '.nodes.ethereum.latest = [$node_eth] | .nodes.xdai.archival = [$node_xdai]' \
             > /tmp/tmp_config.json
           PYTHONPATH=${PYTHONPATH}:. CONFIG_PATH=/tmp/tmp_config.json pytest -vs

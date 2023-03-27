@@ -1,4 +1,5 @@
-from defi_protocols.functions import *
+from defi_protocols.functions import get_node, get_contract, get_decimals, get_logs_web3, GetNodeIndexError
+from defi_protocols.constants import MAX_EXECUTIONS
 from typing import Union
 from defi_protocols.util.topic import TopicCreator, AddressHexor
 

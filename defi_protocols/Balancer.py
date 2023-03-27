@@ -1,6 +1,9 @@
-from defi_protocols.functions import *
+from typing import Union
+from datetime import datetime, timedelta
+
+from defi_protocols.functions import get_node, get_contract, get_decimals, block_to_date, date_to_block, balance_of, get_logs, GetNodeIndexError
+from defi_protocols.constants import MAX_EXECUTIONS, ETHEREUM, BAL_ETH, BB_A_USD_OLD_ETH, BB_A_USD_ETH, POLYGON, ARBITRUM, BAL_POL, ZERO_ADDRESS
 from defi_protocols.prices.prices import get_price
-from datetime import timedelta
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # BALANCER VAULT

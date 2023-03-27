@@ -1,4 +1,10 @@
-from defi_protocols.functions import *
+import requests
+import math
+
+from defi_protocols.constants import (ETHEREUM, XDAI, POLYGON, AVALANCHE, OPTIMISM, ZERO_ADDRESS,
+                                      API_COINGECKO_COINID_PRICE_RANGE, API_COINGECKO_BLOCKCHAINID_TOKENADDRESS_PRICE_RANGE)
+
+
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # get_price

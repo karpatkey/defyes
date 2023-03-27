@@ -1,5 +1,12 @@
-from defi_protocols.functions import *
+import os
+import json
+import math
+from pathlib import Path
+
 from tqdm import tqdm
+
+from defi_protocols.functions import get_node, get_contract, get_decimals, get_logs, GetNodeIndexError
+from defi_protocols.constants import MAX_EXECUTIONS, ETHEREUM, XDAI
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # STAKING REWARDS CONTRACT ADDRESSES

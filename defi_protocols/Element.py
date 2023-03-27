@@ -1,11 +1,9 @@
-from defi_protocols.functions import *
-from defi_protocols.util.topic import TopicCreator, DecodeAddressHexor
+from defi_protocols.functions import get_node, get_contract, get_decimals, GetNodeIndexError
+from defi_protocols.constants import MAX_EXECUTIONS
+
+from defi_protocols.util.topic import DecodeAddressHexor
 from defi_protocols.util.api import RequestFromScan
-from web3 import Web3
-# from defi_protocols import Curve
 from defi_protocols.Curve import unwrap
-import time
-from decimal import *
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # LITERALS

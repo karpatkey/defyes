@@ -1,4 +1,9 @@
-from defi_protocols.functions import *
+from typing import Union
+
+from web3 import Web3
+
+from defi_protocols.functions import get_node, GetNodeIndexError
+from defi_protocols.constants import MAX_EXECUTIONS
 from defi_protocols.util.api import RequestFromScan
 
 
@@ -64,6 +69,7 @@ def decode_multisend_transaction(input_data: str, web3) -> list:
         value = input_data[42:106]
         data_length = int('0x' + input_data[106:170].lstrip('0'), 16)
         data_rest = input_data[170:170 + (data_length * 2)]
+        # FIXME: where does blockchain comes from? It's undefined.
         data_output = decode_function_input(to_address, data_rest, blockchain, web3)
         decode_dict = {'operation': operation, 'to_address': to_address, 'value': value, 'data_length': data_length,
                        'data_output': data_output}

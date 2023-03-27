@@ -1,5 +1,11 @@
-from defi_protocols.functions import *
+import logging
 from typing import Union, Optional
+
+from defi_protocols.constants import ETHEREUM, STKAAVE_ETH, MAX_EXECUTIONS
+from defi_protocols.functions import get_contract, get_node, get_decimals, balance_of, GetNodeIndexError
+
+
+logger = logging.getLogger(__name__)
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # PROTOCOL DATA PROVIDER
@@ -227,7 +233,8 @@ def get_data(wallet, block, blockchain, execution=1, web3=None, index=0, decimal
     except GetNodeIndexError:
         return get_data(wallet, block, blockchain, decimals=decimals, index=0, execution=execution + 1)
 
-    except:
+    except Exception as e:
+        logger.exception(e)
         return get_data(wallet, block, blockchain, decimals=decimals, index=index + 1, execution=execution)
 
 
@@ -287,7 +294,8 @@ def get_all_rewards(wallet, block, blockchain, execution=1, web3=None, index=0, 
     except GetNodeIndexError:
         return get_all_rewards(wallet, block, blockchain, decimals=decimals, index=0, execution=execution + 1)
 
-    except:
+    except Exception as e:
+        logger.exception(e)
         return get_all_rewards(wallet, block, blockchain, decimals=decimals, index=index + 1, execution=execution)
 
 
@@ -345,7 +353,8 @@ def underlying_all(wallet, block, blockchain, execution=1, web3=None, index=0, d
         return underlying_all(wallet, block, blockchain, reward=reward, decimals=decimals, index=0,
                               execution=execution + 1)
 
-    except:
+    except Exception as e:
+        logger.exception(e)
         return underlying_all(wallet, block, blockchain, reward=reward, decimals=decimals, index=index + 1,
                               execution=execution)
 
@@ -414,7 +423,8 @@ def get_apr(token_address, block, blockchain, web3=None, execution=1, index=0, a
     except GetNodeIndexError:
         return get_apr(token_address, block, blockchain, apy=apy, index=0, execution=execution + 1)
 
-    except:
+    except Exception as e:
+        logger.exception(e)
         return get_apr(token_address, block, blockchain, apy=apy, index=index + 1, execution=execution)
 
 
@@ -461,7 +471,8 @@ def get_staking_apr(block, blockchain, web3=None, execution=1, index=0, apy=Fals
     except GetNodeIndexError:
         return get_staking_apr(block, blockchain, apy=apy, index=0, execution=execution + 1)
 
-    except:
+    except Exception as e:
+        logger.exception(e)
         return get_staking_apr(block, blockchain, apy=apy, index=index + 1, execution=execution)
 
 def get_staked(wallet: str, block: Union[int, str], blockchain: str, web3=None, execution: int = 1, index: int = 0, decimals: bool = True) -> list:
@@ -505,6 +516,8 @@ def get_staked(wallet: str, block: Union[int, str], blockchain: str, web3=None, 
     except GetNodeIndexError:
         return get_staked(wallet, block, blockchain, web3=web3, index=0, execution=execution + 1)
 
+    except Exception as e:
+        logger.exception(e)
     except:
         return get_staked(wallet, block, blockchain, web3=web3, index=index + 1, execution=execution)
 

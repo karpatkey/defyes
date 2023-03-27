@@ -1,6 +1,10 @@
-from defi_protocols.functions import *
+from typing import Union
+from datetime import datetime, timedelta
+
+from defi_protocols.functions import get_node, get_contract, get_decimals, balance_of, get_logs, date_to_block, block_to_date, get_contract_abi, GetNodeIndexError
+from defi_protocols.constants import ETHEREUM, MAX_EXECUTIONS, ZERO_ADDRESS, X3CRV_ETH, CRV_ETH, XDAI, CRV_XDAI, E_ADDRESS, X3CRV_XDAI
+
 from web3.exceptions import ContractLogicError
-from datetime import timedelta
 from defi_protocols.prices.prices import get_price
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------

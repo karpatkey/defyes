@@ -1,5 +1,9 @@
-from defi_protocols.functions import *
+import math
+import requests
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
+
+from defi_protocols.constants import BINANCE, API_ZAPPER_PRICE, API_KEY_ZAPPER
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------

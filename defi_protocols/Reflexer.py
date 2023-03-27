@@ -1,4 +1,6 @@
-from defi_protocols.functions import *
+from defi_protocols.functions import get_node, balance_of, total_supply, GetNodeIndexError
+from defi_protocols.constants import MAX_EXECUTIONS, ETHEREUM
+
 
 
 LPTOKENSDATABASE_ETH = [["Reflexer-FLX/WETH","0xd6F3768E62Ef92a9798E5A8cEdD2b78907cEceF9","0xd6F3768E62Ef92a9798E5A8cEdD2b78907cEceF9",["0x6243d8cea23066d098a15582d81a598b4e8391f4","0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"]]]

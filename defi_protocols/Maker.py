@@ -1,4 +1,5 @@
-from defi_protocols.functions import *
+from defi_protocols.functions import get_node, get_contract, balance_of, GetNodeIndexError
+from defi_protocols.constants import MAX_EXECUTIONS, ETHEREUM, DAI_ETH
 from typing import Union
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------

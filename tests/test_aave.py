@@ -8,5 +8,5 @@ UNUSED_ADDRESS = '0xf929122994e177079c924631ba13fb280f5cd1f9'
 
 def test_get_staking_balance():
     web3 = get_node(ETHEREUM)
-    data = Aave.get_staking_balance(UNUSED_ADDRESS,block=16870553,blockchain=ETHEREUM,web3=web3)
+    data = Aave.get_staked(UNUSED_ADDRESS,block=16870553,blockchain=ETHEREUM,web3=web3)
     assert data == [[STK_AAVE, 11538.124991799179], [STK_ABPT, 0.0]]

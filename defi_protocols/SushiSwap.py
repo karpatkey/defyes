@@ -1,10 +1,14 @@
-from defi_protocols.functions import *
-
-from defi_protocols.prices.prices import get_price
-from pathlib import Path
+import logging
 import os
+import json
+import math
+from pathlib import Path
 from typing import Union
-from datetime import timedelta
+from datetime import datetime, timedelta
+
+from defi_protocols.functions import get_contract, get_node, get_decimals, get_logs, last_block, get_token_tx, get_tx_list, date_to_block, block_to_date, GetNodeIndexError
+from defi_protocols.constants import ETHEREUM, POLYGON, XDAI, MAX_EXECUTIONS, ZERO_ADDRESS
+from defi_protocols.prices.prices import get_price
 
 logger = logging.getLogger(__name__)
 
@@ -252,7 +256,8 @@ def get_lptoken_data(lptoken_address, block, blockchain, web3=None, execution=1,
     except GetNodeIndexError:
         return get_lptoken_data(lptoken_address, block, blockchain, index=0, execution=execution + 1)
 
-    except:
+    except Exception as e:
+        logger.exception(e)
         return get_lptoken_data(lptoken_address, block, blockchain, index=index + 1, execution=execution)
 
 
@@ -297,7 +302,8 @@ def get_virtual_total_supply(lptoken_address, block, blockchain, web3=None, exec
     except GetNodeIndexError:
         return get_lptoken_data(lptoken_address, block, blockchain, index=0, execution=execution + 1)
 
-    except:
+    except Exception as e:
+        logger.exception(e)
         return get_lptoken_data(lptoken_address, block, blockchain, index=index + 1, execution=execution)
 
 
@@ -463,7 +469,8 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, execu
         return get_all_rewards(wallet, lptoken_address, block, blockchain, pool_info=pool_info, decimals=decimals,
                                index=0, execution=execution + 1)
 
-    except:
+    except Exception as e:
+        logger.exception(e)
         return get_all_rewards(wallet, lptoken_address, block, blockchain, pool_info=pool_info, decimals=decimals,
                                index=index + 1, execution=execution)
 
@@ -559,7 +566,8 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, execution=
         return underlying(wallet, lptoken_address, block, blockchain, reward=reward, decimals=decimals, index=0,
                           execution=execution + 1)
 
-    except:
+    except Exception as e:
+        logger.exception(e)
         return underlying(wallet, lptoken_address, block, blockchain, reward=reward, decimals=decimals, index=index + 1,
                           execution=execution)
 
@@ -623,7 +631,8 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, execution=1, in
     except GetNodeIndexError:
         return pool_balances(lptoken_address, block, blockchain, decimals=decimals, index=0, execution=execution + 1)
 
-    except:
+    except Exception as e:
+        logger.exception(e)
         return pool_balances(lptoken_address, block, blockchain, decimals=decimals, index=index + 1,
                              execution=execution)
 
@@ -725,7 +734,8 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, ex
         return swap_fees(lptoken_address, block_start, block_end, blockchain, decimals=decimals, index=0,
                          execution=execution + 1)
 
-    except:
+    except Exception as e:
+        logger.exception(e)
         return swap_fees(lptoken_address, block_start, block_end, blockchain, decimals=decimals, index=index + 1,
                          execution=execution)
 
@@ -768,7 +778,7 @@ def get_wallet_by_tx(lptoken_address, block, blockchain, web3=None, execution=1,
 
         if chef_contract is not None:
 
-            tx_hex_bytes = Web3.keccak(text=signature)[0:4].hex()
+            tx_hex_bytes = web3.keccak(text=signature)[0:4].hex()
 
             block_start = block
             while True:
@@ -789,7 +799,8 @@ def get_wallet_by_tx(lptoken_address, block, blockchain, web3=None, execution=1,
         return get_wallet_by_tx(lptoken_address, block, blockchain, signature=signature, index=0,
                                 execution=execution + 1)
 
-    except:
+    except Exception as e:
+        logger.exception(e)
         return get_wallet_by_tx(lptoken_address, block, blockchain, signature=signature, index=index + 1,
                                 execution=execution)
 
@@ -880,7 +891,8 @@ def get_rewards_per_unit(lptoken_address, blockchain, web3=None, execution=1, in
     except GetNodeIndexError:
         return get_rewards_per_unit(lptoken_address, blockchain, block=block, index=0, execution=execution + 1)
 
-    except:
+    except Exception as e:
+        logger.exception(e)
         return get_rewards_per_unit(lptoken_address, blockchain, block=block, index=index + 1, execution=execution)
 
 
@@ -940,8 +952,8 @@ def get_rewards_per_unit(lptoken_address, blockchain, web3=None, execution=1, in
 
 
 def get_swap_fees_APR(lptoken_address: str, blockchain: str, block_end: Union[int,str]= 'latest', web3=None, days: int =1, apy: bool =False) -> int:
-    block_start = date_to_block(datetime.strftime(datetime.strptime(block_to_date(block_end,blockchain),'%Y-%m-%d %H:%M:%S') - timedelta(days=days),'%Y-%m-%d %H:%M:%S'),blockchain)
-    fees = swap_fees(lptoken_address,block_start,block_end,blockchain,web3)
+    block_start = date_to_block(datetime.strftime(datetime.strptime(block_to_date(block_end,blockchain),'%Y-%m-%d %H:%M:%S') - timedelta(days=days),'%Y-%m-%d %H:%M:%S'), blockchain)
+    fees = swap_fees(lptoken_address, block_start, block_end, blockchain, web3)
     token0 = fees['swaps'][0]['token']
     token0_fees = [0]
     token1_fees = [0]

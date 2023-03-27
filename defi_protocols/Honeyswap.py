@@ -1,4 +1,7 @@
-from defi_protocols.functions import *
+import math
+
+from defi_protocols.functions import get_node, get_contract, get_decimals, get_logs, GetNodeIndexError
+from defi_protocols.constants import MAX_EXECUTIONS
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ABIs

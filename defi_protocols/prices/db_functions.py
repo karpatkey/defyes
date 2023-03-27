@@ -1,7 +1,9 @@
-from defi_protocols.functions import *
 import json
-from pathlib import Path
 import os
+from pathlib import Path
+
+from defi_protocols.functions import get_node, get_symbol
+from defi_protocols.constants import ETHEREUM, POLYGON, XDAI
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------

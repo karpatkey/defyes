@@ -1,5 +1,5 @@
-from defi_protocols.functions import *
-from defi_protocols.constants import *
+from defi_protocols.functions import get_node, get_contract, get_decimals, balance_of, GetNodeIndexError
+from defi_protocols.constants import ETHEREUM, COMP_ETH, MAX_EXECUTIONS, ZERO_ADDRESS
 from defi_protocols.prices import prices
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------

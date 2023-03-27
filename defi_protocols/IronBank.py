@@ -1,5 +1,5 @@
-from defi_protocols.functions import *
-from defi_protocols.constants import *
+from defi_protocols.functions import get_node, get_contract, get_decimals, last_block, GetNodeIndexError
+from defi_protocols.constants import MAX_EXECUTIONS, OPTIMISM, ZERO_ADDRESS
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # UNITROLLER

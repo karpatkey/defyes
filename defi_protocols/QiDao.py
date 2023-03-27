@@ -1,4 +1,5 @@
-from defi_protocols.functions import *
+from defi_protocols.functions import get_node, get_contract, get_decimals, timestamp_to_block, block_to_timestamp, GetNodeIndexError
+from defi_protocols.constants import XDAI, GNO_XDAI, WETH_XDAI, POLYGON, MAX_EXECUTIONS, MAI_POL
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # QIDAO_VAULTS
