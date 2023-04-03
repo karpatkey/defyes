@@ -323,3 +323,5 @@ API_GOERLI_GETLOGS = 'https://api-goerli.etherscan.io/api?module=logs&action=get
 API_ETHERSCAN_GETTOKENINFO = 'https://api.etherscan.io/api?module=token&action=tokeninfo&contractaddress=%s&apikey=%s'
 API_ETHPLORER_GETTOKENINFO = 'https://api.ethplorer.io/getTokenInfo/%s?apiKey=%s'
 API_BLOCKSCOUT_GETTOKENCONTRACT = 'https://blockscout.com/xdai/mainnet/api?module=token&action=getToken&contractaddress=%s'
+
+SAFETRANSACTIONWITHROLE = config_data['slackChannels']['safeTransactionWithRole']
