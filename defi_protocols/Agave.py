@@ -147,7 +147,7 @@ def get_data(wallet: str, block: Union[int, str], blockchain: str,
     # [5] = healthFactor
     user_account_data = lending_pool_contract.functions.getUserAccountData(wallet).call(block_identifier=block)
 
-    total_collateral_ETH, total_debt_ETH, current_liquidation_th, *_ = user_account_data
+    total_collateral_ETH, total_debt_ETH, _, current_liquidation_th, *_ = user_account_data
 
     if total_collateral_ETH > 0:
         if total_debt_ETH > 0:
