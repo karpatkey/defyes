@@ -116,3 +116,38 @@ def get_delegated_MKR(wallet: str, block: Union[int, str],
                          web3=web3, decimals=decimals)
 
     return [[ETHTokenAddr.MKR, balance]]
+
+
+# This classes are just a working draft
+# of a possible refactor
+
+class Contract:
+    ADDRESS = 'replace_me_or_watch_me_fail'
+
+    def __init__(self, block):
+        self.block = block
+        self.web3 = get_node(ETHEREUM, block=self.block)
+        self.contract = get_contract(self.ADDRESS, ETHEREUM, web3=self.web3,
+                                     block=self.block)
+
+    def __getattr__(self, a):
+        fun = getattr(self.contract.functions, a)
+        def aux(*args, **kwargs):
+            return fun(*args, **kwargs).call(block_identifier=self.block)
+        return aux
+
+
+class ProxyRegistry(Contract):
+    ADDRESS = '0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4'
+
+
+class CDPManager(Contract):
+    ADDRESS = CDP_MANAGER_ADDRESS
+
+    def vaults(self, wallet_address: str):
+        wallet_address = self.web3.to_checksum_address(wallet_address)
+        # I'm sorry if walruses scare you := := :=
+        _vs = [_next := self.first(wallet_address)]
+        while (_next := self.list(_next)[1]) > 0:
+            _vs.append(_next)
+        return _vs
