@@ -125,12 +125,8 @@ def unwrap(amount: Union[int, float], block: Union[int, str], steth: bool= False
         stEthPerToken = Decimal(wsteth_contract.functions.stEthPerToken().call(block_identifier=block)) / (
             Decimal(10 ** 18))
 
-        steth_equivalent = wsteth_balance * stEthPerToken
-
-        if isinstance(amount, int):
-            steth_equivalent = int(steth_equivalent)
-        else:
-            steth_equivalent = float(steth_equivalent)
+        #FIXME: return Decimal type
+        steth_equivalent = float(wsteth_balance * stEthPerToken)
 
         if steth is True:
             return [STETH_ADDRESS, steth_equivalent]
