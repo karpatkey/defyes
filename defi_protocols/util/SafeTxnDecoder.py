@@ -5,6 +5,10 @@ SAFE_CONTRACT_ABI = '[{"inputs":[],"stateMutability":"nonpayable","type":"constr
 ROLES_CONTRACT_ABI = '[{"inputs":[{"internalType":"address","name":"_owner","type":"address"},{"internalType":"address","name":"_avatar","type":"address"},{"internalType":"address","name":"_target","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"ArraysDifferentLength","type":"error"},{"inputs":[],"name":"ModuleTransactionFailed","type":"error"},{"inputs":[],"name":"NoMembership","type":"error"},{"inputs":[],"name":"SetUpModulesAlreadyCalled","type":"error"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"module","type":"address"},{"indexed":false,"internalType":"uint16[]","name":"roles","type":"uint16[]"},{"indexed":false,"internalType":"bool[]","name":"memberOf","type":"bool[]"}],"name":"AssignRoles","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousAvatar","type":"address"},{"indexed":true,"internalType":"address","name":"newAvatar","type":"address"}],"name":"AvatarSet","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"guard","type":"address"}],"name":"ChangedGuard","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"module","type":"address"}],"name":"DisabledModule","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"module","type":"address"}],"name":"EnabledModule","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"initiator","type":"address"},{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"avatar","type":"address"},{"indexed":false,"internalType":"address","name":"target","type":"address"}],"name":"RolesModSetup","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"module","type":"address"},{"indexed":false,"internalType":"uint16","name":"defaultRole","type":"uint16"}],"name":"SetDefaultRole","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"multisendAddress","type":"address"}],"name":"SetMultisendAddress","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousTarget","type":"address"},{"indexed":true,"internalType":"address","name":"newTarget","type":"address"}],"name":"TargetSet","type":"event"},{"inputs":[{"internalType":"uint16","name":"role","type":"uint16"},{"internalType":"address","name":"targetAddress","type":"address"},{"internalType":"enum ExecutionOptions","name":"options","type":"uint8"}],"name":"allowTarget","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"module","type":"address"},{"internalType":"uint16[]","name":"_roles","type":"uint16[]"},{"internalType":"bool[]","name":"memberOf","type":"bool[]"}],"name":"assignRoles","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"avatar","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"defaultRoles","outputs":[{"internalType":"uint16","name":"","type":"uint16"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"prevModule","type":"address"},{"internalType":"address","name":"module","type":"address"}],"name":"disableModule","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"module","type":"address"}],"name":"enableModule","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"},{"internalType":"enum Enum.Operation","name":"operation","type":"uint8"}],"name":"execTransactionFromModule","outputs":[{"internalType":"bool","name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"},{"internalType":"enum Enum.Operation","name":"operation","type":"uint8"}],"name":"execTransactionFromModuleReturnData","outputs":[{"internalType":"bool","name":"","type":"bool"},{"internalType":"bytes","name":"","type":"bytes"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"},{"internalType":"enum Enum.Operation","name":"operation","type":"uint8"},{"internalType":"uint16","name":"role","type":"uint16"},{"internalType":"bool","name":"shouldRevert","type":"bool"}],"name":"execTransactionWithRole","outputs":[{"internalType":"bool","name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"},{"internalType":"enum Enum.Operation","name":"operation","type":"uint8"},{"internalType":"uint16","name":"role","type":"uint16"},{"internalType":"bool","name":"shouldRevert","type":"bool"}],"name":"execTransactionWithRoleReturnData","outputs":[{"internalType":"bool","name":"success","type":"bool"},{"internalType":"bytes","name":"returnData","type":"bytes"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"getGuard","outputs":[{"internalType":"address","name":"_guard","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"start","type":"address"},{"internalType":"uint256","name":"pageSize","type":"uint256"}],"name":"getModulesPaginated","outputs":[{"internalType":"address[]","name":"array","type":"address[]"},{"internalType":"address","name":"next","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"guard","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_module","type":"address"}],"name":"isModuleEnabled","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"multisend","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint16","name":"role","type":"uint16"},{"internalType":"address","name":"targetAddress","type":"address"}],"name":"revokeTarget","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint16","name":"role","type":"uint16"},{"internalType":"address","name":"targetAddress","type":"address"},{"internalType":"bytes4","name":"functionSig","type":"bytes4"},{"internalType":"enum ExecutionOptions","name":"options","type":"uint8"}],"name":"scopeAllowFunction","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint16","name":"role","type":"uint16"},{"internalType":"address","name":"targetAddress","type":"address"},{"internalType":"bytes4","name":"functionSig","type":"bytes4"},{"internalType":"bool[]","name":"isParamScoped","type":"bool[]"},{"internalType":"enum ParameterType[]","name":"paramType","type":"uint8[]"},{"internalType":"enum Comparison[]","name":"paramComp","type":"uint8[]"},{"internalType":"bytes[]","name":"compValue","type":"bytes[]"},{"internalType":"enum ExecutionOptions","name":"options","type":"uint8"}],"name":"scopeFunction","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint16","name":"role","type":"uint16"},{"internalType":"address","name":"targetAddress","type":"address"},{"internalType":"bytes4","name":"functionSig","type":"bytes4"},{"internalType":"enum ExecutionOptions","name":"options","type":"uint8"}],"name":"scopeFunctionExecutionOptions","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint16","name":"role","type":"uint16"},{"internalType":"address","name":"targetAddress","type":"address"},{"internalType":"bytes4","name":"functionSig","type":"bytes4"},{"internalType":"uint256","name":"paramIndex","type":"uint256"},{"internalType":"enum ParameterType","name":"paramType","type":"uint8"},{"internalType":"enum Comparison","name":"paramComp","type":"uint8"},{"internalType":"bytes","name":"compValue","type":"bytes"}],"name":"scopeParameter","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint16","name":"role","type":"uint16"},{"internalType":"address","name":"targetAddress","type":"address"},{"internalType":"bytes4","name":"functionSig","type":"bytes4"},{"internalType":"uint256","name":"paramIndex","type":"uint256"},{"internalType":"enum ParameterType","name":"paramType","type":"uint8"},{"internalType":"bytes[]","name":"compValues","type":"bytes[]"}],"name":"scopeParameterAsOneOf","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint16","name":"role","type":"uint16"},{"internalType":"address","name":"targetAddress","type":"address"},{"internalType":"bytes4","name":"functionSig","type":"bytes4"}],"name":"scopeRevokeFunction","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint16","name":"role","type":"uint16"},{"internalType":"address","name":"targetAddress","type":"address"}],"name":"scopeTarget","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_avatar","type":"address"}],"name":"setAvatar","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"module","type":"address"},{"internalType":"uint16","name":"role","type":"uint16"}],"name":"setDefaultRole","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_guard","type":"address"}],"name":"setGuard","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_multisend","type":"address"}],"name":"setMultisend","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_target","type":"address"}],"name":"setTarget","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes","name":"initParams","type":"bytes"}],"name":"setUp","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"target","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint16","name":"role","type":"uint16"},{"internalType":"address","name":"targetAddress","type":"address"},{"internalType":"bytes4","name":"functionSig","type":"bytes4"},{"internalType":"uint8","name":"paramIndex","type":"uint8"}],"name":"unscopeParameter","outputs":[],"stateMutability":"nonpayable","type":"function"}]'
 
 def get_safe_actions(tx_hash: str, blockchain: str, web3: object = None, execution: int = 1, index: int = 0) -> list:
+
+    """
+    FIXME: documentation pending
+    """
     if execution > MAX_EXECUTIONS:
         return None
 
@@ -69,21 +73,18 @@ def get_safe_actions(tx_hash: str, blockchain: str, web3: object = None, executi
         return get_safe_actions(tx_hash, blockchain, web3, index=index + 1, execution=execution)
 
 
-def decode_multisend_transaction(input_data: str, web3) -> list:
+def decode_multisend_transaction(input_data: str, web3: object) -> list:
     """
-    input_data is the bytes argument in the multiSend function
+    input_data is the bytes argument in the multiSend function, and can be inputted as 0xsomething or something without 0x
+    FIXME: proper documentation pending
     """
-    if web3.eth.chain_id == 1:
-        blockchain = ETHEREUM
-    else:
-        blockchain = XDAI
 
     if input_data[:2] == '0x':
         input_data = input_data[2:]
 
     function_list = []
     while True:
-        #operation = input_data[:2]
+        #operation = input_data[:2] #We are not using it for
         to_address = '0x' + input_data[2:42]
         value = input_data[42:106]
         data_length = int('0x' + input_data[106:170].lstrip('0'), 16)
@@ -97,9 +98,9 @@ def decode_multisend_transaction(input_data: str, web3) -> list:
     return function_list
 
 
-def decode_function_input(contract_address: str, input_hex: str, web3, abi=None) -> tuple:
+def decode_function_input(contract_address: str, input_hex: str, web3: object, abi=None) -> tuple:
     """
-
+    FIXME: documentation pending
     """
     if contract_address[:2] == '0x':
         checksum_address = web3.to_checksum_address(contract_address)
@@ -122,70 +123,24 @@ def decode_function_input(contract_address: str, input_hex: str, web3, abi=None)
 
     return function_decode
 
-blockchain = 'ethereum'
-tx1 = '0x2971c45416cbf234fe8939599dbb64d5c53210e76e4ff32d89188fa9bea30f87' # multisend
-tx2 = '0x3c0fbad1350d84a159acef5c3e6fe350e10d44dc894bb3ee6f784b0c167e791f' # exec with role from manager safe
-tx2_2 = '0x4170bc71b410f331e5d049be7bc4872380134827b69a4e39642c04b918434fa9'# exec with role from manager safe
-tx3 = '0xd6ef0254c88760e5a2e58924bbaa28f8700341bfa91df469fc9c6f904b732e34' # single call
-print('1',get_safe_actions(tx1, blockchain))
-print('2',get_safe_actions(tx2, blockchain))
-print('3',get_safe_actions(tx2_2, blockchain))
-print('4',get_safe_actions(tx3, blockchain))
+#FIXME: all the following comments should be removed once we write the tests
+# blockchain = XDAI
+# tx1 = '0x29ab61b70723cfafa6a8d4c52c3d98aaf99a68108e3a2c5eaee8db4d0b519c75' # single call
+# tx2 = '0xf86a4de912225c46047e6fb2fa4d86f14f5f677a813ef267cca7a48d2886055f' # multisend
+# tx3 = '0xffd333e9cdfcd5818921a944914bf5a4e1e326cadef897ba3ddea239b0a4d3c9' # execTransactionWithRole from EOA
+#
+# print('1',get_safe_actions(tx1, blockchain))
+# print('2',get_safe_actions(tx2, blockchain))
 
-web3 = get_node(XDAI)
-#print(decode_function_input())
-print('yes')
-print(decode_multisend_transaction('0x006a023ccd1ff6f2045c3309768ead9e68f978f6e100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044095ea7b3000000000000000000000000ba12222222228d8ba445958a75a0704d566bf2c80000000000000000000000000000000000000000000000155bd9307f9fe80000009c58bacc331c9aa871afd802db6379a98e80cedb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044095ea7b3000000000000000000000000ba12222222228d8ba445958a75a0704d566bf2c80000000000000000000000000000000000000000000001583bf3dc4212780000', web3))
+#FIXME: tx3 will fail because we are not able to fetch the ABI from the proxy implementation
+#print('3',get_safe_actions(tx3, blockchain))
 
-
-web3 = get_node(ETHEREUM)
-print(decode_function_input('0x074306bc6a6fc1bd02b425dd41d742adf36ca9c6','0x63453ae1000000000000000000000000675ec042325535f6e176638dd2d4994f645502b9', web3))
-print(decode_multisend_transaction('0x00074306bc6a6fc1bd02b425dd41d742adf36ca9c60000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002463453ae1000000000000000000000000675ec042325535f6e176638dd2d4994f645502b900675ec042325535f6e176638dd2d4994f645502b900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004e6f1daf200675ec042325535f6e176638dd2d4994f645502b9000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000242e1a7d4d000000000000000000000000000000000000000000000030a2b81aa7faf0c8b4', web3))
-
-
-print('mierda')
-
-blockchain = XDAI
-tx1 = '0x29ab61b70723cfafa6a8d4c52c3d98aaf99a68108e3a2c5eaee8db4d0b519c75' # single call
-tx2 = '0xf86a4de912225c46047e6fb2fa4d86f14f5f677a813ef267cca7a48d2886055f' # multisend
-tx3 = '0xffd333e9cdfcd5818921a944914bf5a4e1e326cadef897ba3ddea239b0a4d3c9' # execTransactionWithRole from EOA
-print('1',get_safe_actions(tx1, blockchain))
-print('2',get_safe_actions(tx2, blockchain))
-
-print('mierda2')
-
-
-
-
-
-
-
-
-web3 = get_node(ETHEREUM)
-
-print('')
-
-blockchain = 'ethereum'
-tx1 = '0x2971c45416cbf234fe8939599dbb64d5c53210e76e4ff32d89188fa9bea30f87' # multisend
-tx2 = '0x3c0fbad1350d84a159acef5c3e6fe350e10d44dc894bb3ee6f784b0c167e791f' # exec with role from manager safe
-tx2_2 = '0x4170bc71b410f331e5d049be7bc4872380134827b69a4e39642c04b918434fa9'# exec with role from manager safe
-tx3 = '0xd6ef0254c88760e5a2e58924bbaa28f8700341bfa91df469fc9c6f904b732e34' # single call
-print('1',get_safe_actions(tx1, blockchain))
-print('2',get_safe_actions(tx2, blockchain))
-print('3',get_safe_actions(tx2_2, blockchain))
-print('4',get_safe_actions(tx3, blockchain))
-
-
-
-web3 = get_node(ETHEREUM)
-print(decode_function_input('0x074306bc6a6fc1bd02b425dd41d742adf36ca9c6','0x63453ae1000000000000000000000000675ec042325535f6e176638dd2d4994f645502b9', web3))
-print(decode_multisend_transaction('0x00074306bc6a6fc1bd02b425dd41d742adf36ca9c60000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002463453ae1000000000000000000000000675ec042325535f6e176638dd2d4994f645502b900675ec042325535f6e176638dd2d4994f645502b900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004e6f1daf200675ec042325535f6e176638dd2d4994f645502b9000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000242e1a7d4d000000000000000000000000000000000000000000000030a2b81aa7faf0c8b4', web3))
-
-
-
-
-
-
-
-
-
+# blockchain = 'ethereum'
+# tx1 = '0x2971c45416cbf234fe8939599dbb64d5c53210e76e4ff32d89188fa9bea30f87' # multisend
+# tx2 = '0x3c0fbad1350d84a159acef5c3e6fe350e10d44dc894bb3ee6f784b0c167e791f' # exec with role from manager safe
+# tx2_2 = '0x4170bc71b410f331e5d049be7bc4872380134827b69a4e39642c04b918434fa9'# exec with role from manager safe
+# tx3 = '0xd6ef0254c88760e5a2e58924bbaa28f8700341bfa91df469fc9c6f904b732e34' # single call
+# print('1',get_safe_actions(tx1, blockchain))
+# print('2',get_safe_actions(tx2, blockchain))
+# print('3',get_safe_actions(tx2_2, blockchain))
+# print('4',get_safe_actions(tx3, blockchain))
