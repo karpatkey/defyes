@@ -106,10 +106,13 @@ def decode_function_input(contract_address: str, input_hex: str, web3: object, a
     if abi is None:
         abi = RequestFromScan(blockchain=blockchain, module='contract', action='getabi', kwargs={'address': checksum_address}).request()['result']
     function_contract = web3.eth.contract(address=checksum_address, abi=abi)
+
+    #FIXME: the following fragment of code should not be needed once we solve this issue on the RequestFromScan side
     if 'implementation' in str(abi):
         impl_address = function_contract.functions.implementation().call()
         abi = RequestFromScan(blockchain=blockchain, module='contract', action='getabi', kwargs={'address': impl_address}).request()['result']
         function_contract = web3.eth.contract(address=checksum_address, abi=abi)
+
     function_decode = function_contract.decode_function_input(input_hex)
 
     return function_decode
