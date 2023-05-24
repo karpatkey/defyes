@@ -5,6 +5,7 @@ from typing import Union
 from web3 import Web3
 
 from defi_protocols.functions import get_node, balance_of, get_contract, get_decimals
+from defi_protocols.constants import ETHEREUM
 
 logger = logging.getLogger(__name__)
 
@@ -33,28 +34,35 @@ class EthDerivative:
     block: Union[int, str] = 'latest'
     web3: Web3 = None
     decimals: bool = True
-    blockchain: str = field(init=False)
+    blockchain: str = ETHEREUM
     eth_value_function: str = field(init=False) 
     eth_value_abi: str = field(init=False)
     
     def __post_init__(self):
         self.addr = Web3.to_checksum_address(self.addr)
-        self.blockchain = DERIVS_DB[self.addr]['blockchain']
         if self.web3 is None:
             self.web3 = get_node(self.blockchain, block=self.block)
         self.eth_value_abi = DERIVS_DB[self.addr]['eth_value_abi']
         self.contract_instance = get_contract(self.addr, self.blockchain, abi=self.eth_value_abi)
         self.eth_value_function = DERIVS_DB[self.addr]['eth_value_function']
+        self.name = DERIVS_DB[self.addr]['name']
+    
+    @property
+    def protocol_name(self):
+        return self.name
 
-    def _underlying(self, eth_value, token_decimals):
+    def _underlying(self, token, eth_value, token_decimals):
         result = []
         underlying_amount = eth_value / Decimal(10 ** token_decimals)
-        result.append([DERIVS_DB[self.addr]['underlying'], underlying_amount])
+        result.append([token, underlying_amount])
         return result
 
-    def underlying(self, wallet):
+    def underlying(self, wallet, deriv):
         wallet = self.web3.to_checksum_address(wallet)
         amount = balance_of(wallet, self.addr, self.block, self.blockchain, decimals=False)
-        eth_value = self.contract_instance.functions[self.eth_value_function](amount).call(block_identifier=self.block)
         token_decimals = get_decimals(self.addr,self.blockchain) if self.decimals else 0
-        return self._underlying(eth_value, token_decimals)
+        eth_value = self.contract_instance.functions[self.eth_value_function](amount).call(block_identifier=self.block)
+        if not deriv:
+            return self._underlying(DERIVS_DB[self.addr]['underlying'], eth_value, token_decimals)
+        else:
+            return self._underlying(self.addr, amount, token_decimals)
