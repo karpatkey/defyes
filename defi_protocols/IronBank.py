@@ -1,6 +1,10 @@
-from defi_protocols.functions import get_node, get_contract, get_decimals, last_block
-from defi_protocols.constants import OPTIMISM, ZERO_ADDRESS
+from decimal import Decimal
+from web3 import Web3
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
+
+from defi_protocols.functions import get_node, get_contract, get_decimals, last_block, to_token_amount
+from defi_protocols.constants import OPTIMISM, ZERO_ADDRESS
+from defi_protocols.cache import const_call
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # UNITROLLER
@@ -54,80 +58,57 @@ ABI_FEE_DIST = '[{"inputs":[{"internalType":"uint256","name":"_tokenId","type":"
 ABI_VE_DIST = '[{"inputs":[{"internalType":"uint256","name":"_tokenId","type":"uint256"}],"name":"claimable","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"token","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]'
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# call_contract_method
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def call_contract_method(method, block):
     try:
         return method.call(block_identifier = block)
-    except Exception as e:
-        if type(e) == ContractLogicError or type(e) == BadFunctionCallOutput:
-             return None
-        else:
-            raise e
-        
+    except (ContractLogicError, BadFunctionCallOutput):
+        return None
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_comptoller_address
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 def get_comptoller_address(blockchain):
     if blockchain == OPTIMISM:
         return UNITROLLER_OPTIMISM
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_staking_rewards_factory_address
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_staking_rewards_factory_address(blockchain):
     if blockchain == OPTIMISM:
         return STAKING_REWARDS_FACTORY_OPTIMISM
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_veib_address
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_veib_address(blockchain):
     if blockchain == OPTIMISM:
         return VEIB_OPTIMISM
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_ve_dist_address
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_ve_dist_address(blockchain):
     if blockchain == OPTIMISM:
         return VE_DIST_OPTIMISM
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_fee_dist_address
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_fee_dist_address(blockchain):
     if blockchain == OPTIMISM:
         return FEE_DIST_OPTIMISM
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_itoken_data
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_itoken_data(itoken_address, wallet, block, blockchain, web3=None, underlying_token=None):
 
-    if web3 is None:
+    if not web3:
         web3 = get_node(blockchain, block=block)
 
     itoken_data = {}
 
     itoken_data['contract'] = get_contract(itoken_address, blockchain, web3=web3, abi=ABI_ITOKEN, block=block)
 
-    if underlying_token is not None:
+    if underlying_token:
         itoken_data['underlying'] = underlying_token
     else:
         try:
             itoken_data['underlying'] = itoken_data['contract'].functions.underlying().call(block_identifier=block)
-        except:
+        except Exception as e:
+            print(f'{e}')
             itoken_data['underlying'] = ZERO_ADDRESS
 
-    itoken_data['decimals'] = itoken_data['contract'].functions.decimals().call()
+    itoken_data['decimals'] = const_call(itoken_data['contract'].functions.decimals())
     itoken_data['borrowBalanceStored'] = itoken_data['contract'].functions.borrowBalanceStored(wallet).call(
         block_identifier=block)
     itoken_data['balanceOf'] = itoken_data['contract'].functions.balanceOf(wallet).call(block_identifier=block)
@@ -137,9 +118,6 @@ def get_itoken_data(itoken_address, wallet, block, blockchain, web3=None, underl
     return itoken_data
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_all_rewards
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_all_rewards(wallet, itoken, block, blockchain, web3=None, decimals=True,
                     staking_rewards_contract=None):
 
@@ -148,14 +126,13 @@ def get_all_rewards(wallet, itoken, block, blockchain, web3=None, decimals=True,
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
-    if staking_rewards_contract == None:
+    if staking_rewards_contract is None:
         staking_rewards_factory_contract = get_contract(get_staking_rewards_factory_address(blockchain), blockchain,
                                                         web3=web3, abi=ABI_STAKING_REWARDS_FACTORY, block=block)
 
-        staking_rewards_address = staking_rewards_factory_contract.functions.getStakingRewards(itoken).call(
-            block_identifier=block)
+        staking_rewards_address = staking_rewards_factory_contract.functions.getStakingRewards(itoken).call(block_identifier=block)
         staking_rewards_contract = get_contract(staking_rewards_address, blockchain, web3=web3,
                                                 abi=ABI_STAKING_REWARDS, block=block)
 
@@ -163,18 +140,11 @@ def get_all_rewards(wallet, itoken, block, blockchain, web3=None, decimals=True,
 
     for reward_token in all_rewards_tokens:
         reward_earned = staking_rewards_contract.functions.earned(itoken, wallet).call(block_identifier=block)
-
-        if decimals == True:
-            reward_earned = reward_earned / (10 ** (get_decimals(reward_token, blockchain, web3=web3)))
-
-        all_rewards.append([reward_token, reward_earned])
+        all_rewards.append([reward_token, to_token_amount(reward_token, reward_earned, blockchain, web3, decimals)])
 
     return all_rewards
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# all_rewards
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def all_rewards(wallet, block, blockchain, web3=None, decimals=True):
 
     result = []
@@ -182,20 +152,21 @@ def all_rewards(wallet, block, blockchain, web3=None, decimals=True):
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
     staking_rewards_factory_contract = get_contract(get_staking_rewards_factory_address(blockchain), blockchain,
                                                     web3=web3, abi=ABI_STAKING_REWARDS_FACTORY, block=block)
 
     staking_rewards_helper_address = ZERO_ADDRESS
     rewards_tokens = []
+
     all_staking_rewards = staking_rewards_factory_contract.functions.getAllStakingRewards().call()
     for staking_rewards in all_staking_rewards:
         staking_rewards_contract = get_contract(staking_rewards, blockchain, web3=web3, abi=ABI_STAKING_REWARDS,
                                                 block=block)
 
         if staking_rewards_helper_address is ZERO_ADDRESS:
-            staking_rewards_helper_address = staking_rewards_contract.functions.helperContract().call()
+            staking_rewards_helper_address = const_call(staking_rewards_contract.functions.helperContract())
 
         all_rewards_tokens = staking_rewards_contract.functions.getAllRewardsTokens().call()
         for rewards_token in all_rewards_tokens:
@@ -204,115 +175,86 @@ def all_rewards(wallet, block, blockchain, web3=None, decimals=True):
 
     if staking_rewards_helper_address is not ZERO_ADDRESS and rewards_tokens is not []:
         staking_rewards_helper_contract = get_contract(staking_rewards_helper_address, blockchain, web3=web3,
-                                                        abi=ABI_STAKING_REWARDS_HELPER, block=block)
-        
+                                                       abi=ABI_STAKING_REWARDS_HELPER, block=block)
+
         user_claimable_rewards = call_contract_method(staking_rewards_helper_contract.functions.getUserClaimableRewards(wallet,
                                                                     rewards_tokens), block)
         if user_claimable_rewards is None:
             for reward_token in rewards_tokens:
-                result.append([reward_token, 0])
-            
+                result.append([reward_token, Decimal('0')])
+
             return result
 
         for user_claimable_reward in user_claimable_rewards:
-            if decimals is True:
-                reward_amount = user_claimable_reward[1] / (10 ** user_claimable_reward[0][2])
-
+            rew_decs = user_claimable_reward[0][2] if decimals else 0
+            reward_amount = Decimal(user_claimable_reward[1]) / Decimal(10 ** rew_decs)
             result.append([user_claimable_reward[0][0], reward_amount])
 
     return result
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_locked
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_locked(wallet, block, blockchain, nft_id=302, web3=None, reward=False, decimals=True):
 
-    balances = []
-    result = []
-
-    if web3 is None:
+    if not web3:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
     veib_address = get_veib_address(blockchain)
     veib_contract = get_contract(veib_address, blockchain, web3=web3, abi=ABI_VEIB, block=block)
-    ib_token = veib_contract.functions.token().call()
-
-    if decimals is True:
-        ib_decimals = get_decimals(ib_token, blockchain, web3=web3)
-        veib_decimals = veib_contract.functions.decimals().call()
-    else:
-        ib_decimals = 0
-        veib_decimals = 0
+    ib_token = const_call(veib_contract.functions.token())
 
     if block == 'latest':
         block = last_block(blockchain, web3=web3)
 
     veib_balance = call_contract_method(veib_contract.functions.balanceOfAtNFT(nft_id, block), block)
-    if veib_balance == None:
-        veib_balance = 0
-    else:
-        veib_balance = veib_balance / (10 ** veib_decimals)
+    locked_balance = call_contract_method(veib_contract.functions.locked(nft_id), block)
 
-    locked = call_contract_method(veib_contract.functions.locked(nft_id), block)
-    if locked == None:
-        locked_balance = 0
-    else:
-        locked_balance = locked[0] / (10 ** ib_decimals)
+    balances = [[veib_address, to_token_amount(veib_address, veib_balance, blockchain, web3, decimals)],
+                [ib_token, to_token_amount(ib_token, locked_balance[0], blockchain, web3, decimals)]]
 
-    balances = [[veib_address, veib_balance], [ib_token, locked_balance]]
-
-    if reward is True:
-        ve_dist_contract = get_contract(get_ve_dist_address(blockchain), blockchain, web3=web3, abi=ABI_VE_DIST,
+    result = balances
+    if reward:
+        ve_dist_contract = get_contract(get_ve_dist_address(blockchain),
+                                        blockchain,
+                                        web3=web3,
+                                        abi=ABI_VE_DIST,
                                         block=block)
-        ve_dist_reward_token = ve_dist_contract.functions.token().call()
+        ve_dist_reward_token = const_call(ve_dist_contract.functions.token())
         ve_dist_claimable_reward = call_contract_method(ve_dist_contract.functions.claimable(nft_id), block)
-        if ve_dist_claimable_reward == None:
-            ve_dist_claimable_reward = 0
+        ve_dist_claimable_reward = ve_dist_claimable_reward if ve_dist_claimable_reward else Decimal(0)
 
-        fee_dist_contract = get_contract(get_fee_dist_address(blockchain), blockchain, web3=web3, abi=ABI_VE_DIST,
-                                            block=block)
+        fee_dist_contract = get_contract(get_fee_dist_address(blockchain),
+                                         blockchain,
+                                         web3=web3,
+                                         abi=ABI_VE_DIST,
+                                         block=block)
         fee_dist_reward_token = fee_dist_contract.functions.token().call()
         fee_dist_claimable_reward = call_contract_method(fee_dist_contract.functions.claimable(nft_id), block)
-        if fee_dist_claimable_reward == None:
-            fee_dist_claimable_reward = 0
+        fee_dist_claimable_reward = fee_dist_claimable_reward if fee_dist_claimable_reward else Decimal(0)
 
-        if decimals is True:
-            ve_dist_reward_token_decimals = get_decimals(ve_dist_reward_token, blockchain, web3=web3)
-            fee_dist_reward_token_decimals = get_decimals(fee_dist_reward_token, blockchain, web3=web3)
-        else:
-            ve_dist_reward_token_decimals = 0
-            fee_dist_reward_token_decimals = 0
-
-        result.append(balances)
-        result.append([[ve_dist_reward_token, ve_dist_claimable_reward / (10 ** ve_dist_reward_token_decimals)],
-                        [fee_dist_reward_token, fee_dist_claimable_reward / (10 ** fee_dist_reward_token_decimals)]])
-    else:
-        result = balances
+        result.extend([[ve_dist_reward_token,
+                        to_token_amount(ve_dist_reward_token, ve_dist_claimable_reward, blockchain, web3, decimals)],
+                       [fee_dist_reward_token,
+                        to_token_amount(fee_dist_reward_token, fee_dist_claimable_reward, blockchain, web3, decimals)]])
 
     return result
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# underlying
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# 1 - List of Tuples: [liquidity_token_address, balance, staked_balance]
+# 2 - List of Tuples: [reward_token_address, balance]
 def underlying(wallet, token_address, block, blockchain, web3=None, decimals=True, reward=False):
 
-    result = []
-    balances = []
-
-    if web3 is None:
+    if not web3:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
-    token_address = web3.to_checksum_address(token_address)
+    wallet = Web3.to_checksum_address(wallet)
+    token_address = Web3.to_checksum_address(token_address)
 
     staking_rewards_factory_contract = get_contract(get_staking_rewards_factory_address(blockchain), blockchain,
                                                     web3=web3, abi=ABI_STAKING_REWARDS_FACTORY, block=block)
 
-    itoken = staking_rewards_factory_contract.functions.getStakingToken(token_address).call()
+    itoken = const_call(staking_rewards_factory_contract.functions.getStakingToken(token_address))
 
     if itoken == ZERO_ADDRESS:
         return []
@@ -320,29 +262,25 @@ def underlying(wallet, token_address, block, blockchain, web3=None, decimals=Tru
     itoken_data = get_itoken_data(itoken, wallet, block, blockchain, web3=web3, underlying_token=token_address)
 
     underlying_token_decimals = get_decimals(token_address, block=block, blockchain=blockchain, web3=web3)
-
     mantissa = 18 - (itoken_data['decimals']) + underlying_token_decimals
 
-    exchange_rate = itoken_data['exchangeRateStored'] / (10 ** mantissa)
+    exchange_rate = Decimal(itoken_data['exchangeRateStored']) / Decimal(10 ** mantissa)
 
-    underlying_token_balance = itoken_data['balanceOf'] / (10 ** itoken_data['decimals']) * exchange_rate - \
-                                itoken_data['borrowBalanceStored'] / (10 ** underlying_token_decimals)
+    underlying_token_balance = Decimal(itoken_data['balanceOf']) / Decimal(10 ** itoken_data['decimals']) * exchange_rate - \
+                               Decimal(itoken_data['borrowBalanceStored']) / Decimal(10 ** underlying_token_decimals)
 
-    if decimals == False:
-        underlying_token_balance = underlying_token_balance * (10 ** underlying_token_decimals)
+    if not decimals:
+        underlying_token_balance = underlying_token_balance * Decimal(10 ** underlying_token_decimals)
 
-    staking_rewards_address = staking_rewards_factory_contract.functions.getStakingRewards(itoken).call(
-        block_identifier=block)
+    staking_rewards_address = const_call(staking_rewards_factory_contract.functions.getStakingRewards(itoken))
     staking_rewards_contract = get_contract(staking_rewards_address, blockchain, web3=web3, abi=ABI_STAKING_REWARDS,
                                             block=block)
 
-    staking_rewards_helper_address = staking_rewards_contract.functions.helperContract().call()
+    staking_rewards_helper_address = const_call(staking_rewards_contract.functions.helperContract())
     staking_rewards_helper_contract = get_contract(staking_rewards_helper_address, blockchain, web3=web3,
-                                                    abi=ABI_STAKING_REWARDS_HELPER, block=block)
-    
+                                                   abi=ABI_STAKING_REWARDS_HELPER, block=block)
     user_staked = call_contract_method(staking_rewards_helper_contract.functions.getUserStaked(wallet), block)
-    if user_staked is None:
-        user_staked = []
+    user_staked = user_staked if user_staked else []
 
     itoken_staked_balance = 0
     for itoken_staked_data in user_staked:
@@ -352,40 +290,31 @@ def underlying(wallet, token_address, block, blockchain, web3=None, decimals=Tru
 
     underlying_staked_balance = 0
     if itoken_staked_balance > 0:
-        itoken_staked_balance = itoken_staked_balance / (10 ** get_decimals(itoken, blockchain, web3=web3))
+        itoken_staked_balance = Decimal(itoken_staked_balance) / Decimal(10 ** get_decimals(itoken, blockchain, web3=web3))
         underlying_staked_balance = \
         unwrap(itoken_staked_balance, itoken, block, blockchain, web3=web3, decimals=decimals)[1]
 
-    balances.append([token_address, underlying_token_balance, underlying_staked_balance])
-
-    if reward is True:
+    result = [[token_address, underlying_token_balance, underlying_staked_balance]]
+    if reward:
         all_rewards = get_all_rewards(wallet, itoken, block, blockchain, web3=web3, decimals=decimals,
-                                        staking_rewards_contract=staking_rewards_contract)
-
-        result.append(balances)
-        result.append(all_rewards)
-
-    else:
-        result = balances
+                                      staking_rewards_contract=staking_rewards_contract)
+        result.extend(all_rewards)
 
     return result
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# underlying_all
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# 1 - List of Tuples: [liquidity_token_address, balance, staked_balance]
+# 2 - List of Tuples: [reward_token_address, balance]
 def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=False):
-
     balances = []
-    result = []
 
-    if web3 is None:
+    if not web3:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
     unitroller_contract = get_contract(get_comptoller_address(blockchain), blockchain, web3=web3,
-                                        abi=ABI_UNITROLLER, block=block)
+                                       abi=ABI_UNITROLLER, block=block)
 
     staking_rewards_factory_contract = get_contract(get_staking_rewards_factory_address(blockchain), blockchain,
                                                     web3=web3, abi=ABI_STAKING_REWARDS_FACTORY, block=block)
@@ -404,32 +333,29 @@ def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=F
             if underlying_token is not ZERO_ADDRESS:
 
                 underlying_token_decimals = get_decimals(underlying_token, block=block, blockchain=blockchain,
-                                                            web3=web3)
+                                                         web3=web3)
 
                 mantissa = 18 - (itoken_data['decimals']) + underlying_token_decimals
 
-                exchange_rate = itoken_data['exchangeRateStored'] / (10 ** mantissa)
+                exchange_rate = Decimal(itoken_data['exchangeRateStored']) / Decimal(10 ** mantissa)
 
-                underlying_token_balance = itoken_data['balanceOf'] / (
-                            10 ** itoken_data['decimals']) * exchange_rate - itoken_data['borrowBalanceStored'] / (
-                                                        10 ** underlying_token_decimals)
+                underlying_token_balance = Decimal(itoken_data['balanceOf']) / \
+                                           Decimal(10 ** itoken_data['decimals']) * exchange_rate - \
+                                           Decimal(itoken_data['borrowBalanceStored']) / Decimal(10 ** underlying_token_decimals)
 
-                if decimals == False:
-                    underlying_token_balance = underlying_token_balance * (10 ** underlying_token_decimals)
+                if not decimals:
+                    underlying_token_balance = underlying_token_balance * Decimal(10 ** underlying_token_decimals)
 
         if user_staked == []:
-            staking_rewards_address = staking_rewards_factory_contract.functions.getStakingRewards(itoken).call(
-                block_identifier=block)
+            staking_rewards_address = const_call(staking_rewards_factory_contract.functions.getStakingRewards(itoken))
             staking_rewards_contract = get_contract(staking_rewards_address, blockchain, web3=web3,
                                                     abi=ABI_STAKING_REWARDS, block=block)
 
-            staking_rewards_helper_address = staking_rewards_contract.functions.helperContract().call()
+            staking_rewards_helper_address = const_call(staking_rewards_contract.functions.helperContract())
             staking_rewards_helper_contract = get_contract(staking_rewards_helper_address, blockchain, web3=web3,
-                                                            abi=ABI_STAKING_REWARDS_HELPER, block=block)
-                
+                                                           abi=ABI_STAKING_REWARDS_HELPER, block=block)
             user_staked = call_contract_method(staking_rewards_helper_contract.functions.getUserStaked(wallet), block)
-            if user_staked is None:
-                user_staked = []
+            user_staked = user_staked if user_staked else []
 
         itoken_staked_balance = 0
         for itoken_staked_data in user_staked:
@@ -439,52 +365,40 @@ def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=F
 
         underlying_staked_balance = 0
         if itoken_staked_balance > 0:
-            itoken_staked_balance = itoken_staked_balance / (10 ** get_decimals(itoken, blockchain, web3=web3))
+            itoken_staked_balance = Decimal(itoken_staked_balance) / Decimal(10 ** get_decimals(itoken, blockchain, web3=web3))
             underlying_staked_balance = \
             unwrap(itoken_staked_balance, itoken, block, blockchain, web3=web3, decimals=decimals)[1]
 
         if underlying_token_balance != 0 or underlying_staked_balance > 0:
             balances.append([underlying_token, underlying_token_balance, underlying_staked_balance])
 
-    if reward is True:
+    result = balances
+    if reward:
         rewards = all_rewards(wallet, block, blockchain, web3=web3, decimals=decimals)
 
-        result.append(balances)
-        result.append(rewards)
-
-    else:
-        result = balances
+        result.extend(rewards)
 
     return result
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# unwrap
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# 1 - List of Tuples: [liquidity_token_address, balance]
 def unwrap(itoken_amount, itoken_address, block, blockchain, web3=None, decimals=True):
-   
-    if web3 is None:
+
+    if not web3:
         web3 = get_node(blockchain, block=block)
 
     itoken_contract = get_contract(itoken_address, blockchain, abi=ABI_ITOKEN, web3=web3, block=block)
-    itoken_decimals = itoken_contract.functions.decimals().call()
+    itoken_decimals = const_call(itoken_contract.functions.decimals())
     exchange_rate = itoken_contract.functions.exchangeRateStored().call(block_identifier=block)
 
     underlying_token = itoken_contract.functions.underlying().call()
-    if decimals == True:
-        underlying_token_decimals = get_decimals(underlying_token, blockchain, web3=web3)
-    else:
-        underlying_token_decimals = 0
+    underlying_token_decimals = get_decimals(underlying_token, blockchain, web3=web3) if decimals else 0
 
-    underlying_token_balance = itoken_amount * exchange_rate / (
-                10 ** (18 - itoken_decimals + underlying_token_decimals))
+    underlying_token_balance = itoken_amount * Decimal(exchange_rate) / Decimal(10 ** (18 - itoken_decimals + underlying_token_decimals))
 
     return [underlying_token, underlying_token_balance]
 
 
-''' 
------ Testing -----
-'''
 
 # print(underlying_all('0x5eD64f02588C8B75582f2f8eFd7A5521e3F897CC', 'latest', OPTIMISM, reward=True))
 # print(underlying_all('0x1a4c5e704b65b3406e5432ea2a1136461a60b174', 'latest', OPTIMISM, reward=True))

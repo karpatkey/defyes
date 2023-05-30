@@ -1,8 +1,8 @@
 from typing import Union, List
-from decimal import Decimal
+from web3 import Web3
 
-from defi_protocols.functions import get_node, get_contract, get_decimals
-from defi_protocols.constants import ETHTokenAddr, ABI_TOKEN_SIMPLIFIED
+from defi_protocols.functions import get_node, get_contract, to_token_amount
+from defi_protocols.constants import ETHTokenAddr
 
 CUSDCV3_ADDRESS = '0xc3d688B66703497DAA19211EEdff47f25384cdc3'
 CWETHV3_ADDRESS = '0xA17581A9E3356d9A858b789D68B4d866e593aE94'
@@ -32,19 +32,16 @@ def underlying(wallet: str, token_address: str , block: Union[str,int], blockcha
     balances = []
     web3 = get_node(blockchain, block=block) 
 
-    wallet = web3.to_checksum_address(wallet)
-    token_address = web3.to_checksum_address(token_address)
+    wallet = Web3.to_checksum_address(wallet)
+    token_address = Web3.to_checksum_address(token_address)
 
     cToken_instance = get_contract(token_address, blockchain, abi=CTOKEN_ABI, web3=web3, block=block)
-    cToken_decimals = cToken_instance.functions.decimals().call() if decimals else 0
     cToken_balance = cToken_instance.functions.balanceOf(wallet).call(block_identifier=block)
     base_token = cToken_instance.functions.baseToken().call()
-
-    cToken_balance = Decimal(cToken_balance) / Decimal(10 ** cToken_decimals)
-
-    balances.append([base_token, float(cToken_balance)])
+    balances.append([base_token, to_token_amount(base_token, cToken_balance, blockchain, web3, decimals)])
 
     return balances
+
 
 def get_all_rewards(wallet: str, token_address: str, block: Union[int, str], blockchain: str,
                     web3=None, decimals: bool = True) -> List[List]:
@@ -63,17 +60,12 @@ def get_all_rewards(wallet: str, token_address: str, block: Union[int, str], blo
     rewards = []
     web3 = get_node(blockchain, block=block) 
 
-    wallet = web3.to_checksum_address(wallet)
-    token_address = web3.to_checksum_address(token_address)
+    wallet = Web3.to_checksum_address(wallet)
+    token_address = Web3.to_checksum_address(token_address)
 
     cToken_instance = get_contract(REWARDS_ADDRESS, blockchain, abi=CTOKEN_REWARDS_ABI, web3=web3, block=block)
     cToken_rewards = cToken_instance.functions.rewardsClaimed(token_address,wallet).call(block_identifier=block)
 
-    comp_decimals = get_decimals(ETHTokenAddr.COMP,blockchain,web3=web3,block=block) if decimals else 0
-    cToken_rewards = Decimal(cToken_rewards) / Decimal(10 ** comp_decimals)
-        
-    rewards.append([ETHTokenAddr.COMP, float(cToken_rewards)])
+    rewards.append([ETHTokenAddr.COMP, to_token_amount(ETHTokenAddr.COMP, cToken_rewards, blockchain, web3, decimals)])
 
     return rewards
-
-

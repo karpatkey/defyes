@@ -1,8 +1,9 @@
-import os
 import json
+from decimal import Decimal
 from pathlib import Path
+from web3 import Web3
 
-from defi_protocols.functions import get_node, get_decimals, get_contract
+from defi_protocols.functions import get_node, get_decimals, get_contract, to_token_amount
 from defi_protocols.constants import AURA_ETH, ETHEREUM
 from defi_protocols import Balancer
 
@@ -123,16 +124,9 @@ def get_pool_info(booster_contract, lptoken_address, block):
 def get_rewards(web3, rewarder_contract, wallet, block, blockchain, decimals=True):
 
     reward_token_address = rewarder_contract.functions.rewardToken().call()
+    bal_rewards = rewarder_contract.functions.earned(wallet).call(block_identifier=block)
 
-    if decimals is True:
-        reward_token_decimals = get_decimals(reward_token_address, blockchain, web3=web3)
-    else:
-        reward_token_decimals = 0
-
-    bal_rewards = rewarder_contract.functions.earned(wallet).call(block_identifier=block) / (
-                10 ** reward_token_decimals)
-
-    return [reward_token_address, bal_rewards]
+    return [reward_token_address, to_token_amount(reward_token_address, bal_rewards, blockchain, web3, decimals)]
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -143,24 +137,16 @@ def get_extra_rewards(web3, rewarder_contract, wallet, block, blockchain, decima
     extra_rewards = []
 
     extra_rewards_length = rewarder_contract.functions.extraRewardsLength().call(block_identifier=block)
+    for n in range(extra_rewards_length):
 
-    for i in range(extra_rewards_length):
-
-        extra_reward_contract_address = rewarder_contract.functions.extraRewards(i).call(block_identifier=block)
+        extra_reward_contract_address = rewarder_contract.functions.extraRewards(n).call(block_identifier=block)
         extra_reward_contract = get_contract(extra_reward_contract_address, blockchain, web3=web3, abi=ABI_REWARDER,
                                              block=block)
 
         extra_reward_token_address = extra_reward_contract.functions.rewardToken().call()
+        extra_reward = extra_reward_contract.functions.earned(wallet).call(block_identifier=block)
 
-        if decimals is True:
-            extra_reward_token_decimals = get_decimals(extra_reward_token_address, blockchain, web3=web3)
-        else:
-            extra_reward_token_decimals = 0
-
-        extra_reward = extra_reward_contract.functions.earned(wallet).call(block_identifier=block) / (
-                    10 ** extra_reward_token_decimals)
-
-        extra_rewards.append([extra_reward_token_address, extra_reward])
+        extra_rewards.append([extra_reward_token_address, to_token_amount(extra_reward_token_address, extra_reward, blockchain, web3, decimals)])
 
     return extra_rewards
 
@@ -175,7 +161,7 @@ def get_extra_rewards_airdrop(wallet, block, blockchain, web3=None, decimals=Tru
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
     extra_rewards_distributor = get_contract(EXTRA_REWARDS_DISTRIBUTOR, blockchain, web3=web3,
                                              abi=ABI_EXTRA_REWARDS_DISTRIBUTOR, block=block)
@@ -184,14 +170,7 @@ def get_extra_rewards_airdrop(wallet, block, blockchain, web3=None, decimals=Tru
         block_identifier=block)
 
     if extra_reward > 0:
-        if decimals is True:
-            extra_reward_token_decimals = get_decimals(AURA_ETH, blockchain, web3=web3)
-        else:
-            extra_reward_token_decimals = 0
-
-        extra_reward = extra_reward / (10 ** extra_reward_token_decimals)
-
-        extra_rewards_airdrop = [AURA_ETH, extra_reward]
+        extra_rewards_airdrop = [AURA_ETH, to_token_amount(AURA_ETH, extra_reward, blockchain, web3, decimals)]
 
     return extra_rewards_airdrop
 
@@ -211,24 +190,24 @@ def get_aura_mint_amount(web3, bal_earned, block, blockchain, decimals=True):
     reduction_per_cliff = aura_contract.functions.reductionPerCliff().call(block_identifier=block)
 
     emissions_minted = aura_total_supply - init_mint_amount
-    cliff = emissions_minted / reduction_per_cliff
+    cliff = emissions_minted / Decimal(reduction_per_cliff)
 
     total_cliffs = aura_contract.functions.totalCliffs().call(block_identifier=block)
 
     if cliff < total_cliffs:
 
-        reduction = ((total_cliffs - cliff) * 2.5) + 700
+        reduction = ((total_cliffs - cliff) * Decimal(2.5)) + 700
 
         aura_amount = (bal_earned * reduction) / total_cliffs
 
-        amount_till_max = aura_contract.functions.EMISSIONS_MAX_SUPPLY().call(block_identifier=block) - emissions_minted
+        amount_till_max = Decimal(aura_contract.functions.EMISSIONS_MAX_SUPPLY().call(block_identifier=block)) - emissions_minted
 
         if aura_amount > amount_till_max:
             aura_amount = amount_till_max
 
-    if decimals is False:
+    if not decimals:
         aura_decimals = get_decimals(AURA_ETH, blockchain, web3=web3)
-        aura_amount = aura_amount * (10 ** aura_decimals)
+        aura_amount = aura_amount * Decimal(10 ** aura_decimals)
 
     return [AURA_ETH, aura_amount]
 
@@ -243,9 +222,9 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     if bal_rewards_contract is None:
         booster_contract = get_contract(BOOSTER, blockchain, web3=web3, abi=ABI_BOOSTER, block=block)
@@ -266,7 +245,7 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
     if all_rewards[0][1] >= 0:
         aura_mint_amount = get_aura_mint_amount(web3, all_rewards[0][1], block, blockchain, decimals=decimals)
 
-        if (len(aura_mint_amount) > 0):
+        if len(aura_mint_amount) > 0:
             all_rewards.append(aura_mint_amount)
 
     extra_rewards = get_extra_rewards(web3, bal_rewards_contract, wallet, block, blockchain, decimals=decimals)
@@ -290,34 +269,20 @@ def get_locked(wallet, block, blockchain, web3=None, reward=False, decimals=True
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
     aura_locker_contract = get_contract(AURA_LOCKER, blockchain, web3=web3, abi=ABI_AURA_LOCKER, block=block)
 
-    if decimals is True:
-        aura_decimals = get_decimals(AURA_ETH, blockchain, web3=web3)
-    else:
-        aura_decimals = 0
+    aura_locker = aura_locker_contract.functions.balances(wallet).call(block_identifier=block)[0]
 
-    aura_locker = aura_locker_contract.functions.balances(wallet).call(block_identifier=block)[0] / (
-                10 ** aura_decimals)
-
-    result = [[AURA_ETH, aura_locker]]
+    result = [[AURA_ETH, to_token_amount(AURA_ETH, aura_locker, blockchain, web3, decimals)]]
 
     if reward is True:
         rewards = []
         aura_locker_rewards = aura_locker_contract.functions.claimableRewards(wallet).call(block_identifier=block)
-
-        for aura_locker_reward in aura_locker_rewards:
-
-            if aura_locker_reward[1] > 0:
-
-                if decimals is True:
-                    reward_decimals = get_decimals(aura_locker_reward[0], blockchain, web3=web3)
-                else:
-                    reward_decimals = 0
-
-                rewards.append([aura_locker_reward[0], aura_locker_reward[1] / (10 ** reward_decimals)])
+        if aura_locker_rewards:
+            for token, balance in aura_locker_rewards:
+                rewards.append([token, to_token_amount(token, balance, blockchain, web3, decimals)])
 
         result += rewards
 
@@ -332,26 +297,16 @@ def get_staked(wallet, block, blockchain, web3=None, reward=False, decimals=True
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
     aurabal_rewarder_contract = get_contract(AURABAL_REWARDER, blockchain, web3=web3, abi=ABI_REWARDER, block=block)
+    aurabal_address = aurabal_rewarder_contract.functions.stakingToken().call()
+    aurabal_staked = aurabal_rewarder_contract.functions.balanceOf(wallet).call(block_identifier=block)
 
-    if decimals is True:
-        aurabal_address = aurabal_rewarder_contract.functions.stakingToken().call()
-        aurabal_decimals = get_decimals(aurabal_address, blockchain, web3=web3)
-    else:
-        aurabal_decimals = 0
-
-    aurabal_staked = aurabal_rewarder_contract.functions.balanceOf(wallet).call(block_identifier=block) / (
-                10 ** aurabal_decimals)
-
-    result = [[aurabal_address, aurabal_staked]]
+    result = [[aurabal_address, to_token_amount(aurabal_address, aurabal_staked, blockchain, web3, decimals)]]
 
     if reward is True:
-        rewards = []
-
-        # BAL Rewards
-        rewards.append(get_rewards(web3, aurabal_rewarder_contract, wallet, block, blockchain, decimals=decimals))
+        rewards = [get_rewards(web3, aurabal_rewarder_contract, wallet, block, blockchain, decimals=decimals)]
 
         # Extra Rewards
         extra_rewards = get_extra_rewards(web3, aurabal_rewarder_contract, wallet, block, blockchain,
@@ -376,27 +331,18 @@ def get_compounded(wallet, block, blockchain, web3=None, reward=False, decimals=
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
     stk_aurabal_contract = get_contract(stkauraBAL, blockchain, web3=web3, abi=ABI_STKAURABAL, block=block)
+    aurabal_address = stk_aurabal_contract.functions.underlying().call()
+    aurabal_staked = stk_aurabal_contract.functions.balanceOfUnderlying(wallet).call(block_identifier=block)
 
-    if decimals is True:
-        aurabal_address = stk_aurabal_contract.functions.underlying().call()
-        aurabal_decimals = get_decimals(aurabal_address, blockchain, web3=web3)
-    else:
-        aurabal_decimals = 0
-
-    aurabal_staked = stk_aurabal_contract.functions.balanceOfUnderlying(wallet).call(block_identifier=block) / (
-                10 ** aurabal_decimals)
-
-    result = [[aurabal_address, aurabal_staked]]
+    result = [[aurabal_address, to_token_amount(aurabal_address, aurabal_staked, blockchain, web3, decimals)]]
 
     if reward is True:
         rewards = []
-
         # Extra Rewards
-        extra_rewards = get_extra_rewards(web3, stk_aurabal_contract, wallet, block, blockchain,
-                                            decimals=decimals)
+        extra_rewards = get_extra_rewards(web3, stk_aurabal_contract, wallet, block, blockchain, decimals=decimals)
         for n in range(0, len(extra_rewards)):
             rewards.append(extra_rewards[n])
         
@@ -416,46 +362,35 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, reward=Fal
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     booster_contract = get_contract(BOOSTER, blockchain, web3=web3, abi=ABI_BOOSTER, block=block)
 
     pool_info = get_pool_info(booster_contract, lptoken_address, block)
 
-    if pool_info is None:
-        print('Error: Incorrect Aura LPToken Address: ', lptoken_address)
-        return None
+    if pool_info:
+        bal_rewards_address = pool_info[3]
+        bal_rewards_contract = get_contract(bal_rewards_address, blockchain, web3=web3, abi=ABI_REWARDER, block=block)
+        lptoken_staked = bal_rewards_contract.functions.balanceOf(wallet).call(block_identifier=block)
 
-    bal_rewards_address = pool_info[3]
-    bal_rewards_contract = get_contract(bal_rewards_address, blockchain, web3=web3, abi=ABI_REWARDER, block=block)
-
-    lptoken_staked = bal_rewards_contract.functions.balanceOf(wallet).call(block_identifier=block)
-
-    if no_balancer_underlying is False:
-        balancer_data = Balancer.underlying(wallet, lptoken_address, block, blockchain, web3=web3,
-                                            decimals=decimals, aura_staked=lptoken_staked)
-        balances = [[balancer_data[i][0], balancer_data[i][2]] for i in range(len(balancer_data))]
-    else:
-        if decimals is True:
-            lptoken_decimals = get_decimals(lptoken_address, blockchain, web3=web3)
+        if no_balancer_underlying is False:
+            balancer_data = Balancer.underlying(wallet, lptoken_address, block, blockchain, web3=web3,
+                                                decimals=decimals, aura_staked=lptoken_staked)
+            balances = [[balancer_data[i][0], balancer_data[i][2]] for i in range(len(balancer_data))]
         else:
-            lptoken_decimals = 0
+            balances.append([lptoken_address, to_token_amount(lptoken_address, lptoken_staked, blockchain, web3, decimals)])
 
-        lptoken_staked = lptoken_staked / (10 ** lptoken_decimals)
+        if reward is True:
+            all_rewards = get_all_rewards(wallet, lptoken_address, block, blockchain, web3=web3, decimals=decimals,
+                                          bal_rewards_contract=bal_rewards_contract)
 
-        balances.append([lptoken_address, lptoken_staked])
+            result.append(balances)
+            result.append(all_rewards)
 
-    if reward is True:
-        all_rewards = get_all_rewards(wallet, lptoken_address, block, blockchain, web3=web3, decimals=decimals,
-                                      bal_rewards_contract=bal_rewards_contract)
-
-        result.append(balances)
-        result.append(all_rewards)
-
-    else:
-        result = balances
+        else:
+            result = balances
 
     return result
 
@@ -468,7 +403,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     balances = Balancer.pool_balances(lptoken_address, block, blockchain, web3=web3, decimals=decimals)
 
@@ -512,6 +447,3 @@ def update_db(output_file=DB_FILE):
             json.dump(db_data, db_file)
 
     return updated
-
-
- 

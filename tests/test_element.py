@@ -33,7 +33,8 @@ def test_underlying():
     block = 16627530
     name = 'LP Element Principal Token yvCurve-stETH-24FEB23'
     underlying = Element.underlying(name, WALLET, block, blockchain=ETHEREUM)
-    assert underlying == [[E_ADDRESS, Decimal('744.5556663118056371427981122')], [ETHTokenAddr.stETH, Decimal('766.3546455242681575794980893')]]
+    assert underlying == [[E_ADDRESS, Decimal('744.5556663118056659868728133')],
+                          [ETHTokenAddr.stETH, Decimal('766.3546455242681872680648993')]]
 
 
 def test_underlying_all():
@@ -41,15 +42,18 @@ def test_underlying_all():
     underlying = Element.underlying_all(WALLET, block, blockchain=ETHEREUM)
     assert underlying == [{'protocol': 'Element',
                            'tranche': 'LP Element Principal Token yvCurve-stETH-24FEB23',
-                           'amounts': [[E_ADDRESS, Decimal('744.5556663118056371427981122')], [ETHTokenAddr.stETH, Decimal('766.3546455242681575794980893')]],
+                           'amounts': [[E_ADDRESS, Decimal('744.5556663118056659868728133')],
+                                       [ETHTokenAddr.stETH, Decimal('766.3546455242681872680648993')]],
                            'lptoken_address': '0x06325440D014e39736583c165C2963BA99fAf14E',
                            'wallet': '0x849D52316331967b6fF1198e5E32A0eB168D039d'},
                           {'protocol': 'Element',
                            'tranche': 'LP Element Principal Token yvcrvSTETH-28JAN22',
-                           'amounts': [[E_ADDRESS, Decimal('0.00005176494310919112503054923609')], [ETHTokenAddr.stETH, Decimal('0.00005328050866033555812181817323')]],
+                           'amounts': [[E_ADDRESS, Decimal('0.00005176494310919112209866330221')],
+                                       [ETHTokenAddr.stETH, Decimal('0.00005328050866033555510409296175')]],
                            'lptoken_address': '0x06325440D014e39736583c165C2963BA99fAf14E',
                            'wallet': '0x849D52316331967b6fF1198e5E32A0eB168D039d'},
                           {'protocol': 'Element', 'tranche': 'LP Element Principal Token yvcrvSTETH-15APR22',
-                           'amounts': [[E_ADDRESS, Decimal('0.0002652668934750846743153635040')], [ETHTokenAddr.stETH, Decimal('0.0002730333342642093125746709260')]],
+                           'amounts': [[E_ADDRESS, Decimal('0.0002652668934750846726152143699')],
+                                       [ETHTokenAddr.stETH, Decimal('0.0002730333342642093108247451032')]],
                            'lptoken_address': '0x06325440D014e39736583c165C2963BA99fAf14E',
                            'wallet': '0x849D52316331967b6fF1198e5E32A0eB168D039d'}]

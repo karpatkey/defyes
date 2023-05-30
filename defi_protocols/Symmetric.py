@@ -2,35 +2,24 @@ import logging
 import json
 from decimal import Decimal
 from pathlib import Path
+from web3 import Web3
 from web3.exceptions import ContractLogicError
 
-from defi_protocols.functions import get_node, get_contract, get_decimals, get_logs, BlockchainError
+from defi_protocols.functions import get_node, get_contract, get_decimals, get_logs, BlockchainError, to_token_amount
 from defi_protocols.constants import XDAI, ZERO_ADDRESS
 
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# SYMMETRIC VAULT
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # xDAI - Symmetric Vault Contract Address
 VAULT_XDAI = '0x24F87b37F4F249Da61D89c3FF776a55c321B2773'
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# SYMMCHEF
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # xDAI - SymmChef Contract Address
 SYMMCHEF_XDAI = '0xdf667DeA9F6857634AaAf549cA40E06f04845C03'
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# SYMMCHEF
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # xDAI - SymmChef Contract Address
 SYMFACTORY_XDAI = '0x9B4214FD41cD24347A25122AC7bb6B479BED72Ac'
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ABIs
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Symmetric Vault ABI - getPoolTokens
 ABI_VAULT = '[{"type":"function","stateMutability":"view","outputs":[{"type":"address[]","name":"tokens","internalType":"contract IERC20[]"},{"type":"uint256[]","name":"balances","internalType":"uint256[]"},{"type":"uint256","name":"lastChangeBlock","internalType":"uint256"}],"name":"getPoolTokens","inputs":[{"type":"bytes32","name":"poolId","internalType":"bytes32"}]}]'
 
@@ -57,9 +46,7 @@ SWAP_EVENT_SIGNATURE = 'LOG_SWAP(address,address,address,uint256,uint256)'
 
 DB_FILE = Path(__file__).parent / "db" / "Symmetric_db.json"
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_vault_contract
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 def get_vault_contract(web3, block, blockchain):
     """
     :param web3:
@@ -74,9 +61,6 @@ def get_vault_contract(web3, block, blockchain):
     return vault_contract
 
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_chef_contract
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_chef_contract(web3, block, blockchain):
     """
     :param web3:
@@ -124,10 +108,10 @@ def get_pool_info(web3, lptoken_address, block, blockchain):
         }
         result['totalAllocPoint'] = result['chef_contract'].functions.totalAllocPoint().call(block_identifier=block)
     except ContractLogicError:
-        # FIXME: result should not change type
-        result = None
+        pass
 
     return result
+
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # get_lptoken_data
@@ -156,9 +140,6 @@ def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
     return lptoken_data
 
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_rewarder_contract
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_rewarder_contract(web3, block, blockchain, chef_contract, pool_id):
     """
     :param web3:
@@ -192,12 +173,9 @@ def get_symm_rewards(web3, wallet, chef_contract, pool_id, block, blockchain, de
     :return:
     """
     symm_address = chef_contract.functions.SYMM().call()
+    symm_rewards = chef_contract.functions.pendingSymm(pool_id, wallet).call(block_identifier=block)
 
-    symm_decimals = get_decimals(symm_address, blockchain, web3=web3) if decimals else 0
-    symm_rewards = Decimal(chef_contract.functions.pendingSymm(pool_id, wallet).call(block_identifier=block))
-    symm_rewards /= Decimal(10 ** symm_decimals)
-
-    return [symm_address, symm_rewards]
+    return [symm_address, to_token_amount(symm_address, symm_rewards, blockchain, web3, decimals)]
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -228,11 +206,11 @@ def get_rewards(web3, wallet, chef_contract, pool_id, block, blockchain, decimal
         pending_token_amounts = pending_tokens_info[1]
 
         for i in range(len(pending_tokens_addresses)):
-
-            reward_token_decimals = get_decimals(pending_tokens_addresses[i], blockchain, web3=web3) if decimals else 0
-            reward_token_amount = Decimal(pending_token_amounts[i]) / Decimal(10 ** reward_token_decimals)
-
-            rewards.append([pending_tokens_addresses[i], reward_token_amount])
+            rewards.append([pending_tokens_addresses[i], to_token_amount(pending_tokens_addresses[i],
+                                                                         pending_token_amounts[i],
+                                                                         blockchain,
+                                                                         web3,
+                                                                         decimals)])
 
     return rewards
 
@@ -263,8 +241,8 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    wallet = Web3.to_checksum_address(wallet)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     if pool_info is None:
         pool_info = get_pool_info(web3, lptoken_address, block, blockchain)
@@ -316,8 +294,8 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=T
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    wallet = Web3.to_checksum_address(wallet)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     pool_info = get_pool_info(web3, lptoken_address, block, blockchain)
     factory_contract = get_contract(SYMFACTORY_XDAI, blockchain, block=block, web3=web3, abi=ABI_BPOOL)
@@ -330,14 +308,11 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=T
             current_tokens = lp_token_contract.functions.getCurrentTokens().call()
             for token in current_tokens:
                 balance_token = lp_token_contract.functions.getBalance(token).call()
-                token_decimals = get_decimals(token, blockchain, web3=web3) if decimals else 0
-
-                amount = Decimal(balance) / Decimal(totalsupply) * Decimal(balance_token) / Decimal(10 ** token_decimals)
+                amount = balance / Decimal(totalsupply) * to_token_amount(token, balance_token, blockchain, web3, decimals)
                 result.append([token, amount])
         else:
             logger.error('Incorrect Symmetric LPToken Address: ', lptoken_address)
-            # FIXME: Function returns different type values
-            result = None
+            result = []
     else:
         pool_id = pool_info['pool_info']['poolId']
         chef_contract = pool_info['chef_contract']
@@ -355,12 +330,8 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=T
         pool_staked_fraction /= Decimal(lptoken_data['totalSupply'])
 
         for token_address, pool_balance in zip(pool_tokens, pool_balances):
-            token_decimals = get_decimals(token_address, blockchain, web3=web3) if decimals else 0
-
-            token_balance = Decimal(pool_balance) / Decimal(10 ** token_decimals) * pool_balance_fraction
-            token_staked = Decimal(pool_balance) / Decimal(10 ** token_decimals) * pool_staked_fraction
-
-            result.append([token_address, token_balance, token_staked])
+            token_balance = to_token_amount(token_address, pool_balance, blockchain, web3, decimals)
+            result.append([token_address, token_balance * pool_balance_fraction, token_balance * pool_staked_fraction])
 
     if reward is True:
         all_rewards = get_all_rewards(wallet, lptoken_address, block, blockchain, web3=web3, decimals=decimals,
@@ -395,7 +366,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
     lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
     pool_id = lptoken_contract.functions.getPoolId().call()
 
@@ -405,11 +376,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
     pool_balances = pool_tokens_data[1]
 
     for token_address, pool_balance in zip(pool_tokens, pool_balances):
-        token_decimals = get_decimals(token_address, blockchain, web3=web3) if decimals else 0
-
-        token_balance = Decimal(pool_balance) / Decimal(10 ** token_decimals)
-
-        balances.append([token_address, token_balance])
+        balances.append([token_address, to_token_amount(token_address, pool_balance, blockchain, web3, decimals)])
 
     return balances
 
@@ -433,7 +400,7 @@ def get_rewards_per_unit(lptoken_address, blockchain, web3=None, block='latest')
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
     pool_info = get_pool_info(web3, lptoken_address, block, blockchain)
 
     if pool_info is None:
@@ -583,7 +550,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
     if web3 is None:
         web3 = get_node(blockchain, block=block_start)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKENV1, block=block_start)
     from IPython import embed; embed()

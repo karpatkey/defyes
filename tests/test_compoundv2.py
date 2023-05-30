@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from defi_protocols import Compound
 from defi_protocols.constants import ETHEREUM, ETHTokenAddr, ZERO_ADDRESS
 from defi_protocols.functions import get_node
@@ -81,19 +83,19 @@ def test_underlying():
     block = 16904422
     node = get_node(ETHEREUM, block)
     dai_underlying = Compound.underlying(WALLET_N1, ETHTokenAddr.DAI, block, ETHEREUM, web3=node)
-    assert dai_underlying == [['0x6B175474E89094C44Da98b954EedeAC495271d0F', 0.9999999998429369]]
+    assert dai_underlying == [['0x6B175474E89094C44Da98b954EedeAC495271d0F', Decimal('0.9999999998429369002850268805')]]
 
     block = 16906410
     eth_underlying = Compound.underlying(WALLET_N1, ZERO_ADDRESS, block, ETHEREUM, web3=node)
-    assert eth_underlying == [['0x0000000000000000000000000000000000000000', 0.0009999999621424396]]
+    assert eth_underlying == [['0x0000000000000000000000000000000000000000', Decimal('0.0009999999621424394485648011655')]]
 
 
 def test_underlying_all():
     block = 16906410
     node = get_node(ETHEREUM, block)
     underlyings = Compound.underlying_all(WALLET_N1, block, ETHEREUM, web3=node)
-    assert underlyings == [[ETHTokenAddr.DAI, 1.0000108840576543],
-                           [ZERO_ADDRESS, 0.0009999999621424396]]
+    assert underlyings == [[ETHTokenAddr.DAI, Decimal('1.000010884057654258470225384')],
+                           [ZERO_ADDRESS, Decimal('0.0009999999621424394485648011655')]]
 
 
 def test_all_comp_rewards():
@@ -101,7 +103,7 @@ def test_all_comp_rewards():
     node = get_node(ETHEREUM, block)
     rewards = Compound.all_comp_rewards(WALLET_N1, block, ETHEREUM, web3=node)
     assert rewards[0][0] == ETHTokenAddr.COMP
-    assert rewards[0][1] == 1.508535739321e-06
+    assert rewards[0][1] == Decimal('0.000001508535739321')
 
 
 def test_unwrap():
@@ -115,44 +117,44 @@ def test_unwrap():
     ctoken_amount = wallet1_cdai['balanceOf']
     ctoken_address = CTOKEN_CONTRACTS['cdai_contract']
     unwrapped_data = Compound.unwrap(ctoken_amount, ctoken_address, block, ETHEREUM, web3=node)
-    assert unwrapped_data == [ETHTokenAddr.DAI, 100012432.30888236]
+    assert unwrapped_data == [ETHTokenAddr.DAI, Decimal('100012432.3088823602890022154')]
 
 
 def test_get_apr():
     block = 16924820
     node = get_node(ETHEREUM, block)
     comp_apr = Compound.get_apr(ETHTokenAddr.COMP, block, ETHEREUM, web3=node)
-    assert comp_apr == [{'metric': 'apr', 'type': 'supply', 'value': 0.0028302645027622475},
-                        {'metric': 'apr', 'type': 'borrow', 'value': 0.05500756675758112}]
+    assert comp_apr == [{'metric': 'apr', 'type': 'supply', 'value': Decimal('0.002830267264410439852176000')},
+                        {'metric': 'apr', 'type': 'borrow', 'value': Decimal('0.055007566655502029090688000')}]
 
     dai_apy = Compound.get_apr(ETHTokenAddr.DAI, block, ETHEREUM, web3=node, apy=True)
-    assert dai_apy == [{'metric': 'apy', 'type': 'supply', 'value': 0.017116487300299577},
-                       {'metric': 'apy', 'type': 'borrow', 'value': 0.03595587221146879}]
+    assert dai_apy == [{'metric': 'apy', 'type': 'supply', 'value': Decimal('0.017116487300260146197020843')},
+                       {'metric': 'apy', 'type': 'borrow', 'value': Decimal('0.035955872211446296931789467')}]
 
     dai_apr_with_contract = Compound.get_apr(ETHTokenAddr.DAI,
                                              block,
                                              ETHEREUM,
                                              web3=node,
                                              ctoken_address=CTOKEN_CONTRACTS['cdai_contract'])
-    assert dai_apr_with_contract == [{'metric': 'apr', 'type': 'supply', 'value': 0.016971650612873646},
-                                     {'metric': 'apr', 'type': 'borrow', 'value': 0.03532454536880891}]
+    assert dai_apr_with_contract == [{'metric': 'apr', 'type': 'supply', 'value': Decimal('0.016971650630021105741808000')},
+                                     {'metric': 'apr', 'type': 'borrow', 'value': Decimal('0.035324548559412767558064000')}]
 
 
 def test_get_comp_apr():
     block = 16924820
     node = get_node(ETHEREUM, block)
     usdt_comp_apr = Compound.get_comp_apr(ETHTokenAddr.USDT, block, ETHEREUM, web3=node)
-    assert usdt_comp_apr == [{'metric': 'apr', 'type': 'supply', 'value': 0.0},
-                             {'metric': 'apr', 'type': 'borrow', 'value': 0.004109315639766464}]
+    assert usdt_comp_apr == [{'metric': 'apr', 'type': 'supply', 'value': Decimal('0')},
+                             {'metric': 'apr', 'type': 'borrow', 'value': Decimal('0.004109317817792878835568000')}]
 
     dai_comp_apy = Compound.get_comp_apr(ETHTokenAddr.DAI, block, ETHEREUM, web3=node, apy=True)
-    assert dai_comp_apy == [{'metric': 'apy', 'type': 'supply', 'value': 0.007943711809621057},
-                            {'metric': 'apy', 'type': 'borrow', 'value': 0.01409698572150675}]
+    assert dai_comp_apy == [{'metric': 'apy', 'type': 'supply', 'value': Decimal('0.007943711809619570636738672')},
+                            {'metric': 'apy', 'type': 'borrow', 'value': Decimal('0.014096985721529171800616936')}]
 
-    sushi_apr_contract = Compound.get_apr(ETHTokenAddr.SUSHI,
-                                          block,
-                                          ETHEREUM,
-                                          web3=node,
-                                          ctoken_address=CTOKEN_CONTRACTS['csushi_contract'])
-    assert sushi_apr_contract == [{'metric': 'apr', 'type': 'supply', 'value': 0.003473483836557989},
-                                  {'metric': 'apr', 'type': 'borrow', 'value': 0.05069088908626895}]
+    sushi_apr_contract = Compound.get_comp_apr(ETHTokenAddr.SUSHI,
+                                               block,
+                                               ETHEREUM,
+                                               web3=node,
+                                               ctoken_address=CTOKEN_CONTRACTS['csushi_contract'])
+    assert sushi_apr_contract == [{'metric': 'apr', 'type': 'supply', 'value': Decimal('0')},
+                                  {'metric': 'apr', 'type': 'borrow', 'value': Decimal('0')}]

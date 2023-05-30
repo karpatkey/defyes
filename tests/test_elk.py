@@ -74,8 +74,8 @@ def test_underlying():
     node = get_node(POLYGON, block)
     lptoken_address = '0xf99c496C4bc62D4ce47f79bc7D367Af4FFab105B'
     underlying = Elk.underlying(WALLET_N1, lptoken_address, block, POLYGON, node, reward=True)
-    assert underlying == [[[PolygonTokenAddr.USDC, Decimal('0.000000'), Decimal('6842.636923250133597020104181')],
-                           [PolygonTokenAddr.ELK, Decimal('0E-18'), Decimal('45806.10835723145688926330223')]],
+    assert underlying == [[[PolygonTokenAddr.USDC, Decimal('0'), Decimal('6842.636923250133597020104181')],
+                           [PolygonTokenAddr.ELK, Decimal('0'), Decimal('45806.10835723145688926330223')]],
                           [[PolygonTokenAddr.ELK, Decimal('132.497466741066924339')]]]
 
 

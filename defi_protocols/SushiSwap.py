@@ -1,42 +1,30 @@
 import logging
 import os
 import json
-import math
 from pathlib import Path
 from typing import Union
 from datetime import datetime, timedelta
+from decimal import Decimal
+from web3 import Web3
+from web3.exceptions import ABIFunctionNotFound
 
-from defi_protocols.functions import get_contract, get_node, get_decimals, get_logs, last_block, get_token_tx, get_tx_list, date_to_block, block_to_date
+from defi_protocols.functions import get_contract, get_node, get_decimals, get_logs, last_block, get_token_tx, get_tx_list, date_to_block, block_to_date, to_token_amount
 from defi_protocols.constants import ETHEREUM, POLYGON, XDAI, ZERO_ADDRESS
 from defi_protocols.prices.prices import get_price
 from defi_protocols.cache import const_call
 
 logger = logging.getLogger(__name__)
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# MASTERCHEF_V1
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# MASTERCHEF_V1 Contract Address
 MASTERCHEF_V1 = '0xc2EdaD668740f1aA35E4D8f227fB8E17dcA888Cd'
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# MASTERCHEF_V2
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# MASTERCHEF_V2 Contract Address
 MASTERCHEF_V2 = '0xEF0881eC094552b2e128Cf945EF17a6752B4Ec5d'
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# LIQUIDITY MINING
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Polygon - MiniChef Contract Address
 MINICHEF_POLYGON = '0x0769fd68dFb93167989C6f7254cd0D766Fb2841F'
 
 # xDAI - MiniChef Contract Address
 MINICHEF_XDAI = '0xdDCbf776dF3dE60163066A5ddDF2277cB445E0F3'
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ABIs
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Chefs V2 ABI - SUSHI, rewarder, pendingSushi, lpToken, userInfo, poolLength, poolInfo, sushiPerBlock, sushiPerSecond, totalAllocPoint
 ABI_CHEF_V2 = '[{"inputs":[],"name":"SUSHI","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"rewarder","outputs":[{"internalType":"contract IRewarder","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"uint256","name":"_pid","type":"uint256"},{"internalType":"address","name":"_user","type":"address"}],"name":"pendingSushi","outputs":[{"internalType":"uint256","name":"pending","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"lpToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"address","name":"","type":"address"}],"name":"userInfo","outputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"int256","name":"rewardDebt","type":"int256"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"poolLength","outputs":[{"internalType":"uint256","name":"pools","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"poolInfo","outputs":[{"internalType":"uint128","name":"accSushiPerShare","type":"uint128"},{"internalType":"uint64","name":"lastRewardBlock","type":"uint64"},{"internalType":"uint64","name":"allocPoint","type":"uint64"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"sushiPerBlock","outputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"stateMutability":"view","type":"function"}, {"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"sushiPerSecond","inputs":[]}, {"inputs":[],"name":"totalAllocPoint","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]'
 
@@ -49,9 +37,6 @@ ABI_REWARDER = '[{"inputs":[{"internalType":"uint256","name":"pid","type":"uint2
 # LP Token ABI - decimals, totalSupply, getReserves, balanceOf, token0, token1, kLast
 ABI_LPTOKEN = '[{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"getReserves","outputs":[{"internalType":"uint112","name":"_reserve0","type":"uint112"},{"internalType":"uint112","name":"_reserve1","type":"uint112"},{"internalType":"uint32","name":"_blockTimestampLast","type":"uint32"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"token0","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"token1","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"kLast","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]'
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# EVENT SIGNATURES
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Swap Event Signature
 SWAP_EVENT_SIGNATURE = 'Swap(address,uint256,uint256,uint256,uint256,address)'
 
@@ -67,7 +52,6 @@ DEPOSIT_EVENT_SIGNATURE = 'deposit(uint256,uint256,address)'
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_chef_contract(web3, block, blockchain, v1=False):
     """
-
     :param web3:
     :param block:
     :param blockchain:
@@ -102,7 +86,6 @@ def get_chef_contract(web3, block, blockchain, v1=False):
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_pool_info(web3, lptoken_address, block, blockchain, use_db=True):
     """
-
     :param web3:
     :param lptoken_address:
     :param block:
@@ -214,7 +197,6 @@ def get_pool_info(web3, lptoken_address, block, blockchain, use_db=True):
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
     """
-
     :param lptoken_address:
     :param block:
     :param blockchain:
@@ -236,13 +218,13 @@ def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
     lptoken_data['reserves'] = lptoken_data['contract'].functions.getReserves().call(block_identifier=block)
     lptoken_data['kLast'] = lptoken_data['contract'].functions.kLast().call(block_identifier=block)
 
-    root_k = math.sqrt(lptoken_data['reserves'][0] * lptoken_data['reserves'][1])
-    root_k_last = math.sqrt(lptoken_data['kLast'])
+    root_k = (Decimal(lptoken_data['reserves'][0]) * Decimal(lptoken_data['reserves'][1])).sqrt()
+    root_k_last = Decimal(lptoken_data['kLast']).sqrt()
 
     if root_k > root_k_last:
         lptoken_data['virtualTotalSupply'] = lptoken_data['totalSupply'] * 6 * root_k / (5 * root_k + root_k_last)
     else:
-        lptoken_data['virtualTotalSupply'] = lptoken_data['totalSupply']
+        lptoken_data['virtualTotalSupply'] = Decimal(lptoken_data['totalSupply'])
 
     return lptoken_data
 
@@ -273,11 +255,10 @@ def get_virtual_total_supply(lptoken_address, block, blockchain, web3=None):
     lptoken_data['reserves'] = lptoken_data['contract'].functions.getReserves().call(block_identifier=block)
     lptoken_data['kLast'] = lptoken_data['contract'].functions.kLast().call(block_identifier=block)
 
-    root_k = math.sqrt(lptoken_data['reserves'][0] * lptoken_data['reserves'][1])
-    root_k_last = math.sqrt(lptoken_data['kLast'])
+    root_k = (Decimal(lptoken_data['reserves'][0]) * Decimal(lptoken_data['reserves'][1])).sqrt()
+    root_k_last = Decimal(lptoken_data['kLast']).sqrt()
 
     return lptoken_data['totalSupply'] * 6 * root_k / (5 * root_k + root_k_last)
-
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -285,7 +266,6 @@ def get_virtual_total_supply(lptoken_address, block, blockchain, web3=None):
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_rewarder_contract(web3, block, blockchain, chef_contract, pool_id):
     """
-
     :param web3:
     :param block:
     :param blockchain:
@@ -310,7 +290,6 @@ def get_rewarder_contract(web3, block, blockchain, chef_contract, pool_id):
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_sushi_rewards(web3, wallet, chef_contract, pool_id, block, blockchain, decimals=True):
     """
-
     :param web3:
     :param wallet:
     :param chef_contract:
@@ -322,18 +301,12 @@ def get_sushi_rewards(web3, wallet, chef_contract, pool_id, block, blockchain, d
     """
     try:
         sushi_address = const_call(chef_contract.functions.SUSHI())
-    except:
+    except ABIFunctionNotFound:
         sushi_address = const_call(chef_contract.functions.sushi())
 
-    if decimals is True:
-        sushi_decimals = get_decimals(sushi_address, blockchain, web3=web3)
-    else:
-        sushi_decimals = 0
+    sushi_rewards = chef_contract.functions.pendingSushi(pool_id, wallet).call(block_identifier=block)
 
-    sushi_rewards = chef_contract.functions.pendingSushi(pool_id, wallet).call(block_identifier=block) / (
-                10 ** sushi_decimals)
-
-    return [sushi_address, sushi_rewards]
+    return [sushi_address, to_token_amount(sushi_address, sushi_rewards, blockchain, web3, decimals)]
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -344,7 +317,6 @@ def get_sushi_rewards(web3, wallet, chef_contract, pool_id, block, blockchain, d
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_rewards(web3, wallet, chef_contract, pool_id, block, blockchain, decimals=True):
     """
-
     :param web3:
     :param wallet:
     :param chef_contract:
@@ -358,21 +330,17 @@ def get_rewards(web3, wallet, chef_contract, pool_id, block, blockchain, decimal
 
     rewarder_contract = get_rewarder_contract(web3, block, blockchain, chef_contract, pool_id)
 
-    if rewarder_contract != None:
+    if rewarder_contract is not None:
         pending_tokens_info = rewarder_contract.functions.pendingTokens(pool_id, wallet, 1).call(block_identifier=block)
         pending_tokens_addresses = pending_tokens_info[0]
         pending_token_amounts = pending_tokens_info[1]
 
         for i in range(len(pending_tokens_addresses)):
-
-            if decimals is True:
-                reward_token_decimals = get_decimals(pending_tokens_addresses[i], blockchain, web3=web3)
-            else:
-                reward_token_decimals = 0
-
-            reward_token_amount = pending_token_amounts[i] / (10 ** reward_token_decimals)
-
-            rewards.append([pending_tokens_addresses[i], reward_token_amount])
+            rewards.append([pending_tokens_addresses[i], to_token_amount(pending_tokens_addresses[i],
+                                                                         pending_token_amounts[i],
+                                                                         blockchain,
+                                                                         web3,
+                                                                         decimals)])
 
     return rewards
 
@@ -388,27 +356,23 @@ def get_rewards(web3, wallet, chef_contract, pool_id, block, blockchain, decimal
 def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decimals=True,
                     pool_info=None):
     """
-
     :param wallet:
     :param lptoken_address:
     :param block:
     :param blockchain:
     :param web3:
-    :param execution:
-    :param index:
     :param decimals:
     :param pool_info:
     :return:
     """
-
     all_rewards = []
 
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     if pool_info is None:
         pool_info = get_pool_info(web3, lptoken_address, block, blockchain)
@@ -445,14 +409,11 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
 def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=True,
                reward=False):
     """
-
     :param wallet:
     :param lptoken_address:
     :param block:
     :param blockchain:
     :param web3:
-    :param execution:
-    :param index:
     :param decimals:
     :param reward:
     :return:
@@ -464,9 +425,9 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=T
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     pool_info = get_pool_info(web3, lptoken_address, block, blockchain)
 
@@ -479,28 +440,22 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=T
 
     lptoken_data = get_lptoken_data(lptoken_address, block, blockchain, web3=web3)
 
-    pool_balance_fraction = lptoken_data['contract'].functions.balanceOf(wallet).call(block_identifier=block) / \
-                            lptoken_data['virtualTotalSupply']
-    pool_staked_fraction = chef_contract.functions.userInfo(pool_id, wallet).call(block_identifier=block)[0] / \
-                           lptoken_data['virtualTotalSupply']
+    pool_balance_fraction = lptoken_data['contract'].functions.balanceOf(wallet).call(block_identifier=block)
+    pool_balance_fraction /= Decimal(lptoken_data['virtualTotalSupply'])
 
-    for i in range(len(lptoken_data['reserves'])):
+    pool_staked_fraction = chef_contract.functions.userInfo(pool_id, wallet).call(block_identifier=block)[0]
+    pool_staked_fraction /= Decimal(lptoken_data['virtualTotalSupply'])
+
+    for n, reserve in enumerate(lptoken_data['reserves']):
         try:
-            getattr(lptoken_data['contract'].functions, 'token' + str(i))
-        except:
+            getattr(lptoken_data['contract'].functions, 'token' + str(n))
+        except AttributeError:
             continue
 
-        token_address = lptoken_data['token' + str(i)]
+        token_address = lptoken_data['token' + str(n)]
+        token_balance = to_token_amount(token_address, reserve, blockchain, web3, decimals)
 
-        if decimals is True:
-            token_decimals = get_decimals(token_address, blockchain, web3=web3)
-        else:
-            token_decimals = 0
-
-        token_balance = lptoken_data['reserves'][i] / (10 ** token_decimals) * (pool_balance_fraction)
-        token_staked = lptoken_data['reserves'][i] / (10 ** token_decimals) * (pool_staked_fraction)
-
-        balances.append([token_address, token_balance, token_staked])
+        balances.append([token_address, token_balance * pool_balance_fraction, token_balance * pool_staked_fraction])
 
     if reward is True:
         all_rewards = get_all_rewards(wallet, lptoken_address, block, blockchain, web3=web3, decimals=decimals,
@@ -524,13 +479,10 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=T
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
     """
-
     :param lptoken_address:
     :param block:
     :param blockchain:
     :param web3:
-    :param execution:
-    :param index:
     :param decimals:
     :return:
     """
@@ -539,27 +491,17 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
-
     reserves = lptoken_contract.functions.getReserves().call(block_identifier=block)
 
-    for i in range(len(reserves)):
-        func = getattr(lptoken_contract.functions, 'token' + str(i), None)
+    for n, reserve in enumerate(reserves):
+        func = getattr(lptoken_contract.functions, 'token' + str(n), None)
         if func is None:
             continue
-
         token_address = const_call(func())
-
-        if decimals is True:
-            token_decimals = get_decimals(token_address, blockchain, web3=web3)
-        else:
-            token_decimals = 0
-
-        token_balance = reserves[i] / (10 ** token_decimals)
-
-        balances.append([token_address, token_balance])
+        balances.append([token_address, to_token_amount(token_address, reserve, blockchain, web3, decimals)])
 
     return balances
 
@@ -571,14 +513,11 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, decimals=True):
     """
-
     :param lptoken_address:
     :param block_start:
     :param block_end:
     :param blockchain:
     :param web3:
-    :param execution:
-    :param index:
     :param decimals:
     :return:
     """
@@ -588,7 +527,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
     if web3 is None:
         web3 = get_node(blockchain, block=block_start)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block_start)
 
@@ -596,12 +535,8 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
     token1 = const_call(lptoken_contract.functions.token1())
     result['swaps'] = []
 
-    if decimals is True:
-        decimals0 = get_decimals(token0, blockchain, web3=web3)
-        decimals1 = get_decimals(token1, blockchain, web3=web3)
-    else:
-        decimals0 = 0
-        decimals1 = 0
+    decimals0 = get_decimals(token0, blockchain, web3=web3) if decimals else Decimal('0')
+    decimals1 = get_decimals(token1, blockchain, web3=web3) if decimals else Decimal('0')
 
     get_logs_bool = True
     block_from = block_start
@@ -631,13 +566,13 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
                     swap_data = {
                         'block': block_number,
                         'token': token1,
-                        'amount': 0.003 * int(swap_log['data'][67:130], 16) / (10 ** decimals1)
+                        'amount': Decimal('0.003') * int(swap_log['data'][67:130], 16) / Decimal(10 ** decimals1)
                     }
                 else:
                     swap_data = {
                         'block': block_number,
                         'token': token0,
-                        'amount': 0.003 * int(swap_log['data'][2:66], 16) / (10 ** decimals0)
+                        'amount': Decimal('0.003') * int(swap_log['data'][2:66], 16) / Decimal(10 ** decimals0)
                     }
 
                 result['swaps'].append(swap_data)
@@ -659,13 +594,10 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
 def get_wallet_by_tx(lptoken_address, block, blockchain, web3=None,
                      signature=DEPOSIT_EVENT_SIGNATURE):
     """
-
     :param lptoken_address:
     :param block:
     :param blockchain:
     :param web3:
-    :param execution:
-    :param index:
     :param signature:
     :return:
     """
@@ -673,7 +605,7 @@ def get_wallet_by_tx(lptoken_address, block, blockchain, web3=None,
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     if isinstance(block, str):
         if block == 'latest':
@@ -707,12 +639,9 @@ def get_wallet_by_tx(lptoken_address, block, blockchain, web3=None,
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_rewards_per_unit(lptoken_address, blockchain, web3=None, block='latest'):
     """
-
     :param lptoken_address:
     :param blockchain:
     :param web3:
-    :param execution:
-    :param index:
     :param block:
     :return:
     """
@@ -721,7 +650,7 @@ def get_rewards_per_unit(lptoken_address, blockchain, web3=None, block='latest')
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     pool_info = get_pool_info(web3, lptoken_address, block, blockchain)
 
@@ -736,15 +665,15 @@ def get_rewards_per_unit(lptoken_address, blockchain, web3=None, block='latest')
 
     try:
         sushi_reward_data['sushi_address'] = const_call(chef_contract.functions.SUSHI())
-    except:
+    except ABIFunctionNotFound:
         sushi_reward_data['sushi_address'] = const_call(chef_contract.functions.sushi())
 
     try:
         sushi_reward_data['sushiPerBlock'] = chef_contract.functions.sushiPerBlock().call(
-            block_identifier=block) * (pool_info['pool_info']['allocPoint'] / pool_info['totalAllocPoint'])
-    except:
+            block_identifier=block) * (pool_info['pool_info']['allocPoint'] / Decimal(pool_info['totalAllocPoint']))
+    except ABIFunctionNotFound:
         sushi_reward_data['sushiPerSecond'] = chef_contract.functions.sushiPerSecond().call(
-            block_identifier=block) * (pool_info['pool_info']['allocPoint'] / pool_info['totalAllocPoint'])
+            block_identifier=block) * (pool_info['pool_info']['allocPoint'] / Decimal(pool_info['totalAllocPoint']))
 
     result.append(sushi_reward_data)
 
@@ -765,9 +694,9 @@ def get_rewards_per_unit(lptoken_address, blockchain, web3=None, block='latest')
 
         try:
             reward_data['rewardPerSecond'] = rewarder_contract.functions.rewardPerSecond().call(
-                block_identifier=block) * (rewarder_alloc_point / rewarder_total_alloc_point)
+                block_identifier=block) * (rewarder_alloc_point / Decimal(rewarder_total_alloc_point))
         except:
-            reward_data['rewardPerSecond'] = 0
+            reward_data['rewardPerSecond'] = Decimal(0)
 
         result.append(reward_data)
 

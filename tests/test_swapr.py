@@ -30,17 +30,17 @@ def test_get_distribution_contracts(campaigns, db):
 
 def test_get_lptoken_data():
     x = Swapr.get_lptoken_data(DXS, TEST_BLOCK, XDAI, WEB3)
-    expected =  {'decimals': 18,
-                 'totalSupply': 94233751915117971705,
-                 'token0': BER_XDAI,
-                 'token1': GNO_XDAI,
-                 'reserves': [1071822921647535396369, 8286413444006866465, 1677145545],
-                 'kLast': 8880000000000000000000000000000000000000,
-                 'virtualTotalSupply': 9.423513825757097e+19}
+    expected = {'decimals': 18,
+                'totalSupply': 94233751915117971705,
+                'token0': BER_XDAI,
+                'token1': GNO_XDAI,
+                'reserves': [1071822921647535396369, 8286413444006866465, 1677145545],
+                'kLast': 8880000000000000000000000000000000000000,
+                'virtualTotalSupply': Decimal('94235138257570979954.58402272')}
     assert {k: x[k] for k in expected} == expected
 
 
-#FIXME: this function can't be tested for db=False because it takes forever
+# FIXME: this function can't be tested for db=False because it takes forever
 @pytest.mark.parametrize('campaigns', [0, 1, 'all'])
 @pytest.mark.parametrize('db', [True])
 def test_get_all_rewards(campaigns, db):
@@ -50,7 +50,7 @@ def test_get_all_rewards(campaigns, db):
     assert x == []
 
 
-#FIXME: this function can't be tested for db=False because it takes forever
+# FIXME: this function can't be tested for db=False because it takes forever
 @pytest.mark.parametrize('campaigns', [0, 1, 'all'])
 @pytest.mark.parametrize('db', [True])
 @pytest.mark.parametrize('decimals', [True, False])
@@ -58,23 +58,23 @@ def test_get_all_rewards(campaigns, db):
 def test_underlying(campaigns, db, decimals, reward):
     x = Swapr.underlying(TEST_WALLET, DXS, TEST_BLOCK, XDAI, WEB3,
                          decimals=decimals, reward=reward, campaigns=campaigns, db=db)
-    y = Decimal(10 ** (18 if decimals else 0))
-    assert x == [[BER_XDAI, Decimal('1071807153499413047954.911589') / y, 0.0],
-                 [GNO_XDAI, Decimal('8286291538240578806.716100750') / y, 0.0]]
+    y = Decimal(10**18 if decimals else 1)
+    assert x == [[BER_XDAI, Decimal('1071807153499412909748.616424') / y, Decimal('0')],
+                 [GNO_XDAI, Decimal('8286291538240577738.223834754') / y, Decimal('0')]]
 
 
 @pytest.mark.parametrize('decimals', [True, False])
 def test_pool_balances(decimals):
     x = Swapr.pool_balances(DXS, TEST_BLOCK, XDAI, WEB3, decimals=decimals)
-    y = Decimal(10 ** (18 if decimals else 0))
-    assert x == [[BER_XDAI, Decimal(1071822921647535396369) / y],
-                 [GNO_XDAI, Decimal(8286413444006866465) / y]]
+    y = Decimal(10**18 if decimals else 1)
+    assert x == [[BER_XDAI, Decimal('1071822921647535396369') / y],
+                 [GNO_XDAI, Decimal('8286413444006866465') / y]]
 
 
-@pytest.mark.parametrize('decimals', [True, False])
+@pytest.mark.parametrize('decimals', [False, True])
 def test_swap_fees(decimals):
     x = Swapr.swap_fees(DXS, TEST_BLOCK - 100, 27568826, XDAI, WEB3, decimals=decimals)
-    y = Decimal(10 ** (18 if decimals else 0))
+    y = Decimal(10**18 if decimals else 1)
     assert x['swaps'] == [{'block': 27494581, 'token': BER_XDAI, 'amount': Decimal('249999999999999999.8900') / y},
                           {'block': 27494618, 'token': BER_XDAI, 'amount': Decimal('1562499999999999999.3975') / y},
                           {'block': 27494972, 'token': GNO_XDAI, 'amount': Decimal('2537125747349638.0950') / y},

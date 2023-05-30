@@ -4,8 +4,9 @@ import os
 from pathlib import Path
 from decimal import Decimal
 from typing import Union
+from web3 import Web3
 
-from defi_protocols.functions import get_node, get_contract, get_decimals
+from defi_protocols.functions import get_node, get_contract, to_token_amount
 from defi_protocols.constants import ABI_TOKEN_SIMPLIFIED, ETHEREUM
 from defi_protocols.util.topic import decode_address_hexor
 from defi_protocols.cache import const_call
@@ -54,6 +55,7 @@ ABI_GAUGE: str = '[{"stateMutability":"view","type":"function","name":"decimals"
             {"stateMutability":"view","type":"function","name":"reward_tokens","inputs":[{"name":"arg0","type":"uint256"}],"outputs":[{"name":"","type":"address"}],"gas":3723}]'
 
 ABI_CDO_PROXY: str = '[{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"proxy","type":"address"}],"name":"CDODeployed","type":"event"},{"inputs":[{"internalType":"address","name":"implementation","type":"address"},{"internalType":"address","name":"admin","type":"address"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"deployCDO","outputs":[],"stateMutability":"nonpayable","type":"function"}]'
+
 
 # function for getting all addresses you need to get underlying
 def get_addresses(block: Union[int, str], blockchain: str, web3=None,
@@ -106,29 +108,22 @@ def get_all_rewards(wallet: str, gauge_address: str, block: Union[int, str], blo
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
     gauge_contract = get_contract(gauge_address, blockchain, web3=web3, abi=ABI_GAUGE, block=block)
     idle_rewards = gauge_contract.functions.claimable_tokens(wallet).call(block_identifier=block)
-    if decimals:
-        token_decimals = get_decimals(IDLE_TOKEN, blockchain, web3=web3)
-        rewards.append([IDLE_TOKEN, idle_rewards / (10 ** token_decimals)])
-    else:
-        rewards.append([IDLE_TOKEN, idle_rewards])
+    rewards.append([IDLE_TOKEN, to_token_amount(IDLE_TOKEN, idle_rewards, blockchain, web3, decimals)])
 
     for i in range(0, 10):
         reward_tokens = gauge_contract.functions.reward_tokens(i).call()
         if reward_tokens == '0x0000000000000000000000000000000000000000':
             break
-        claimable_rewards = gauge_contract.functions.claimable_reward_write(wallet, reward_tokens).call(
-            block_identifier=block)
-        claimed_rewards = gauge_contract.functions.claimed_reward(wallet, reward_tokens).call(
-            block_identifier=block)
-        if decimals:
-            token_decimals = get_decimals(reward_tokens, blockchain, web3=web3)
-            rewards.append([reward_tokens, (claimable_rewards + claimed_rewards) / 10 ** token_decimals])
-        else:
-            rewards.append([reward_tokens, claimable_rewards + claimed_rewards])
+        claimable_rewards = gauge_contract.functions.claimable_reward_write(wallet, reward_tokens).call(block_identifier=block)
+        claimed_rewards = gauge_contract.functions.claimed_reward(wallet, reward_tokens).call(block_identifier=block)
+        all_rewards = claimable_rewards + claimed_rewards
+        rewards.append([reward_tokens, to_token_amount(reward_tokens, all_rewards, blockchain, web3, decimals)])
+
     return rewards
+
 
 def get_amounts(underlying_address: str, cdo_address: str, aa_address: str, bb_address: str, gauge_address: str,
                 wallet: str, block: Union[int, str], blockchain: str, web3=None, decimals: bool = True) -> list:
@@ -137,7 +132,7 @@ def get_amounts(underlying_address: str, cdo_address: str, aa_address: str, bb_a
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
     cdo_contract = get_contract(cdo_address, blockchain, web3=web3, abi=ABI_CDO_IDLE, block=block)
     aa_contract = get_contract(aa_address, blockchain, web3=web3, abi=ABI_TOKEN_SIMPLIFIED, block=block)
     bb_contract = get_contract(bb_address, blockchain, web3=web3, abi=ABI_TOKEN_SIMPLIFIED, block=block)
@@ -152,21 +147,18 @@ def get_amounts(underlying_address: str, cdo_address: str, aa_address: str, bb_a
     bb_balance = bb_contract.functions.balanceOf(wallet).call(block_identifier=block) * (
                 cdo_contract.functions.virtualPrice(bb_address).call(block_identifier=block) / Decimal(10 ** 18))
 
-    if decimals:
-        decimals_underlying = const_call(aa_contract.functions.decimals())
-        [balances.append([underlying_address, float(i / Decimal(10 ** decimals_underlying))]) for i in
-         [aa_balance, bb_balance, gauge_balance] if i != 0]
-        return balances
-    else:
-        [balances.append([underlying_address, i]) for i in [aa_balance, bb_balance, gauge_balance] if i != 0]
-        return balances
+    for balance in [aa_balance, bb_balance, gauge_balance]:
+        if balance != 0:
+            balances.append([underlying_address, to_token_amount(aa_address, balance, blockchain, web3, decimals)])
+
+    return balances
 
 
 def underlying(token_address: str, wallet: str, block: Union[int, str], blockchain: str, web3=None,
                decimals: bool = True, db: bool = True, rewards: bool = False) -> list:
     if web3 is None:
         web3 = get_node(blockchain, block)
-    token_address = web3.to_checksum_address(token_address)
+    token_address = Web3.to_checksum_address(token_address)
 
     if db:
         file = open(str(Path(os.path.abspath(__file__)).resolve().parents[0]) + '/db/Idle_db.json')

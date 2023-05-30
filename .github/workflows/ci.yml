@@ -1,13 +1,6 @@
 name: Defi Protocols
 
-on: 
-  push:
-    branches:
-      - main
-    
-  pull_request:
-    branches:
-      - main
+on: [push]
 
 jobs:
   Test:
@@ -27,17 +20,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install .
       - name: Run tests
+        env:
+          CI: true
+          NODE_ETH: ${{ secrets.NODE_ETH }}
+          NODE_XDAI: ${{ secrets.NODE_XDAI }}
+          NODE_POLYGON: ${{ secrets.NODE_POLYGON }}
+          NODE_OPTIMISM: ${{ secrets.NODE_OPTIMISM }}
+          APIKEYS_ETHERSCAN: ${{ secrets.APIKEYS_ETHERSCAN }}
+          APIKEYS_POLSCAN: ${{ secrets.APIKEYS_POLSCAN }}
         run: |
           pip install -r requirements-dev.txt
-          cat defi_protocols/config.json |\
-            jq --arg node_eth ${{ secrets.NODE_ETH }} \
-               --arg node_xdai ${{ secrets.NODE_XDAI }} \
-               '.nodes.ethereum.latest = [$node_eth] | .nodes.ethereum.archival = [$node_eth] | .nodes.xdai.archival = [$node_xdai]' | \
-            jq --arg etherscan ${{ secrets.APIKEYS_ETHERSCAN }} \
-               --arg polscan ${{ secrets.APIKEYS_POLSCAN }} \
-               '.apikeys.etherscan = $etherscan | .apikeys.polscan = $polscan' | \
-            jq --arg node_polygon ${{ secrets.NODE_POLYGON }} '.nodes.polygon.archival = [$node_polygon]' \
-            > /tmp/tmp_config.json
+          sh ci_secrets_helper.sh
+          cat /tmp/tmp_config.json
           PYTHONPATH=${PYTHONPATH}:. CONFIG_PATH=/tmp/tmp_config.json pytest -vs
       - name: Archive cache
         uses: actions/upload-artifact@v3

@@ -14,5 +14,5 @@ WXDAI = '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d'
 @pytest.mark.parametrize('decimals', [False, True])
 def test_underlying(decimals):
     x = RealT.underlying(TEST_WALLET, TEST_BLOCK, XDAI, WEB3, decimals=decimals)
-    b = Decimal(702419123657008433506235) / Decimal(10**(18 if decimals else 0))
+    b = Decimal(702419123657008433506235) / Decimal(10**18 if decimals else 1)
     assert x == [[WXDAI, b]]

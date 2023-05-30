@@ -1,3 +1,5 @@
+from web3 import Web3
+
 from defi_protocols.functions import get_node, get_contract, get_decimals, GetNodeIndexError
 from defi_protocols.constants import ETHEREUM, POLYGON, XDAI, BINANCE, KOVAN, OPTIMISM, ARBITRUM, AVAX, MAX_EXECUTIONS, ZERO_ADDRESS
 from defi_protocols.prices import Chainlink
@@ -95,10 +97,10 @@ def get_rate(token_src, block, blockchain, web3=None, execution=1, index=0, use_
         if web3 is None:
             web3 = get_node(blockchain, block=block)
 
-        token_src = web3.to_checksum_address(token_src)
+        token_src = Web3.to_checksum_address(token_src)
 
         if token_dst is not None:
-            token_dst = web3.to_checksum_address(token_dst)
+            token_dst = Web3.to_checksum_address(token_dst)
 
         oracle_address = get_oracle_address(blockchain)
         oracle_contract = get_contract(oracle_address, blockchain, web3=web3, abi=ABI_ORACLE, block=block)
@@ -160,7 +162,7 @@ def get_price(token_src, block, blockchain, web3=None, execution=1, index=0, use
         if web3 is None:
             web3 = get_node(blockchain, block=block)
 
-        token_src = web3.to_checksum_address(token_src)
+        token_src = Web3.to_checksum_address(token_src)
 
         native_token_price = Chainlink.get_native_token_price(web3, block, blockchain)
 
@@ -172,7 +174,7 @@ def get_price(token_src, block, blockchain, web3=None, execution=1, index=0, use
                 rate = get_rate(token_src, block, blockchain, use_wrappers=use_wrappers)
                 token_src_price = native_token_price * rate
             else:
-                connector = web3.to_checksum_address(connector)
+                connector = Web3.to_checksum_address(connector)
 
                 rate = get_rate(token_src, block, blockchain, token_dst=connector, use_wrappers=use_wrappers)
                 connector_price = get_price(connector, block, blockchain, use_wrappers=use_wrappers)

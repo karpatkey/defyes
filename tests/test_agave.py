@@ -42,9 +42,11 @@ GNOSIS_SAFE_UNDERLYING_ALL_WITH_REWARDS = \
  ['0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1', Decimal('552005140092550220243')],
  ['0x4ECaBa5870353805a9F068101A40E0f32ed605C6', Decimal('311298154329')],
  ['0x3a97704a1b25F08aa230ae53B352e2e72ef52843', Decimal('0')]]
-GNOSIS_SAFE_DATA = {'liquidation_ratio': 127.04865963664083,
+
+# TODO: use descriptive constants
+GNOSIS_SAFE_DATA = {'collateral_ratio': Decimal('Infinity'),
+                    'liquidation_ratio': Decimal('127.0486596366408334392072164'),
                     'xdai_price_usd': Decimal('0.99974566'),
-                    'collateral_ratio': float('infinity'),
                     'collaterals': [{'token_address': '0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83',
                                      'token_amount': Decimal('861490.60953'),
                                      'token_price_usd': Decimal('0.99985874999999999944370486')},
@@ -61,9 +63,6 @@ GNOSIS_SAFE_DATA = {'liquidation_ratio': 127.04865963664083,
                                      'token_amount': Decimal('311298.154329'),
                                      'token_price_usd': Decimal('1.00050699999999999942231082')}],
                     'debts': []}
-    # TODO: use descriptive constants
-
-
 
 # https://gnosisscan.io/address/0x24dcbd376db23e4771375092344f5cbea3541fc0#readContract
 # getAllReservesTokens
@@ -120,8 +119,8 @@ def test_get_apr(apy):
     TOKEN_ADDRESS = '0x3a97704a1b25F08aa230ae53B352e2e72ef52843'
     apr = Agave.get_apr(TOKEN_ADDRESS, TEST_BLOCK, XDAI, web3=WEB3, apy=apy)
     # FIXME: make this more interesting:
-    assert apr == {True: [{'metric': 'apy', 'type': 'supply', 'value': 0.0}, {'metric': 'apy', 'type': 'variable_borrow', 'value': 0.0}, {'metric': 'apy', 'type': 'stable_borrow', 'value': 0.0}],
-                   False: [{'metric': 'apr', 'type': 'supply', 'value': 0.0}, {'metric': 'apr', 'type': 'variable_borrow', 'value': 0.0}, {'metric': 'apr', 'type': 'stable_borrow', 'value': 0.0}]}[apy]
+    assert apr == {True: [{'metric': 'apy', 'type': 'supply', 'value': Decimal('0')}, {'metric': 'apy', 'type': 'variable_borrow', 'value': Decimal('0')}, {'metric': 'apy', 'type': 'stable_borrow', 'value': Decimal('0')}],
+                   False: [{'metric': 'apr', 'type': 'supply', 'value': Decimal('0')}, {'metric': 'apr', 'type': 'variable_borrow', 'value': Decimal('0')}, {'metric': 'apr', 'type': 'stable_borrow', 'value': Decimal('0')}]}[apy]
 
 
 # FIXME: This test seems to depend on fluctuating values
@@ -129,17 +128,16 @@ def test_get_apr(apy):
 def test_get_staking_apr(apy):
     TOKEN_ADDRESS = '0x3a97704a1b25F08aa230ae53B352e2e72ef52843'
     stk_apr = Agave.get_staking_apr(TEST_BLOCK, XDAI, web3=WEB3, apy=apy)
-    assert stk_apr == {True: [{'metric': 'apy', 'type': 'staking', 'value': 0.12741271642245144}],
-                       False: [{'metric': 'apr', 'type': 'staking', 'value': 0.1199253794401285}]}[apy]
+    assert stk_apr == {True: [{'metric': 'apy', 'type': 'staking', 'value': Decimal('0.127412720014978996749268306')}],
+                       False: [{'metric': 'apr', 'type': 'staking', 'value': Decimal('0.1199253794401285060793250841')}]}[apy]
 
 
 @pytest.mark.parametrize('wallet_address', [TEST_WALLET_ADDRESS, UNUSED_ADDRESS])
 @pytest.mark.parametrize('decimals', [True, False])
 def test_get_staked(wallet_address, decimals):
 
-    expected = {TEST_WALLET_ADDRESS: Decimal('103630383543378402291') / Decimal(10 ** (18 if decimals else 0)),
+    expected = {TEST_WALLET_ADDRESS: Decimal('103630383543378402291') / Decimal(10**18 if decimals else 1),
                 UNUSED_ADDRESS: 0}[wallet_address]
 
     data = Agave.get_staked(wallet_address, block=TEST_BLOCK, blockchain=XDAI, web3=WEB3, decimals=decimals)
     assert data == [[AGVE_XDAI, expected]]
-

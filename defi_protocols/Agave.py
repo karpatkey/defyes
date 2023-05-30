@@ -1,4 +1,4 @@
-'''
+"""
 Agave is the DeFi lending protocol on Gnosis.
 
 Agave rewards depositors with passive income
@@ -7,13 +7,14 @@ to borrow and lend digital assets.
 
 Agave is a fork of Aave, built by the
 1Hive community and deployed on the xDai chain
-'''
+"""
 
 import logging
 from typing import Union, List, Dict
 from decimal import Decimal
+from web3 import Web3
 
-from defi_protocols.functions import get_node, get_contract, get_decimals, balance_of
+from defi_protocols.functions import get_node, get_contract, balance_of, to_token_amount
 from defi_protocols.constants import AGVE_XDAI, STKAGAVE_XDAI
 
 
@@ -75,20 +76,16 @@ def get_reserves_tokens_balances(web3, wallet: str, block: Union[int, str], bloc
     balances = []
 
     pdp_contract = get_contract(PDP_XDAI, blockchain, web3=web3, abi=ABI_PDP, block=block)
-
     reserves_tokens = get_reserves_tokens(pdp_contract, block)
-
-    cs_wallet = web3.to_checksum_address(wallet)
+    cs_wallet = Web3.to_checksum_address(wallet)
 
     for token in reserves_tokens:
         user_reserve_data = pdp_contract.functions.getUserReserveData(token, cs_wallet).call(block_identifier=block)
-
         currentATokenBalance, currentStableDebt, currentVariableDebt, *_ = user_reserve_data
-        balance = Decimal(currentATokenBalance - currentStableDebt - currentVariableDebt)
-        token_decimals = get_decimals(token, blockchain, web3=web3) if decimals else 0
+        balance = currentATokenBalance - currentStableDebt - currentVariableDebt
 
         if balance != 0:
-            balances.append([token, balance / Decimal(10 ** token_decimals)])
+            balances.append([token, to_token_amount(token, balance, blockchain, web3, decimals)])
 
     return balances
 
@@ -103,7 +100,7 @@ def get_data(wallet: str, block: Union[int, str], blockchain: str,
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
     lpapr_contract = get_contract(LPAPR_XDAI, blockchain, web3=web3, abi=ABI_LPAPR, block=block)
 
@@ -119,16 +116,12 @@ def get_data(wallet: str, block: Union[int, str], blockchain: str,
 
     balances = get_reserves_tokens_balances(web3, wallet, block, blockchain, decimals=decimals)
 
-    if len(balances) > 0:
-
+    if balances:
         price_oracle_address = lpapr_contract.functions.getPriceOracle().call()
         price_oracle_contract = get_contract(price_oracle_address, blockchain, web3=web3, abi=ABI_PRICE_ORACLE, block=block)
 
         for balance in balances:
-            asset = {}
-
-            asset['token_address'] = balance[0]
-            asset['token_amount'] = abs(balance[1])
+            asset = {'token_address': balance[0], 'token_amount': abs(balance[1])}
 
             token_price_usd = price_oracle_contract.functions.getAssetPrice(asset['token_address']).call(block_identifier=block)
             asset['token_price_usd'] = Decimal(token_price_usd) / Decimal(10 ** 18) * xdai_usd_price
@@ -151,16 +144,16 @@ def get_data(wallet: str, block: Union[int, str], blockchain: str,
 
     if total_collateral_ETH > 0:
         if total_debt_ETH > 0:
-            agave_data['collateral_ratio'] = 100 * total_collateral_ETH / total_debt_ETH
+            agave_data['collateral_ratio'] = 100 * total_collateral_ETH / Decimal(total_debt_ETH)
         else:
-            agave_data['collateral_ratio'] = float('infinity')
+            agave_data['collateral_ratio'] = Decimal('infinity')
     else:
-        agave_data['collateral_ratio'] = float('nan')
+        agave_data['collateral_ratio'] = Decimal('nan')
 
     if current_liquidation_th > 0:
-        agave_data['liquidation_ratio'] = 1000000 / current_liquidation_th
+        agave_data['liquidation_ratio'] = 1000000 / Decimal(current_liquidation_th)
     else:
-        agave_data['liquidation_ratio'] = float('infinity')
+        agave_data['liquidation_ratio'] = Decimal('infinity')
 
     # Ether price in USD
     agave_data['xdai_price_usd'] = xdai_usd_price
@@ -176,42 +169,38 @@ def get_data(wallet: str, block: Union[int, str], blockchain: str,
 
 def get_all_rewards(wallet: str, block: Union[int, str], blockchain: str,
                     web3=None, decimals: bool = True) -> List[List]:
-    '''
+    """
     Output: List of 2-element lists: [[reward_token_1_address, balance_1], [t2, b2], ... ]
-    '''
+    """
 
     all_rewards = []
 
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
     stkagave_contract = get_contract(STKAGAVE_XDAI, blockchain, web3=web3, abi=ABI_STKAGAVE, block=block)
 
     reward_token = stkagave_contract.functions.REWARD_TOKEN().call()
 
-    reward_token_decimals = get_decimals(reward_token, blockchain, web3=web3) if decimals else 0
-
     reward_balance = stkagave_contract.functions.getTotalRewardsBalance(wallet).call(block_identifier=block)
 
-    reward_balance = Decimal(reward_balance) / Decimal(10 ** reward_token_decimals)
-
-    all_rewards.append([reward_token, reward_balance])
+    all_rewards.append([reward_token, to_token_amount(reward_token, reward_balance, blockchain, web3, decimals)])
 
     return all_rewards
 
 
 def underlying_all(wallet: str, block: Union[int, str], blockchain: str,
                    web3=None, decimals: bool = True, reward: bool = False) -> List[List]:
-    '''
+    """
     Output: a list of 2-element lists: [[token_1_address, balance_1], [t2, b2], ... ].
-    '''
+    """
 
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
     balances = get_reserves_tokens_balances(web3, wallet, block, blockchain, decimals=decimals)
 
@@ -225,12 +214,12 @@ def underlying_all(wallet: str, block: Union[int, str], blockchain: str,
 
 def get_apr(token_address: str, block: Union[int, str], blockchain: str,
             web3=None, apy: bool = False) -> List[Dict]:
-    '''
+    """
     Output:
         [{'metric': 'apr'/'apy', 'type': 'supply', 'value': supply_apr/supply_apy},
          {'metric': 'apr'/'apy', 'type': 'variable_borrow', 'value': borrow_apr/borrow_apy},
          {'metric': 'apr'/'apy', 'type': 'stable_borrow', 'value': borrow_apr/borrow_apy}]
-    '''
+    """
 
     if web3 is None:
         web3 = get_node(blockchain, block=block)
@@ -247,18 +236,14 @@ def get_apr(token_address: str, block: Union[int, str], blockchain: str,
     variable_borrow_rate = reserve_data[4]
     stable_borrow_rate = reserve_data[5]
 
-    ray = 10 ** 27
+    ray = Decimal(10 ** 27)
     seconds_per_year = 31536000
 
     deposit_apr = liquidity_rate / ray
     variable_borrow_apr = variable_borrow_rate / ray
     stable_borrow_apr = stable_borrow_rate / ray
 
-    deposit_apy = ((1 + (deposit_apr / seconds_per_year)) ** seconds_per_year) - 1
-    variable_borrow_apy = ((1 + (variable_borrow_apr / seconds_per_year)) ** seconds_per_year) - 1
-    stable_borrow_apy = ((1 + (stable_borrow_apr / seconds_per_year)) ** seconds_per_year) - 1
-
-    if apy is False:
+    if not apy:
         return [{'metric': 'apr', 'type': 'supply', 'value': deposit_apr},
                 {'metric': 'apr', 'type': 'variable_borrow', 'value': variable_borrow_apr},
                 {'metric': 'apr', 'type': 'stable_borrow', 'value': stable_borrow_apr}]
@@ -299,13 +284,12 @@ def get_staked(wallet: str, block: Union[int, str], blockchain: str,
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    agave_wallet = web3.to_checksum_address(wallet)
+    agave_wallet = Web3.to_checksum_address(wallet)
 
     stkagave_contract = get_contract(STKAGAVE_XDAI, blockchain, web3=web3, abi=ABI_STKAGAVE, block=block)
     stkagave_balance = stkagave_contract.functions.balanceOf(agave_wallet).call(block_identifier=block)
 
-    stkagave_decimals = stkagave_contract.functions.decimals().call() if decimals else 0
-    stkagave_balance = Decimal(stkagave_balance) / Decimal(10 ** stkagave_decimals)
+    stkagave_balance = to_token_amount(STKAGAVE_XDAI, stkagave_balance, blockchain, web3, decimals)
 
     if stkagve:
         balances.append([STKAGAVE_XDAI, stkagave_balance])

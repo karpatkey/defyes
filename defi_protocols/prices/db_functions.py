@@ -1,8 +1,9 @@
 import json
 import os
 from pathlib import Path
+from web3 import Web3
 
-from defi_protocols.functions import get_node, get_symbol
+from defi_protocols.functions import get_symbol
 from defi_protocols.constants import ETHEREUM, POLYGON, XDAI
 
 
@@ -14,19 +15,14 @@ def update_token_mapping(token_address_eth, token_address_pol, token_address_xda
     with open(str(Path(os.path.abspath(__file__)).resolve().parents[0]) + '/token_mapping.json', 'r') as db_file:
         db_data = json.load(db_file)
 
-    web3 = get_node(ETHEREUM)
-
     if token_address_xdai is not None and len(str(token_address_xdai)) > 0:
-        if not web3.is_checksum_address(token_address_xdai):
-            token_address_xdai = web3.to_checksum_address(token_address_xdai)
+        token_address_xdai = Web3.to_checksum_address(token_address_xdai)
 
     if token_address_eth is not None and len(str(token_address_eth)) > 0:
-        if not web3.is_checksum_address(token_address_eth):
-            token_address_eth = web3.to_checksum_address(token_address_eth)
+        token_address_eth = Web3.to_checksum_address(token_address_eth)
 
     if token_address_pol is not None and len(str(token_address_pol)) > 0:
-        if not web3.is_checksum_address(token_address_pol):
-            token_address_pol = web3.to_checksum_address(token_address_pol)
+        token_address_pol = Web3.to_checksum_address(token_address_pol)
 
     # XDAI Node
     if token_address_xdai is not None and len(str(token_address_xdai)) > 0:

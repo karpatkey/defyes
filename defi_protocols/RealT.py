@@ -1,5 +1,6 @@
 from typing import Union
 from decimal import Decimal
+from web3 import Web3
 
 from defi_protocols.functions import get_node, get_contract
 
@@ -19,7 +20,7 @@ def underlying(wallet: str, block: Union[int,str], blockchain: str,
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
     token_contract = get_contract(TOKEN_CONTRACT_XDAI, blockchain,
                                   web3, abi=TOKEN_CONTRACT_ABI)
     balance_of = Decimal(token_contract.functions.balanceOf(wallet).call(block_identifier=block))

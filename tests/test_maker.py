@@ -1,3 +1,4 @@
+from decimal import Decimal
 
 from defi_protocols import Maker
 from defi_protocols.functions import get_node
@@ -14,24 +15,24 @@ VAULT_ID = 27353
 
 def test_get_vault_data():
     x = Maker.get_vault_data(VAULT_ID, TEST_BLOCK, WEB3)
-    assert x == {'mat': 1.6,
+    assert x == {'mat': Decimal('1.6'),
                  'gem': ETHTokenAddr.wstETH,
-                 'dai': DAI_ETH, 
-                 'ink': 57328.918780519,
-                 'art': 21811755.174275193,
-                 'Art': 131281671.56044462,
-                 'rate': 1.0337823922958922,
-                 'spot': 1456.9286150664384,
-                 'line': 154522941.83599702,
-                 'dust': 7500.0}
+                 'dai': DAI_ETH,
+                 'ink': Decimal('57328.918780519001386926'),
+                 'art': Decimal('21811755.174275192209603126'),
+                 'Art': Decimal('131281671.560444627089962248'),
+                 'rate': Decimal('1.033782392295892171018325313'),
+                 'spot': Decimal('1456.9286150664385'),
+                 'line': Decimal('154522941.8359970071858062359'),
+                 'dust': Decimal('7500')}
 
 
 def test_underlying():
     x = Maker.underlying(VAULT_ID, TEST_BLOCK, WEB3)
-    assert x == [[ETHTokenAddr.wstETH, 57328.918780519],
-                 [DAI_ETH, -22548608.444234513]]
+    assert x == [[ETHTokenAddr.wstETH, Decimal('57328.918780519001386926')],
+                 [DAI_ETH, Decimal('-22548608.44423451266093976218')]]
 
 def test_get_delegated_MKR():
     x = Maker.get_delegated_MKR(TEST_WALLET, TEST_BLOCK, WEB3,
                                 decimals=False)
-    assert x == [[ETHTokenAddr.MKR, 583805204609736124092]]
+    assert x == [[ETHTokenAddr.MKR, Decimal('583805204609736124092')]]

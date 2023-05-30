@@ -1,6 +1,8 @@
+from decimal import Decimal
+from typing import Union
+
 from defi_protocols.functions import get_node, get_contract, balance_of
 from defi_protocols.constants import ETHEREUM, DAI_ETH, ETHTokenAddr
-from typing import Union
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # CDP MANAGER
@@ -67,19 +69,19 @@ def get_vault_data(vault_id, block, web3=None):
 
     urn_data = vat_contract.functions.urns(ilk, urn_handler_address).call(block_identifier=block)
 
-    vault_data['mat'] = spot_contract.functions.ilks(ilk).call(block_identifier=block)[1] / 10 ** 27
+    vault_data['mat'] = spot_contract.functions.ilks(ilk).call(block_identifier=block)[1] / Decimal(10**27)
     vault_data['gem'] = ilk_info[4]
     vault_data['dai'] = DAI_ETH
-    vault_data['ink'] = urn_data[0] / 10 ** 18
-    vault_data['art'] = urn_data[1] / 10 ** 18
+    vault_data['ink'] = urn_data[0] / Decimal(10**18)
+    vault_data['art'] = urn_data[1] / Decimal(10**18)
 
     ilk_data = vat_contract.functions.ilks(ilk).call(block_identifier=block)
 
-    vault_data['Art'] = ilk_data[0] / 10 ** 18
-    vault_data['rate'] = ilk_data[1] / 10 ** 27
-    vault_data['spot'] = ilk_data[2] / 10 ** 27
-    vault_data['line'] = ilk_data[3] / 10 ** 45
-    vault_data['dust'] = ilk_data[4] / 10 ** 45
+    vault_data['Art'] = ilk_data[0] / Decimal(10**18)
+    vault_data['rate'] = ilk_data[1] / Decimal(10**27)
+    vault_data['spot'] = ilk_data[2] / Decimal(10**27)
+    vault_data['line'] = ilk_data[3] / Decimal(10**45)
+    vault_data['dust'] = ilk_data[4] / Decimal(10**45)
 
     return vault_data
 

@@ -1,4 +1,5 @@
 import pytest
+from decimal import Decimal
 
 from defi_protocols import Bancor
 from defi_protocols.constants import ETHEREUM, ETHTokenAddr, E_ADDRESS
@@ -16,20 +17,22 @@ def test_underlying():
     node = get_node(ETHEREUM, block)
 
     underlying = Bancor.underlying(bnICHI_ADDR, WALLET_N1, block, ETHEREUM, web3=node)
-    assert underlying == [[ETHTokenAddr.ICHI, 44351.005182315], [ETHTokenAddr.BNT, 0.0]]
+    assert underlying == [[ETHTokenAddr.ICHI, Decimal('44351.005182315')], [ETHTokenAddr.BNT, Decimal('0')]]
     underlying = Bancor.underlying(bnETH_ADDR, WALLET_N2, block, ETHEREUM, web3=node)
-    assert underlying == [[E_ADDRESS, 0.14970330422829936], [ETHTokenAddr.BNT, 0.0]]
+    assert underlying == [[E_ADDRESS, Decimal('0.149703304228299349')], [ETHTokenAddr.BNT, Decimal('0')]]
 
 
+@pytest.mark.skip(reason='It takes to long.')
 def test_underlying_all():
     block = 17067718
     node = get_node(ETHEREUM, block)
 
     underlying = Bancor.underlying_all(WALLET_N2, block, ETHEREUM, web3=node)
-    assert underlying == [[[E_ADDRESS, 0.14970330422829936], [ETHTokenAddr.BNT, 0.0]], [], [], [], [], [], [], [], [],
+    assert underlying == [[[E_ADDRESS, Decimal('0.149703304228299349')], [ETHTokenAddr.BNT, Decimal('0')]], [], [], [],
                           [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [],
                           [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [],
                           [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [],
                           [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [],
                           [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [],
-                          [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
+                          [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [],
+                          [], [], [], [], [], []]

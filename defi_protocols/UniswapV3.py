@@ -3,36 +3,22 @@ from decimal import Decimal
 from enum import IntEnum
 from typing import Union, ClassVar
 from dataclasses import dataclass, field
+from web3 import Web3
 
 from defi_protocols.functions import get_node, get_contract, get_decimals
 
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# UNISWAP V3 FACTORY
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 FACTORY: str = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# UNISWAP V3 POSITIONS NFT
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 POSITIONS_NFT: str = '0xC36442b4a4522E871399CD717aBDD847Ab11FE88'
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# UNISWAP V3 ROUTER 2
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 UNISWAPV3_ROUTER2: str = '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45'
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# UNISWAP V3 QUOTER
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 UNISWAPV3_QUOTER: str = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6"
 
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# FEES
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Possible Fees for Uniwsap v3 Pools
 # https://docs.uniswap.org/sdk/v3/reference/enums/FeeAmount
 class FeeAmount(IntEnum):
@@ -42,9 +28,6 @@ class FeeAmount(IntEnum):
     HIGH = 10000
 
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ABIs
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Uniswap v3 Factory ABI - getPool
 ABI_FACTORY: str = '[{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint24","name":"","type":"uint24"}],"name":"getPool","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]'
 
@@ -150,7 +133,7 @@ class NFTPosition:
             self.decimals1 = get_decimals(self.token1, self.blockchain, self.web3)
 
     def owned_by(self, wallet: str) -> bool:
-        wallet = self.web3.to_checksum_address(wallet)
+        wallet = Web3.to_checksum_address(wallet)
         nft_owner = self._nft_contract.functions.ownerOf(self.nftid).call(block_identifier=self.block)
         return nft_owner == wallet
 
@@ -168,8 +151,8 @@ class NFTPosition:
             fee_upper_token0 = fo0up
             fee_upper_token1 = fo1up
 
-        fa = int(Decimal((fg0 - fee_lower_token0 - fee_upper_token0 - self.fr0) * self.liquidity) / Decimal(2 ** 128))
-        fb = int(Decimal((fg1 - fee_lower_token1 - fee_upper_token1 - self.fr1) * self.liquidity) / Decimal(2 ** 128))
+        fa = Decimal((fg0 - fee_lower_token0 - fee_upper_token0 - self.fr0) * self.liquidity) / Decimal(2 ** 128)
+        fb = Decimal((fg1 - fee_lower_token1 - fee_upper_token1 - self.fr1) * self.liquidity) / Decimal(2 ** 128)
 
         return [fa, fb]
 
@@ -201,11 +184,8 @@ class NFTPosition:
             amount1 = Decimal(amount1) + Decimal(amount1fee)
 
             if self.decimals:
-                amount0 = float(amount0 / Decimal(10 ** self.decimals0))
-                amount1 = float(amount1 / Decimal(10 ** self.decimals1))
-            else:
-                amount0 = int(amount0)
-                amount1 = int(amount1)
+                amount0 = amount0 / Decimal(10 ** self.decimals0)
+                amount1 = amount1 / Decimal(10 ** self.decimals1)
 
             if amount0 > 0:
                 balances.append([self.token0, amount0])
@@ -292,7 +272,8 @@ def get_fee(nftid: int, block: Union[int, str], blockchain: str, web3=None, deci
     return [[nft_position.token0, fa], [nft_position.token1, fb]]
 
 
-def get_rate_uniswap_v3(token_src: str, token_dst: str, block: Union[int, str], blockchain: str, web3=None, fee: int = FeeAmount.LOWEST) -> float:
+def get_rate_uniswap_v3(token_src: str, token_dst: str, block: Union[int, str], blockchain: str,
+                        web3=None, fee: int = FeeAmount.LOWEST) -> Decimal:
     """Returns the price of a token .
     Parameters
     ----------
@@ -317,8 +298,8 @@ def get_rate_uniswap_v3(token_src: str, token_dst: str, block: Union[int, str], 
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    token_src = web3.to_checksum_address(token_src)
-    token_dst = web3.to_checksum_address(token_dst)
+    token_src = Web3.to_checksum_address(token_src)
+    token_dst = Web3.to_checksum_address(token_dst)
     token_src_decimals = get_decimals(token_src, blockchain, web3=web3)
     token_dst_decimals = get_decimals(token_dst, blockchain, web3=web3)
 
@@ -329,7 +310,7 @@ def get_rate_uniswap_v3(token_src: str, token_dst: str, block: Union[int, str], 
     else:
         factor = 1 / pool.price
 
-    return float(factor / Decimal(10 ** (token_dst_decimals - token_src_decimals)))
+    return factor / Decimal(10 ** (token_dst_decimals - token_src_decimals))
 
 
 def allnfts(wallet: str, block: Union[int, str], blockchain: str, web3=None) -> list:

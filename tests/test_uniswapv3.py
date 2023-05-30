@@ -1,8 +1,9 @@
-from defi_protocols import UniswapV3
-from defi_protocols.uniswapv3helper import LiquidityPosition
-from defi_protocols.constants import ETHEREUM, ETHTokenAddr, ZERO_ADDRESS
-from defi_protocols.functions import get_node
+import pytest
 from decimal import Decimal
+
+from defi_protocols import UniswapV3
+from defi_protocols.constants import ETHEREUM, ETHTokenAddr
+from defi_protocols.functions import get_node
 
 
 WALLET_N1 = '0x849D52316331967b6fF1198e5E32A0eB168D039d'
@@ -10,15 +11,15 @@ WALLET_N2 = '0x0EFcCBb9E2C09Ea29551879bd9Da32362b32fc89'
 NFT_ID = 358770
 
 
-def test_underlying():
+@pytest.mark.parametrize('decimals', [False, True])
+def test_underlying(decimals):
     block = 17094489
     node = get_node(ETHEREUM, block)
 
-    uniswapv3 = UniswapV3.underlying(WALLET_N1, NFT_ID, block, ETHEREUM, web3=node, fee=True)
-    assert uniswapv3 == [[ETHTokenAddr.GNO, 98419.15638388108], [ETHTokenAddr.WETH, 2210.998677615111]]
-
-    uniswapv3 = UniswapV3.underlying(WALLET_N1, NFT_ID, block, ETHEREUM, web3=node, decimals=False, fee=True)
-    assert uniswapv3 == [[ETHTokenAddr.GNO, 98419156383881089964338], [ETHTokenAddr.WETH, 2210998677615110963219]]
+    x = UniswapV3.underlying(WALLET_N1, NFT_ID, block, ETHEREUM, web3=node, decimals=decimals, fee=True)
+    y = Decimal(10**18 if decimals else 1)
+    assert x == [[ETHTokenAddr.GNO, Decimal('98419156383881089964338.69948') / y],
+                 [ETHTokenAddr.WETH, Decimal('2210998677615110963219.938648') / y]]
 
 
 def test_allnfts():
@@ -34,9 +35,12 @@ def test_underlying_all():
     block = 17119477
 
     balances = UniswapV3.underlying_all(WALLET_N2, block, ETHEREUM, fee=True)
-    assert balances == [[[ETHTokenAddr.WBTC, 7.755961341942962e-06], [ETHTokenAddr.WETH, 0.001896950944013546]],
-                        [[ETHTokenAddr.WETH, 0.0005397922732214861], [ETHTokenAddr.sETH2, 0.001391854480130107]],
-                        [[ETHTokenAddr.WBTC, 8.020662597920984], [ETHTokenAddr.WETH, 194.4352083634992]]]
+    assert balances == [[[ETHTokenAddr.WBTC, Decimal('0.000007761923265277525510526250729')],
+                         [ETHTokenAddr.WETH, Decimal('0.001896950944013546473011431266')]],
+                        [[ETHTokenAddr.WETH, Decimal('0.0005397922732214861340191702537')],
+                         [ETHTokenAddr.sETH2, Decimal('0.001391854480130107973608729216')]],
+                        [[ETHTokenAddr.WBTC, Decimal('8.020662601714621409987468151')],
+                         [ETHTokenAddr.WETH, Decimal('194.4352083634992021665618551')]]]
 
 
 def test_get_rate():
@@ -49,17 +53,15 @@ def test_get_rate():
                                          block,
                                          ETHEREUM,
                                          node,
-                                         UniswapV3.FeeAmount.MEDIUM) == 0.05737047195982491
+                                         UniswapV3.FeeAmount.MEDIUM) == Decimal('0.05737047195982491454567443143')
 
-def test_get_fee():
+
+@pytest.mark.parametrize('decimals', [False, True])
+def test_get_fee(decimals):
     block = 17094489
     node = get_node(ETHEREUM, block)
 
-    position_nft = UniswapV3.NFTPosition(NFT_ID, ETHEREUM, block, node, decimals=True)
-
-    fees = UniswapV3.get_fee(NFT_ID, block, web3=node, blockchain=ETHEREUM, decimals=True)
-    assert fees == [['0x6810e776880C02933D47DB1b9fc05908e5386b96', Decimal('474.998434375840983379')], ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', Decimal('25.927112063507954904')]]
-
-    fees = UniswapV3.get_fee(NFT_ID, block, web3=node, blockchain=ETHEREUM, decimals=False)
-    assert fees == [['0x6810e776880C02933D47DB1b9fc05908e5386b96', 474998434375840983379], ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', 25927112063507954904]]
-
+    x = UniswapV3.get_fee(NFT_ID, block, web3=node, blockchain=ETHEREUM, decimals=decimals)
+    y = Decimal(10**18 if decimals else 1)
+    assert x == [['0x6810e776880C02933D47DB1b9fc05908e5386b96', Decimal('474998434375840983379.1298473') / y],
+                 ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', Decimal('25927112063507954904.89758316') / y]]

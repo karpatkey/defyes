@@ -1,5 +1,6 @@
-from defi_protocols.functions import get_node, get_contract, get_decimals
-from defi_protocols.constants import E_ADDRESS
+from web3 import Web3
+
+from defi_protocols.functions import get_node, get_contract, to_token_amount
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # LITERALS
@@ -30,7 +31,7 @@ def underlying(token_address: str, wallet: str, block: int, blockchain: str, web
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
     bancor_poolcontract = get_contract(token_address, blockchain, web3=web3, abi=ABI_POOL, block=block)
     balance = bancor_poolcontract.functions.balanceOf(wallet).call(block_identifier=block)
 
@@ -38,18 +39,10 @@ def underlying(token_address: str, wallet: str, block: int, blockchain: str, web
         reserve_token = bancor_poolcontract.functions.reserveToken().call()
         pooltokens_contract = get_contract(BANCOR_NETWORK_INFO_ADDRESS, blockchain, web3=web3, abi=ABI_NETWORK_INFO, block=block)
         bancor_pool = pooltokens_contract.functions.withdrawalAmounts(reserve_token, balance).call(block_identifier=block)
-        if decimals is True:
-            decimals0 = get_decimals(reserve_token, blockchain, web3=web3)
-            decimals1 = get_decimals(BNT_TOKEN, blockchain, web3=web3)
-            amount0 = bancor_pool[1] / 10 ** decimals0
-            amount1 = bancor_pool[2] / 10 ** decimals1
-        else:
-            amount0 = bancor_pool[0]
-            amount1 = bancor_pool[2]
 
-        balances.append([reserve_token, amount0])
+        balances.append([reserve_token, to_token_amount(reserve_token, bancor_pool[1], blockchain, web3, decimals)])
         if reward:
-            balances.append([BNT_TOKEN, amount1])
+            balances.append([BNT_TOKEN, to_token_amount(BNT_TOKEN, bancor_pool[2], blockchain, web3, decimals)])
     return balances
 
 
@@ -68,7 +61,7 @@ def underlying_all(wallet: str, block: int, blockchain: str, web3=None, decimals
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
     liquiditypools_contract = get_contract(BANCOR_NETWORK_ADDRESS, blockchain, web3=web3, abi=ABI_NETWORK,
                                            block=block)

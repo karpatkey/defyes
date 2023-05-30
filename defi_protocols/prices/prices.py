@@ -5,6 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
 from datetime import datetime
+from web3 import Web3
 
 from defi_protocols.functions import get_node, timestamp_to_block, block_to_timestamp, GetNodeIndexError
 from defi_protocols.constants import MAX_EXECUTIONS, ETHEREUM, ZERO_ADDRESS, API_ETHERSCAN_GETTOKENINFO, API_KEY_ETHERSCAN
@@ -28,7 +29,7 @@ def get_price(token_address, block, blockchain, web3=None, execution=1, index=0,
         if web3 is None:
             web3 = get_node(blockchain, block=block)
 
-        token_address = web3.to_checksum_address(token_address)
+        token_address = Web3.to_checksum_address(token_address)
 
         if token_address == ZERO_ADDRESS:
             # returns price, source and blockchain:

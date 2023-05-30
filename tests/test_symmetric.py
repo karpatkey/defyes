@@ -9,6 +9,7 @@ from defi_protocols.constants import XDAI, GnosisTokenAddr
 WALLET = '0xa3E1282ac6116A698A49b2084c5c30fE1947b4A5'
 LPTOKEN_ADDR = '0x650f5d96E83d3437bf5382558cB31F0ac5536684'
 
+
 def test_get_vault_contract():
     block = 24502952
     node = get_node(XDAI, block)
@@ -79,8 +80,8 @@ def test_underlying():
     node = get_node(XDAI, block)
     underlying = Symmetric.underlying(WALLET, LPTOKEN_ADDR, block, XDAI, node, reward=True)
     assert underlying == [
-        [[GnosisTokenAddr.GNO, Decimal('0E-17'), Decimal('18.07623048385338968061676268')],
-         [GnosisTokenAddr.WXDAI, Decimal('0E-18'), Decimal('383.1488150228401270848778395')]],
+        [[GnosisTokenAddr.GNO, Decimal('0'), Decimal('18.07623048385338968061676268')],
+         [GnosisTokenAddr.WXDAI, Decimal('0'), Decimal('383.1488150228401270848778395')]],
         [[GnosisTokenAddr.SYMM, Decimal('17.618790701012049339')],
          [GnosisTokenAddr.GNO, Decimal('0')]]]
 
@@ -98,7 +99,7 @@ def test_get_rewards_per_unit():
     node = get_node(XDAI, block)
     rewards = Symmetric.get_rewards_per_unit(LPTOKEN_ADDR, XDAI, node, block)
     assert rewards == [{'symm_address': GnosisTokenAddr.SYMM, 'symmPerSecond': Decimal('63269355361192.04081632653061')},
-                       {'reward_address': GnosisTokenAddr.GNO, 'rewardPerSecond': 0.0}]
+                       {'reward_address': GnosisTokenAddr.GNO, 'rewardPerSecond': Decimal('0')}]
 
 
 @pytest.mark.xfail(reason="Checking if db needs update")
@@ -108,7 +109,7 @@ def test_db_uptodate():
         assert uptodate is False, "DB is outdated"
 
 
-@pytest.mark.skip(reason="Bgub in: lptoken_contract.functions.getCurrentTokens")
+@pytest.mark.skip(reason="Bug in: lptoken_contract.functions.getCurrentTokens")
 def test_swap_fees():
     block_start = 24323921
     block_end = 24502952

@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
+from decimal import Decimal
 from itertools import groupby
 from operator import itemgetter
 from typing import Union
 from web3.exceptions import ContractLogicError, BadFunctionCallOutput
+from web3 import Web3
 
-from defi_protocols.functions import get_node, get_contract, get_decimals, block_to_date, date_to_block, balance_of, get_logs
+from defi_protocols.functions import get_node, get_contract, get_decimals, block_to_date, date_to_block, balance_of, get_logs, to_token_amount
 from defi_protocols.constants import ETHEREUM, XDAI, BAL_ETH, BAL_ARB, BAL_XDAI, BB_A_USD_OLD_ETH, BB_A_USD_ETH, POLYGON, ARBITRUM, BAL_POL, ZERO_ADDRESS
 from defi_protocols.prices.prices import get_price
 
@@ -219,15 +221,9 @@ def get_bal_rewards(web3, gauge_contract, wallet, block, blockchain, decimals=Tr
     :return:
     """
     bal_address = get_bal_address(blockchain)
+    bal_rewards = gauge_contract.functions.claimable_tokens(wallet).call(block_identifier=block)
 
-    if decimals is True:
-        bal_decimals = get_decimals(bal_address, blockchain, web3=web3)
-    else:
-        bal_decimals = 0
-
-    bal_rewards = gauge_contract.functions.claimable_tokens(wallet).call(block_identifier=block) / (10 ** bal_decimals)
-
-    return [bal_address, bal_rewards]
+    return [bal_address, to_token_amount(bal_address, bal_rewards, blockchain, web3, decimals)]
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -265,14 +261,7 @@ def get_rewards(web3, gauge_contract, wallet, block, blockchain, decimals=True):
             token_rewards = child_chain_reward_helper_contract.functions.getPendingRewards(gauge_contract.address, 
                                                                         wallet, token_address).call(block_identifier=block)
 
-        if decimals == True:
-            token_decimals = get_decimals(token_address, blockchain, web3=web3)
-        else:
-            token_decimals = 0
-
-        token_rewards = token_rewards / (10 ** token_decimals)
-
-        rewards.append([token_address, token_rewards])
+        rewards.append([token_address, to_token_amount(token_address, token_rewards, blockchain, web3, decimals)])
 
     return rewards
 
@@ -292,14 +281,7 @@ def get_vebal_rewards(web3, wallet, block, blockchain, decimals=True):
         token_address = VEBAL_REWARD_TOKENS[i]
         token_rewards = claim_tokens[i]
 
-        if decimals == True:
-            token_decimals = get_decimals(token_address, blockchain, web3=web3)
-        else:
-            token_decimals = 0
-
-        token_rewards = token_rewards / (10 ** token_decimals)
-
-        vebal_rewards.append([token_address, token_rewards])
+        vebal_rewards.append([token_address, to_token_amount(token_address, token_rewards, blockchain, web3, decimals)])
 
     return vebal_rewards
 
@@ -314,9 +296,9 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     if gauge_address is None:
         gauge_address = get_gauge_address(blockchain, block, web3, lptoken_address)
@@ -360,9 +342,9 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, reward=Fal
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     vault_contract = get_contract(VAULT, blockchain, web3=web3, abi=ABI_VAULT, block=block)
 
@@ -373,27 +355,26 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, reward=Fal
     gauge_address = gauge_factory_contract.functions.getPoolGauge(lptoken_address).call()
 
     lptoken_data = get_lptoken_data(lptoken_address, block, blockchain, web3=web3)
-
-    lptoken_data['balanceOf'] = lptoken_data['contract'].functions.balanceOf(wallet).call(block_identifier=block)
+    lptoken_data['balanceOf'] = Decimal(lptoken_data['contract'].functions.balanceOf(wallet).call(block_identifier=block))
 
     if gauge_address != ZERO_ADDRESS:
         lptoken_data['staked'] = balance_of(wallet, gauge_address, block, blockchain, web3=web3, decimals=False)
     else:
-        lptoken_data['staked'] = 0
+        lptoken_data['staked'] = Decimal(0)
 
-    lptoken_data['locked'] = 0
+    lptoken_data['locked'] = Decimal(0)
     if blockchain == ETHEREUM:
         vebal_contract = get_contract(VEBAL, blockchain, web3=web3, abi=ABI_VEBAL, block=block)
 
-        if (lptoken_address == vebal_contract.functions.token().call()):
+        if lptoken_address == vebal_contract.functions.token().call():
             try:
-                lptoken_data['locked'] = vebal_contract.functions.locked(wallet).call(block_identifier=block)[0]
+                lptoken_data['locked'] = Decimal(vebal_contract.functions.locked(wallet).call(block_identifier=block)[0])
             except:
-                lptoken_data['locked'] = 0
+                pass
 
     pool_tokens_data = vault_contract.functions.getPoolTokens(lptoken_data['poolId']).call(block_identifier=block)
     pool_tokens = pool_tokens_data[0]
-    pool_balances = pool_tokens_data[1]
+    pool_balances = [Decimal(balance) for balance in pool_tokens_data[1]]
 
     pool_balance_fraction = lptoken_data['balanceOf'] / lptoken_data['totalSupply']
     pool_staked_fraction = lptoken_data['staked'] / lptoken_data['totalSupply']
@@ -436,13 +417,13 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, reward=Fal
 
             unwrapped_balances.append([main_token, token_balance])
 
-        for unwrapped_balance in unwrapped_balances:
-            main_token, token_balance = unwrapped_balance
+        for main_token, token_balance in unwrapped_balances:
+            token_balance = Decimal(token_balance)
             
             if aura_staked is None:
                 token_staked = token_balance * pool_staked_fraction
             else:
-                aura_pool_fraction = aura_staked / lptoken_data['totalSupply']
+                aura_pool_fraction = Decimal(aura_staked) / lptoken_data['totalSupply']
                 token_staked = token_balance * aura_pool_fraction
 
             token_locked = token_balance * pool_locked_fraction
@@ -473,7 +454,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     vault_contract = get_contract(VAULT, blockchain, web3=web3, abi=ABI_VAULT, block=block)
 
@@ -481,7 +462,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
 
     pool_tokens_data = vault_contract.functions.getPoolTokens(lptoken_data['poolId']).call(block_identifier=block)
     pool_tokens = pool_tokens_data[0]
-    pool_balances = pool_tokens_data[1]
+    pool_balances = [Decimal(balance) for balance in pool_tokens_data[1]]
 
     for i in range(len(pool_tokens)):
 
@@ -496,7 +477,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
 
         unwrapped_balances = []
         if call_contract_method(token_contract.functions.getRate(), block) is not None:
-            unwrapped_balances = unwrap(pool_balances[i] / (10**token_decimals), token_address, block, blockchain, web3=web3, decimals=decimals)
+            unwrapped_balances = unwrap(pool_balances[i] / Decimal(10**token_decimals), token_address, block, blockchain, web3=web3, decimals=decimals)
         else:
             main_token = call_contract_method(token_contract.functions.UNDERLYING_ASSET_ADDRESS(), block)
             if main_token is None:
@@ -510,19 +491,14 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
                     main_token = token_address
 
             if lptoken_data['scalingFactors'] is not None:
-                token_balance = pool_balances[i] * lptoken_data['scalingFactors'][i] / (10 ** (2 * 18 - token_decimals))
+                token_balance = pool_balances[i] * lptoken_data['scalingFactors'][i] / Decimal(10 ** (2 * 18 - token_decimals))
             else:
                 main_token = pool_tokens[i]
                 token_balance = pool_balances[i]
 
-            if decimals is True:
-                token_balance = token_balance / (10**token_decimals)
-            
-            unwrapped_balances.append([main_token, token_balance])
+            unwrapped_balances.append([main_token, to_token_amount(main_token, token_balance, blockchain, web3, decimals)])
         
-        for unwrapped_balance in unwrapped_balances:
-            main_token, token_balance = unwrapped_balance
-
+        for main_token, token_balance in unwrapped_balances:
             balances.append([main_token, token_balance])
     
     first = itemgetter(0)
@@ -534,14 +510,14 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # unwrap
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def unwrap(lptoken_amount, lptoken_address, block, blockchain, web3=None, decimals=True):
+def unwrap(lptoken_amount: Decimal, lptoken_address: str, block: int | str, blockchain: str, web3: Web3 = None, decimals:bool = True) -> Decimal:
 
     balances = []
 
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     vault_contract = get_contract(VAULT, blockchain, web3=web3, abi=ABI_VAULT, block=block)
 
@@ -549,9 +525,9 @@ def unwrap(lptoken_amount, lptoken_address, block, blockchain, web3=None, decima
 
     pool_tokens_data = vault_contract.functions.getPoolTokens(lptoken_data['poolId']).call(block_identifier=block)
     pool_tokens = pool_tokens_data[0]
-    pool_balances = pool_tokens_data[1]
+    pool_balances = [Decimal(balance) for balance in pool_tokens_data[1]]
 
-    pool_balance_fraction = lptoken_amount * (10 ** lptoken_data['decimals']) / lptoken_data['totalSupply']
+    pool_balance_fraction = Decimal(lptoken_amount) * Decimal(10 ** lptoken_data['decimals']) / lptoken_data['totalSupply']
 
     for i in range(len(pool_tokens)):
 
@@ -566,7 +542,7 @@ def unwrap(lptoken_amount, lptoken_address, block, blockchain, web3=None, decima
 
         unwrapped_balances = []
         if call_contract_method(token_contract.functions.getRate(), block) is not None:
-            unwrapped_balances = unwrap(pool_balances[i] / (10**token_decimals), token_address, block, blockchain, web3=web3, decimals=decimals)
+            unwrapped_balances = unwrap(pool_balances[i] / Decimal(10**token_decimals), token_address, block, blockchain, web3=web3, decimals=decimals)
         else:
             main_token = call_contract_method(token_contract.functions.UNDERLYING_ASSET_ADDRESS(), block)
             if main_token is None:
@@ -612,7 +588,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
     if web3 is None:
         web3 = get_node(blockchain, block=block_start)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
 
@@ -643,21 +619,16 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
                 if block_number == last_block:
                     hash_overlap.append(swap_log['transactionHash'])
 
-                token_in = web3.to_checksum_address('0x' + swap_log['topics'][2][-40:])
-
-                if decimals is True:
-                    token_in_decimals = get_decimals(token_in, blockchain, web3=web3)
-                else:
-                    token_in_decimals = 0
-
+                token_in = Web3.to_checksum_address('0x' + swap_log['topics'][2][-40:])
                 lptoken_decimals = get_decimals(lptoken_address, blockchain, web3=web3)
-                swap_fee = lptoken_contract.functions.getSwapFeePercentage().call(block_identifier=block_number) / (
-                            10 ** lptoken_decimals)
+                swap_fee = Decimal(lptoken_contract.functions.getSwapFeePercentage().call(block_identifier=block_number))
+                swap_fee /= Decimal(10 ** lptoken_decimals)
+                swap_fee *= int(swap_log['data'][2:66], 16)
 
                 swap_data = {
                     'block': block_number,
                     'tokenIn': token_in,
-                    'amountIn': swap_fee * int(swap_log['data'][2:66], 16) / (10 ** token_in_decimals)
+                    'amountIn': to_token_amount(token_in, swap_fee, blockchain, web3, decimals)
                 }
 
                 result['swaps'].append(swap_data)
@@ -675,7 +646,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
 # get_swap_fees_APR
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_swap_fees_APR(lptoken_address: str, blockchain: str, block_end: Union[int, str] = 'latest', web3=None,
-                      days: int = 1, apy: bool = False) -> int:
+                      days: int = 1, apy: bool = False) -> Decimal:
     block_start = date_to_block(datetime.strftime(
         datetime.strptime(block_to_date(block_end, blockchain), '%Y-%m-%d %H:%M:%S') - timedelta(days=days),
         '%Y-%m-%d %H:%M:%S'), blockchain)
@@ -695,17 +666,16 @@ def get_swap_fees_APR(lptoken_address: str, blockchain: str, block_end: Union[in
 
     fee = 0
     for k in totals_list:
-        fee += k[1] * get_price(k[0], block_end, blockchain, web3)[0]
+        fee += k[1] * Decimal(get_price(k[0], block_end, blockchain, web3)[0])
     pool_balance = pool_balances(lptoken_address, block_end, blockchain)
     tvl = 0
     for l in pool_balance:
-        tvl += l[1] * get_price(l[0], block_end, blockchain, web3)[0]
+        tvl += l[1] * Decimal(get_price(l[0], block_end, blockchain, web3)[0])
 
-    rate = fee / tvl
-    apr = (((1 + rate) ** (365 / days) - 1) * 100) / 2
+    rate = Decimal(fee / tvl)
+    apr = (((1 + rate) ** Decimal(365 / days) - 1) * 100) / 2
     seconds_per_year = 365 * 24 * 60 * 60
-    if apy == True:
-        apy = (1 + (apr / seconds_per_year)) ** (seconds_per_year) - 1
-        return apy
+    if apy:
+        return (1 + (apr / seconds_per_year)) ** seconds_per_year - 1
     else:
         return apr

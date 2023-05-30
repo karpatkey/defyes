@@ -1,8 +1,8 @@
-import math
 import logging
 from decimal import Decimal
+from web3 import Web3
 
-from defi_protocols.functions import get_node, get_contract, get_decimals, get_logs
+from defi_protocols.functions import get_node, get_contract, get_decimals, get_logs, to_token_amount
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +33,8 @@ def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
     lptoken_data['reserves'] = lptoken_data['contract'].functions.getReserves().call(block_identifier=block)
     lptoken_data['kLast'] = lptoken_data['contract'].functions.kLast().call(block_identifier=block)
 
-    root_k = math.sqrt(lptoken_data['reserves'][0] * lptoken_data['reserves'][1])
-    root_k_last = math.sqrt(lptoken_data['kLast'])
+    root_k = (Decimal(lptoken_data['reserves'][0]) * Decimal(lptoken_data['reserves'][1])).sqrt()
+    root_k_last = (Decimal(lptoken_data['kLast'])).sqrt()
 
     if block != 'latest':
         if block < 12108893:
@@ -56,28 +56,24 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=T
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     lptoken_data = get_lptoken_data(lptoken_address, block, blockchain, web3=web3)
 
     balance = lptoken_data['contract'].functions.balanceOf(wallet).call(block_identifier=block)
     pool_balance_fraction = balance / lptoken_data['virtualTotalSupply']
 
-    for i in range(len(lptoken_data['reserves'])):
+    for n, reserve in enumerate(lptoken_data['reserves']):
         try:
-            getattr(lptoken_data['contract'].functions, 'token' + str(i))
-        except:
+            getattr(lptoken_data['contract'].functions, 'token' + str(n))
+        except AttributeError:
             continue
 
-        token_address = lptoken_data['token' + str(i)]
-
-        token_decimals = get_decimals(token_address, blockchain, web3=web3) if decimals else 0
-
-        token_balance = Decimal(lptoken_data['reserves'][i]) / Decimal(10 ** token_decimals) * Decimal(pool_balance_fraction)
-
-        result.append([token_address, token_balance])
+        token_address = lptoken_data['token' + str(n)]
+        result.append([token_address,
+                       to_token_amount(token_address, reserve, blockchain, web3, decimals) * Decimal(pool_balance_fraction)])
 
     return result
 
@@ -85,31 +81,23 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=T
 # Output: a list with 1 element:
 # 1 - List of Tuples: [liquidity_token_address, balance]
 def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
-
     balances = []
 
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
-
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
     lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
-
     reserves = lptoken_contract.functions.getReserves().call(block_identifier=block)
 
-    for i in range(len(reserves)):
+    for n, reserve in enumerate(reserves):
         try:
-            func = getattr(lptoken_contract.functions, 'token' + str(i))
-        except:
+            func = getattr(lptoken_contract.functions, 'token' + str(n))
+        except AttributeError:
             continue
 
         token_address = func().call()
-
-        token_decimals = get_decimals(token_address, blockchain, web3=web3) if decimals else 0
-
-        token_balance = Decimal(reserves[i]) / Decimal(10 ** token_decimals)
-
-        balances.append([token_address, token_balance])
+        balances.append([token_address, to_token_amount(token_address, reserve, blockchain, web3, decimals)])
 
     return balances
 
@@ -122,7 +110,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
     if web3 is None:
         web3 = get_node(blockchain, block=block_start)
 
-    lptoken_address = web3.to_checksum_address(lptoken_address)
+    lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block_start)
 
@@ -161,13 +149,13 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
                     swap_data = {
                         'block': block_number,
                         'token': token1,
-                        'amount': Decimal(0.003) * Decimal(int(swap_log['data'][67:130], 16)) / Decimal(10 ** decimals1)
+                        'amount': Decimal('0.003') * Decimal(int(swap_log['data'][67:130], 16)) / Decimal(10 ** decimals1)
                     }
                 else:
                     swap_data = {
                         'block': block_number,
                         'token': token0,
-                        'amount': Decimal(0.003) * Decimal(int(swap_log['data'][2:66], 16)) / Decimal(10 ** decimals0)
+                        'amount': Decimal('0.003') * Decimal(int(swap_log['data'][2:66], 16)) / Decimal(10 ** decimals0)
                     }
 
                 result['swaps'].append(swap_data)

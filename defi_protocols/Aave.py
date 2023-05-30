@@ -1,8 +1,11 @@
 import logging
-from typing import Union, Optional
+from decimal import Decimal
+from typing import Union, List
+from web3.exceptions import ContractLogicError
+from web3 import Web3
 
 from defi_protocols.constants import ETHEREUM, STKAAVE_ETH, AAVE_ETH, ABPT_ETH
-from defi_protocols.functions import get_contract, get_node, get_decimals, balance_of
+from defi_protocols.functions import get_contract, get_node, balance_of, to_token_amount
 
 
 logger = logging.getLogger(__name__)
@@ -98,7 +101,7 @@ def get_reserves_tokens(pdp_contract, block):
 # get_reserves_tokens_balances
 # 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def get_reserves_tokens_balances(web3, wallet, block, blockchain, decimals=True):
+def get_reserves_tokens_balances(web3: Web3, wallet: str, block: int | str, blockchain: str, decimals: bool = True) -> List:
     """
     :param web3:
     :param wallet:
@@ -110,31 +113,22 @@ def get_reserves_tokens_balances(web3, wallet, block, blockchain, decimals=True)
     balances = []
 
     pdp_address = get_protocol_data_provider(blockchain)
-    if pdp_address is None:
-        return None
+    if pdp_address:
+        pdp_contract = get_contract(pdp_address, blockchain, web3=web3, abi=ABI_PDP, block=block)
+        reserves_tokens = get_reserves_tokens(pdp_contract, block)
 
-    pdp_contract = get_contract(pdp_address, blockchain, web3=web3, abi=ABI_PDP, block=block)
+        for reserves_token in reserves_tokens:
 
-    reserves_tokens = get_reserves_tokens(pdp_contract, block)
+            try:
+                user_reserve_data = pdp_contract.functions.getUserReserveData(reserves_token, wallet).call(block_identifier=block)
+            except ContractLogicError:
+                continue
 
-    for reserves_token in reserves_tokens:
+            # balance = currentATokenBalance - currentStableDebt - currentVariableDebt
+            balance = Decimal(user_reserve_data[0] - user_reserve_data[1] - user_reserve_data[2])
 
-        try:
-            user_reserve_data = pdp_contract.functions.getUserReserveData(reserves_token, wallet).call(
-                block_identifier=block)
-        except:
-            continue
-
-        if decimals is True:
-            token_decimals = get_decimals(reserves_token, blockchain, web3=web3)
-        else:
-            token_decimals = 0
-
-        # balance = currentATokenBalance - currentStableDebt - currentVariableDebt
-        balance = (user_reserve_data[0] - user_reserve_data[1] - user_reserve_data[2]) / 10 ** token_decimals
-
-        if balance != 0:
-            balances.append([reserves_token, balance])
+            if balance != 0:
+                balances.append([reserves_token, to_token_amount(reserves_token, balance, blockchain, web3, decimals)])
 
     return balances
 
@@ -151,9 +145,7 @@ def get_data(wallet, block, blockchain, web3=None, decimals=True):
     :param wallet:
     :param block:
     :param blockchain:
-    :param execution:
     :param web3:
-    :param index:
     :param decimals:
     :return:
     """
@@ -164,7 +156,7 @@ def get_data(wallet, block, blockchain, web3=None, decimals=True):
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
     lpapr_address = get_lpapr_address(blockchain)
     lpapr_contract = get_contract(lpapr_address, blockchain, web3=web3, abi=ABI_LPAPR, block=block)
@@ -176,26 +168,19 @@ def get_data(wallet, block, blockchain, web3=None, decimals=True):
     chainlink_eth_usd_contract = get_contract(CHAINLINK_ETH_USD, blockchain, web3=web3, abi=ABI_CHAINLINK_ETH_USD,
                                               block=block)
     chainlink_eth_usd_decimals = chainlink_eth_usd_contract.functions.decimals().call()
-    eth_usd_price = chainlink_eth_usd_contract.functions.latestAnswer().call(block_identifier=block) / (
-                10 ** chainlink_eth_usd_decimals)
-
+    eth_usd_price = chainlink_eth_usd_contract.functions.latestAnswer().call(block_identifier=block) / Decimal(10 ** chainlink_eth_usd_decimals)
     balances = get_reserves_tokens_balances(web3, wallet, block, blockchain, decimals=decimals)
-    if balances is None:
-        return None
 
-    if len(balances) > 0:
-
+    if balances:
         price_oracle_address = lpapr_contract.functions.getPriceOracle().call()
         price_oracle_contract = get_contract(price_oracle_address, blockchain, web3=web3, abi=ABI_PRICE_ORACLE,
                                              block=block)
 
         for balance in balances:
-            asset = {}
+            asset = {'token_address': balance[0], 'token_amount': abs(balance[1])}
 
-            asset['token_address'] = balance[0]
-            asset['token_amount'] = abs(balance[1])
             asset['token_price_usd'] = price_oracle_contract.functions.getAssetPrice(asset['token_address']).call(
-                block_identifier=block) / (10 ** 18) * eth_usd_price
+                block_identifier=block) / Decimal(10 ** 18) * eth_usd_price
 
             if balance[1] < 0:
                 debts.append(asset)
@@ -215,16 +200,16 @@ def get_data(wallet, block, blockchain, web3=None, decimals=True):
 
     if total_collateral_ETH > 0:
         if total_debt_ETH > 0:
-            aave_data['collateral_ratio'] = 100 * total_collateral_ETH / total_debt_ETH
+            aave_data['collateral_ratio'] = Decimal(100 * total_collateral_ETH / total_debt_ETH)
         else:
-            aave_data['collateral_ratio'] = float('infinity')
+            aave_data['collateral_ratio'] = Decimal('infinity')
     else:
-        aave_data['collateral_ratio'] = float('nan')
+        aave_data['collateral_ratio'] = Decimal('nan')
 
     if current_liquidation_th > 0:
-        aave_data['liquidation_ratio'] = 1000000 / current_liquidation_th
+        aave_data['liquidation_ratio'] = 1000000 / Decimal(current_liquidation_th)
     else:
-        aave_data['liquidation_ratio'] = float('infinity')
+        aave_data['liquidation_ratio'] = Decimal('infinity')
 
     # Ether price in USD
     aave_data['eth_price_usd'] = eth_usd_price
@@ -249,50 +234,35 @@ def get_data(wallet, block, blockchain, web3=None, decimals=True):
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_all_rewards(wallet, block, blockchain, web3=None, decimals=True):
     """
-
     :param wallet:
     :param block:
     :param blockchain:
-    :param execution:
     :param web3:
-    :param index:
     :param decimals:
     :return:
     """
     all_rewards = []
 
-
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
     stkaave_address = get_stkaave_address(blockchain)
-    if stkaave_address is None:
-        return None
+    if stkaave_address:
+        stkaave_contract = get_contract(stkaave_address, blockchain, web3=web3, abi=ABI_STKAAVE, block=block)
 
-    stkaave_contract = get_contract(stkaave_address, blockchain, web3=web3, abi=ABI_STKAAVE, block=block)
+        reward_token = stkaave_contract.functions.REWARD_TOKEN().call()
+        reward_balance = stkaave_contract.functions.getTotalRewardsBalance(wallet).call(block_identifier=block)
 
-    reward_token = stkaave_contract.functions.REWARD_TOKEN().call()
-
-    if decimals is True:
-        reward_token_decimals = get_decimals(reward_token, blockchain, web3=web3)
-    else:
-        reward_token_decimals = 0
-
-    reward_balance = stkaave_contract.functions.getTotalRewardsBalance(wallet).call(block_identifier=block) / (
-                10 ** reward_token_decimals)
-
-    all_rewards.append([reward_token, reward_balance])
+        all_rewards.append([reward_token, to_token_amount(reward_token, reward_balance, blockchain, web3, decimals)])
 
     return all_rewards
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # underlying_all
-# 'execution' = the current iteration, as the function goes through the different Full/Archival nodes of the blockchain attempting a successfull execution
 # 'reward' = True -> retrieves the rewards / 'reward' = False or not passed onto the function -> no reward retrieval
-# 'index' = specifies the index of the Archival or Full Node that will be retrieved by the getNode() function
 # 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
 # Output: a list with 2 elements:
 # 1 - List of Tuples: [token_address, balance], where balance = currentATokenBalance - currentStableDebt - currentStableDebt
@@ -300,13 +270,10 @@ def get_all_rewards(wallet, block, blockchain, web3=None, decimals=True):
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=False):
     """
-
     :param wallet:
     :param block:
     :param blockchain:
-    :param execution:
     :param web3:
-    :param index:
     :param decimals:
     :param reward:
     :return:
@@ -315,28 +282,23 @@ def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=F
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    wallet = web3.to_checksum_address(wallet)
+    wallet = Web3.to_checksum_address(wallet)
 
     balances = get_reserves_tokens_balances(web3, wallet, block, blockchain, decimals=decimals)
-    if balances is None:
-        return None
+    if balances:
+        if reward:
+            all_rewards = get_all_rewards(wallet, block, blockchain, web3=web3, decimals=decimals)
 
-    if reward is True:
-        all_rewards = get_all_rewards(wallet, block, blockchain, web3=web3, decimals=decimals)
-
-        result.append(balances)
-        result.append(all_rewards)
-
-    else:
-        result = balances
+            result.append(balances)
+            result.append(all_rewards)
+        else:
+            result = balances
 
     return result
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # get_apr
-# 'execution' = the current iteration, as the function goes through the different Full/Archival nodes of the blockchain attempting a successfull execution
-# 'index' = specifies the index of the Archival or Full Node that will be retrieved by the getNode() function
 # 'web3' = web3 (Node) -> Improves performance
 # 'apy' = True/False -> True = returns APY / False = returns APR
 # Output: Tuple:
@@ -346,13 +308,10 @@ def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=F
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_apr(token_address, block, blockchain, web3=None, apy=False):
     """
-
     :para token_address:
     :param block:
     :param blockchain:
     :param web3:
-    :param execution:
-    :param index:
     :param apy:
     :return:
     """
@@ -373,7 +332,7 @@ def get_apr(token_address, block, blockchain, web3=None, apy=False):
     variable_borrow_rate = reserve_data[4]
     stable_borrow_rate = reserve_data[5]
 
-    ray = 10 ** 27
+    ray = Decimal(10 ** 27)
     seconds_per_year = 31536000
 
     deposit_apr = liquidity_rate / ray
@@ -396,8 +355,6 @@ def get_apr(token_address, block, blockchain, web3=None, apy=False):
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # get_staking_apr
-# 'execution' = the current iteration, as the function goes through the different Full/Archival nodes of the blockchain attempting a successfull execution
-# 'index' = specifies the index of the Archival or Full Node that will be retrieved by the getNode() function
 # 'web3' = web3 (Node) -> Improves performance
 # 'apy' = True/False -> True = returns APY / False = returns APR
 # Output: Tuple:
@@ -405,12 +362,9 @@ def get_apr(token_address, block, blockchain, web3=None, apy=False):
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_staking_apr(block, blockchain, web3=None, apy=False):
     """
-
     :param block:
     :param blockchain:
     :param web3:
-    :param execution:
-    :param index:
     :return:
     """
     if web3 is None:
@@ -419,9 +373,10 @@ def get_staking_apr(block, blockchain, web3=None, apy=False):
     seconds_per_year = 31536000
     stk_aave_address = get_stkaave_address(blockchain)
     stkaave_contract = get_contract(stk_aave_address, blockchain, web3=web3, abi=ABI_STKAAVE, block=block)
-    emission_per_second = stkaave_contract.functions.assets(stk_aave_address).call(block_identifier=block)[0]
     aave_token_address = stkaave_contract.functions.REWARD_TOKEN().call()
     current_stakes = balance_of(stk_aave_address, aave_token_address, block, blockchain, web3=web3, decimals=False)
+
+    emission_per_second = stkaave_contract.functions.assets(stk_aave_address).call(block_identifier=block)[0]
 
     staking_apr = emission_per_second * seconds_per_year / current_stakes
 
@@ -435,12 +390,9 @@ def get_staking_apr(block, blockchain, web3=None, apy=False):
 
 def get_staked(wallet: str, block: Union[int, str], blockchain: str, stkaave: bool = False, web3=None, decimals: bool = True) -> list:
     """
-
     :param block:
     :param blockchain:
     :param web3:
-    :param execution:
-    :param index:
     :return:
     """
 
@@ -449,20 +401,12 @@ def get_staked(wallet: str, block: Union[int, str], blockchain: str, stkaave: bo
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    aave_wallet = web3.to_checksum_address(wallet)
+    aave_wallet = Web3.to_checksum_address(wallet)
+
+    stkabpt_balance = balance_of(aave_wallet, STAKED_ABPT_TOKEN, block, blockchain, web3, decimals)
 
     stk_aave_address = get_stkaave_address(blockchain)
-    stkaave_contract = get_contract(stk_aave_address, blockchain, web3=web3, abi=ABI_STKAAVE, block=block)
-    stkaave_balance = stkaave_contract.functions.balanceOf(aave_wallet).call(block_identifier=block)
-    stkaave_decimals = stkaave_contract.functions.decimals().call()
-
-    stkabpt_contract = get_contract(STAKED_ABPT_TOKEN, blockchain, web3=web3, abi=ABI_STKAAVE, block=block)
-    stkabpt_balance = stkabpt_contract.functions.balanceOf(aave_wallet).call(block_identifier=block)
-    stkabpt_decimals = stkabpt_contract.functions.decimals().call()
-
-    if decimals:
-        stkabpt_balance = stkabpt_balance / 10 ** stkabpt_decimals
-        stkaave_balance = stkaave_balance / 10 ** stkaave_decimals
+    stkaave_balance = balance_of(aave_wallet, stk_aave_address, block, blockchain, web3, decimals)
 
     if stkaave:
         balances.append([STKAAVE_ETH, stkaave_balance])

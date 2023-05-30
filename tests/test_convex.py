@@ -55,26 +55,26 @@ def test_get_extra_rewards(lp_token, wallet):
 
 def test_get_cvx_mint_amount():
     x = Convex.get_cvx_mint_amount(WEB3, False, TEST_BLOCK, ETHEREUM, decimals=False)
-    assert x == [CVX_ETH, 0.0]
+    assert x == [CVX_ETH, Decimal('0')]
 
 
 def test_get_all_rewards():
     x = Convex.get_all_rewards(TEST_WALLET, X3CRV_ETH, TEST_BLOCK, ETHEREUM,
                                WEB3, False, None)
-    assert x == [[CRV_ETH, 0.0],
-                 [CVX_ETH, 0.0]]
+    assert x == [[CRV_ETH, Decimal('0')],
+                 [CVX_ETH, Decimal('0')]]
 
 
 def test_get_locked():
     x = Convex.get_locked(TEST_WALLET, TEST_BLOCK, ETHEREUM,
                           WEB3, reward=False, decimals=False)
-    assert x == [[CVX_ETH, 0.0]]
+    assert x == [[CVX_ETH, Decimal('0')]]
 
 
 def test_get_staked():
     x = Convex.get_staked(TEST_WALLET, TEST_BLOCK, ETHEREUM,
                           WEB3, reward=False, decimals=False)
-    assert x == [[CVX_ETH, 0.0]]
+    assert x == [[CVX_ETH, Decimal('0')]]
 
 
 def test_underlying():
@@ -86,7 +86,7 @@ def test_underlying():
          [USDC_ETH, Decimal('0')],
          [USDT_ETH, Decimal('0')],
          [CRV_ETH, Decimal('0')],
-         [CVX_ETH, Decimal('0E-58')]]
+         [CVX_ETH, Decimal('0')]]
 
 
 def test_pool_balances():

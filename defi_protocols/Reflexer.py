@@ -32,25 +32,25 @@ class LiquidityPool:
         if self.web3 is None:
             self.web3 = get_node(self.blockchain, block=self.block)
         else:
-            assert self.web3.isinstance(Web3), "web3 is not a Web3 instance"
+            assert isinstance(self.web3, Web3), "web3 is not a Web3 instance"
 
     def _underlying(self, amount):
-        fraction = Decimal(amount) / Decimal(total_supply(self.addr, self.block, self.blockchain))
+        fraction = Decimal(amount) / total_supply(self.addr, self.block, self.blockchain)
         result = []
         for token in LPTOKENS_DB[self.addr]['tokens']:
             balance = balance_of(self.addr, token, self.block, self.blockchain)
 
-            result.append([token, Decimal(balance) * fraction])
+            result.append([token, balance * fraction])
 
         return result
 
     def underlying(self, wallet):
-        wallet = self.web3.to_checksum_address(wallet)
+        wallet = Web3.to_checksum_address(wallet)
         amount = balance_of(wallet, LPTOKENS_DB[self.addr]['staked_token'], self.block, self.blockchain)
         return self._underlying(amount)
 
     def lptoken_underlying(self, wallet):
-        wallet = self.web3.to_checksum_address(wallet)
+        wallet = Web3.to_checksum_address(wallet)
         amount = balance_of(wallet, self.addr, self.block, self.blockchain)
         return self._underlying(amount)
 
@@ -59,14 +59,15 @@ class LiquidityPool:
         return self._underlying(amount)
 
 
-
 def underlying(wallet, lptoken_address, block, web3=None):
     lp = LiquidityPool(lptoken_address, block, web3)
     return lp.underlying(wallet)
 
+
 def balance_of_lptoken_underlying(address, lptoken_address, block):
     lp = LiquidityPool(lptoken_address, block)
     return lp.lptoken_underlying(address)
+
 
 def pool_balance(lptoken_address, block):
     lp = LiquidityPool(lptoken_address, block)

@@ -1,3 +1,4 @@
+import json
 import requests
 from typing import List, Union, Dict
 from decimal import Decimal
@@ -9,11 +10,12 @@ def get_api_results(wallet: str, blockchain: str) -> Union[List[dict], str]:
     else:
         print("blockchain not available")
 
-    request = requests.get(
+    response = requests.get(
         f"https://api.hiddenhand.finance/reward/{chain_id}/{wallet}"
-    ).json()
-    if not request["error"]:
-        return request["data"]
+    )
+    result = json.loads(response.text, parse_float=Decimal)
+    if not result["error"]:
+        return result["data"]
     else:
         return "request returns error"
 
@@ -46,10 +48,7 @@ def underlying_all(
 
         balance = {"token": entry["token"], "balance": claimable}
         position["balances"].append(balance)
-    print(result)
-    print('')
 
-    #Replace 0x0 with 0x0000000000000000000000000000000000000000
     for position in result['positions']:
         position['balances'] = [
             {**entry, 'token': '0x0000000000000000000000000000000000000000'} if entry['token'] == '0x0' else entry for

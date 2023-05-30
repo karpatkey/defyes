@@ -55,7 +55,7 @@ def test_get_gauge_version():
     # LiquidityGaugeV2
     # LiquidityGaugeReward
     # RewardsOnlyGauge
-    
+
     gv = Curve.get_gauge_version(CURVE_3POOL_GAUGE, TEST_BLOCK, ETHEREUM, web3=WEB3, only_version=True)
     assert gv == 'LiquidityGauge'
 
@@ -73,7 +73,7 @@ def test_get_pool_data():
 def test_get_all_rewards(decimals):
     rewards = Curve.get_all_rewards(TEST_WALLET, X3CRV_ETH, TEST_BLOCK, ETHEREUM,
                                     web3=WEB3, decimals=decimals)
-    assert rewards == [[CRV_ETH, Decimal('120624446582848732188') / Decimal(10**(18 if decimals else 0))]]
+    assert rewards == [[CRV_ETH, Decimal('120624446582848732188') / Decimal(10**18 if decimals else 1)]]
 
 
 @pytest.mark.parametrize('reward', [True, False])
@@ -81,12 +81,12 @@ def test_get_all_rewards(decimals):
 def test_underlying(reward, decimals):
     u = Curve.underlying(TEST_WALLET, X3CRV_ETH, TEST_BLOCK, ETHEREUM, web3=WEB3,
                          reward=reward, decimals=decimals)
-    print(u) 
-    expected = [[DAI_ETH, Decimal('0E-18'), Decimal('0E-18')],
-                [USDC_ETH, 0.0, 0.0],
-                [USDT_ETH, 0.0, 0.0]]
+    print(u)
+    expected = [[DAI_ETH, Decimal('0'), Decimal('0')],
+                [USDC_ETH, Decimal('0'), Decimal('0')],
+                [USDT_ETH, Decimal('0'), Decimal('0')]]
     if reward:
-        expected.append([CRV_ETH, 120624446582848732188 / Decimal(10**(18 if decimals else 0))])
+        expected.append([CRV_ETH, 120624446582848732188 / Decimal(10**18 if decimals else 1)])
 
     assert u == expected
 
@@ -98,13 +98,13 @@ def test_unwrap(lptoken_amount, decimals):
                      decimals=decimals)
     print(u)
     expected = {0:
-                      [[DAI_ETH, 0.0],
-                      [USDC_ETH, 0.0],
-                      [USDT_ETH, 0.0]],
+                      [[DAI_ETH, Decimal('0')],
+                      [USDC_ETH, Decimal('0')],
+                      [USDT_ETH, Decimal('0')]],
                 10:
-                      [[DAI_ETH, Decimal('3917354685557199081.180899410') / Decimal(10**(18 if decimals else 0))],
-                      [USDC_ETH, Decimal('4147544.963364350419868516281') / Decimal(10**(6 if decimals else 0))],
-                      [USDT_ETH, Decimal('2190460.875671642443221745933') / Decimal(10**(6 if decimals else 0))]],
+                      [[DAI_ETH, Decimal('3917354685557199081.180899410') / Decimal(10**18 if decimals else 1)],
+                      [USDC_ETH, Decimal('4147544.963364350419868516281') / Decimal(10**6 if decimals else 1)],
+                      [USDT_ETH, Decimal('2190460.875671642443221745933') / Decimal(10**6 if decimals else 1)]],
                 }
     assert u == expected[lptoken_amount]
 
@@ -113,9 +113,9 @@ def test_unwrap(lptoken_amount, decimals):
 def test_pool_balances(decimals):
     pb = Curve.pool_balances(X3CRV_ETH, TEST_BLOCK, ETHEREUM, web3=WEB3, decimals=decimals)
     print(pb)
-    assert pb == [[DAI_ETH, Decimal('165857824629254122209119338') / Decimal(10**(18 if decimals else 0))],
-                  [USDC_ETH, Decimal('175604425510732') / Decimal(10**(6 if decimals else 0))],
-                  [USDT_ETH, Decimal('92743777795510') / Decimal(10**(6 if decimals else 0))]]
+    assert pb == [[DAI_ETH, Decimal('165857824629254122209119338') / Decimal(10**18 if decimals else 1)],
+                  [USDC_ETH, Decimal('175604425510732') / Decimal(10**6 if decimals else 1)],
+                  [USDT_ETH, Decimal('92743777795510') / Decimal(10**6 if decimals else 1)]]
 
 
 @pytest.mark.parametrize('decimals', [True, False])

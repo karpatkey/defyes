@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from defi_protocols import Azuro
 from defi_protocols.constants import XDAI, WXDAI
 from defi_protocols.functions import get_node
@@ -15,17 +17,27 @@ def test_get_deposit():
 
 
 def test_underlying():
-    assert Azuro.underlying(WALLET_N1, NFT_ID, BLOCK, XDAI, NODE, rewards=True) == [[WXDAI, 522206.9771458292],
-                                                                                    [WXDAI, 22206.97714582918]]
+    assert Azuro.underlying(WALLET_N1,
+                            NFT_ID,
+                            BLOCK,
+                            XDAI,
+                            NODE,
+                            rewards=True) == [[WXDAI, Decimal('522206.977145829181047864')],
+                                              [WXDAI, Decimal('22206.977145829181047864')]]
 
 
 def test_underlying_all():
-    assert [[[WXDAI, 2327299.1842438867], [WXDAI, 27299.184243886655]],
-            [[WXDAI, 0.0], [WXDAI, 0.028837093647137876]],
-            [[WXDAI, 1434603.3214181093], [WXDAI, 4613.321418109328]],
-            [[WXDAI, 71451.43632115095], [WXDAI, 1611.490569207598]],
-            [[WXDAI, 2327299.1842438867], [WXDAI, 27299.184243886655]]] == Azuro.underlying_all(WALLET_N1,
-                                                                                                BLOCK,
-                                                                                                XDAI,
-                                                                                                NODE,
-                                                                                                rewards=True)
+    assert Azuro.underlying_all(WALLET_N1,
+                                BLOCK,
+                                XDAI,
+                                NODE,
+                                rewards=True) == [[[WXDAI, Decimal('2327299.184243886654322408')],
+                                                   [WXDAI, Decimal('27299.184243886654322408')]],
+                                                  [[WXDAI, Decimal('0')],
+                                                   [WXDAI, Decimal('0.028837093647137877')]],
+                                                  [[WXDAI, Decimal('1434603.321418109328231961')],
+                                                   [WXDAI, Decimal('4613.321418109328231961')]],
+                                                  [[WXDAI, Decimal('71451.436321150949751018')],
+                                                   [WXDAI, Decimal('1611.490569207598008139')]],
+                                                  [[WXDAI, Decimal('2327299.184243886654322408')],
+                                                   [WXDAI, Decimal('27299.184243886654322408')]]]

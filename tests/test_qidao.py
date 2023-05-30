@@ -12,15 +12,16 @@ def test_get_vaul_address():
 def test_get_vault_data():
     block = 27814350
     data = QiDao.get_vault_data(0, GnosisTokenAddr.GNO, block, XDAI)
+    assert data.pop('liquidation_price').is_nan()
     assert data == {'collateral_address': GnosisTokenAddr.GNO, 'collateral_amount': Decimal('12.669153514705549101'),
                     'collateral_token_usd_value': Decimal('115.44042'),
                     'debt_address': GnosisTokenAddr.MAI, 'debt_amount': Decimal('0'),
                     'debt_token_usd_value': Decimal('0.99446664920316931668708736'), 'debt_usd_value': Decimal('0'),
-                    'collateral_ratio': float('infinity'), 'available_debt_amount': Decimal('3259.913205994382808393'),
-                    'liquidation_ratio': 130, 'liquidation_price': None}
+                    'collateral_ratio': Decimal('Infinity'), 'available_debt_amount': Decimal('3259.913205994382808393'),
+                    'liquidation_ratio': 130}
 
 
 def test_underlying():
     block = 27814350
     underlying = QiDao.underlying(0, GnosisTokenAddr.GNO, block, XDAI)
-    assert underlying == [[GnosisTokenAddr.GNO, Decimal('12.669153514705549101')], [GnosisTokenAddr.MAI, Decimal('-0')]]
+    assert underlying == [[GnosisTokenAddr.GNO, Decimal('12.669153514705549101')], [GnosisTokenAddr.MAI, Decimal('0')]]
