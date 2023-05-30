@@ -1,5 +1,5 @@
 from decimal import Decimal
-
+import pytest
 from defi_protocols import Ankr
 from defi_protocols.constants import E_ADDRESS, ETHEREUM
 
@@ -14,7 +14,14 @@ def test_underlying():
     underlying = Ankr.underlying(WALLET, TOKEN_ADDR, block, BLOCKCHAIN)
     assert underlying == [[E_ADDRESS, Decimal('578.291718333123492848')]]
 
+
+def test_underlying_deriv():
+    block = 17293000
+    underlying = Ankr.underlying(WALLET, TOKEN_ADDR, block, BLOCKCHAIN, deriv=True)
+    assert underlying == [[TOKEN_ADDR, Decimal('518.999055369601472876')]]
+
+
 def test_underlying_not_ankr_address():
     block = 17293000
-    underlying = Ankr.underlying(WALLET, RETH_ADDRESS, block, BLOCKCHAIN)
-    assert underlying == 'not a Ankr Staked ETH address'
+    with pytest.raises(ValueError):
+        Ankr.underlying(WALLET, RETH_ADDRESS, block, BLOCKCHAIN)

@@ -27,29 +27,29 @@ DERIVS_DB = {
 }
 
 
-
 @dataclass
 class EthDerivative:
+    name: str
     addr: str
     block: Union[int, str] = 'latest'
     web3: Web3 = None
     decimals: bool = True
     blockchain: str = ETHEREUM
-    eth_value_function: str = field(init=False) 
+    eth_value_function: str = field(init=False)
     eth_value_abi: str = field(init=False)
-    
+
     def __post_init__(self):
         self.addr = Web3.to_checksum_address(self.addr)
+        if self.addr not in DERIVS_DB:
+            raise ValueError(f"Address '{self.addr}' is not a known derivative.")
+        db = DERIVS_DB[self.addr]
+        if self.name != db["name"]:
+            raise ValueError("Not a '%s' address" % db["name"])
         if self.web3 is None:
             self.web3 = get_node(self.blockchain, block=self.block)
-        self.eth_value_abi = DERIVS_DB[self.addr]['eth_value_abi']
+        self.eth_value_abi = db['eth_value_abi']
         self.contract_instance = get_contract(self.addr, self.blockchain, abi=self.eth_value_abi)
-        self.eth_value_function = DERIVS_DB[self.addr]['eth_value_function']
-        self.name = DERIVS_DB[self.addr]['name']
-    
-    @property
-    def protocol_name(self):
-        return self.name
+        self.eth_value_function = db['eth_value_function']
 
     def _underlying(self, token, eth_value, token_decimals):
         result = []
@@ -60,8 +60,8 @@ class EthDerivative:
     def underlying(self, wallet, deriv):
         wallet = self.web3.to_checksum_address(wallet)
         amount = balance_of(wallet, self.addr, self.block, self.blockchain, decimals=False)
-        token_decimals = get_decimals(self.addr,self.blockchain) if self.decimals else 0
-        eth_value = self.contract_instance.functions[self.eth_value_function](amount).call(block_identifier=self.block)
+        token_decimals = get_decimals(self.addr, self.blockchain) if self.decimals else 0
+        eth_value = self.contract_instance.functions[self.eth_value_function](int(amount)).call(block_identifier=self.block)
         if not deriv:
             return self._underlying(DERIVS_DB[self.addr]['underlying'], eth_value, token_decimals)
         else:

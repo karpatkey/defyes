@@ -1,5 +1,5 @@
 from decimal import Decimal
-
+import pytest
 from defi_protocols import Rocket
 from defi_protocols.constants import E_ADDRESS, ETHEREUM
 
@@ -10,10 +10,16 @@ BLOCKCHAIN = ETHEREUM
 
 def test_underlying():
     block = 17293000
-    underlying = Rocket.underlying(WALLET, TOKEN_ADDR, block)
+    underlying = Rocket.underlying(WALLET, TOKEN_ADDR, block, BLOCKCHAIN)
     assert underlying == [[E_ADDRESS, Decimal('991.795974817271166526')]]
+
+
+def test_underlying_deriv():
+    block = 17293000
+    underlying = Rocket.underlying(WALLET, TOKEN_ADDR, block, BLOCKCHAIN, deriv=True)
+    assert underlying == [[TOKEN_ADDR, Decimal('925.927757509123691032')]]
 
 def test_underlying_not_reth_address():
     block = 17293000
-    underlying = Rocket.underlying(WALLET, ANKR_ADDR, block, BLOCKCHAIN)
-    assert underlying == 'not a Ankr Staked ETH address'
+    with pytest.raises(ValueError):
+        Rocket.underlying(WALLET, ANKR_ADDR, block, BLOCKCHAIN)
