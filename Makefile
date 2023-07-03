@@ -1,5 +1,5 @@
 CONFIG_PATH ?= config.json
-image := defi-protocols
+image := Defyes
 path := defi_protocols tests
 repo_dir := $(shell git rev-parse --show-toplevel)
 docker_base_run := docker run --rm -i \

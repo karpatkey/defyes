@@ -3,7 +3,7 @@ requires = ["setuptools>=65.5.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "defi-protocols"
+name = "Defyes"
 version = "0.0.9"
 description = "A simple defi_protocols package"
 readme = "README.md"
@@ -31,7 +31,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/KarpatkeyDAO/defi-protocols"
+Homepage = "https://github.com/KarpatkeyDAO/Defyes"
 
 [tool.setuptools.packages.find]
 include = ["defi_protocols*"]

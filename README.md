@@ -1,7 +1,7 @@
 
 <!-- logo -->
 <p align="center">
-  <img width='400' src="https://raw.github.com/KarpatkeyDAO/defi-protocols/main/img/karpatkey_logo_black.png">
+  <img width='400' src="https://raw.github.com/KarpatkeyDAO/Defyes/main/img/karpatkey_logo_black.png">
 </p>
 
 <!-- tag line -->
@@ -14,27 +14,27 @@
 
 ## Repo Url
 
-[KarpatkeyDAO/defi-protocols](https://github.com/KarpatkeyDAO/defi-protocols)
+[KarpatkeyDAO/Defyes](https://github.com/KarpatkeyDAO/Defyes)
 
 
 ## Installing from repository
 
 ```bash
-pip3 install git+https://github.com/KarpatkeyDAO/defi-protocols.git
+pip3 install git+https://github.com/KarpatkeyDAO/Defyes.git
 ```
 
 ## Installing latest version available on pypi
 
-[pip3 install defi-protocols](https://pypi.org/project/defi-protocols/)
+[pip3 install Defyes](https://pypi.org/project/Defyes/)
 
 
 ## Config 
 
-- First you will have to modify the [config.json](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/defi_protocols/config.json)
+- First you will have to modify the [config.json](https://github.com/KarpatkeyDAO/Defyes/blob/main/defi_protocols/config.json)
 
 - You should provide `RPC` endpoints and `EXPLORER API KEYS`
 
-- You should set the env `CONFIG_PATH` env with the config.json's absolute path or the config.json can be placed under default package path `/path/to/python/site-packages/defi-protocols/config.json`
+- You should set the env `CONFIG_PATH` env with the config.json's absolute path or the config.json can be placed under default package path `/path/to/python/site-packages/Defyes/config.json`
 
   <details><summary><b>Test</b></summary>
 
@@ -61,27 +61,27 @@ pip3 install git+https://github.com/KarpatkeyDAO/defi-protocols.git
 
 | Protocol      | Underlying | Rewards | Fees | docs |
 |---------------|------------|---------|------|------|
-| AAVE          | ✔          | ✔       |  -   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/Aave.md)   |
-| Agave         | ✔          | ✔       |  -   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/Agave.md)   |
-| Aura          | ✔          | ✔       |  -   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/Aura.md)   |
-| Balancer      | ✔          | ✔       |  ✔   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/Balancer.md)   |
-| Bancor        | ✔          | ?       |  -   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/Bancor.md)   |
-| Compound      | ✔          | pending |  -   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/Compound.md)   |
-| Convex        | ✔          | ✔       |  -   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/Convex.md)   |
-| Curve         | ✔          | ✔       |  ✔   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/Curve.md)   |
-| Elk           | ✔          | ✔       |  ✔   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/Elk.md)   |
-| Honeyswap     | ✔          | -       |  ✔   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/Honeyswap.md)   |
-| Maker         | ✔          | -       |  -   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/Maker.md)   |
-| QiDao         | ✔          | -       |  -   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/QiDao.md)   |
-| SushiSwap     | ✔          | ✔       |  ✔   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/Sushiswap.md)   |
-| Swapr         | ✔          | ✔       |  ✔   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/Swapr.md)   |
-| Symmetric     | ✔          | ✔       |  ✔   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/Symmetric.md)   |
-| Unit Protocol | ✔          | ✔       |  -   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/Unit.md)   |
-| Uniswap V3    | ✔          | ?       |  -   |  [link](https://github.com/KarpatkeyDAO/defi-protocols/blob/main/docs/UniswapV3.md)   |
+| AAVE          | ✔          | ✔       |  -   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/Aave.md)   |
+| Agave         | ✔          | ✔       |  -   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/Agave.md)   |
+| Aura          | ✔          | ✔       |  -   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/Aura.md)   |
+| Balancer      | ✔          | ✔       |  ✔   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/Balancer.md)   |
+| Bancor        | ✔          | ?       |  -   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/Bancor.md)   |
+| Compound      | ✔          | pending |  -   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/Compound.md)   |
+| Convex        | ✔          | ✔       |  -   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/Convex.md)   |
+| Curve         | ✔          | ✔       |  ✔   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/Curve.md)   |
+| Elk           | ✔          | ✔       |  ✔   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/Elk.md)   |
+| Honeyswap     | ✔          | -       |  ✔   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/Honeyswap.md)   |
+| Maker         | ✔          | -       |  -   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/Maker.md)   |
+| QiDao         | ✔          | -       |  -   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/QiDao.md)   |
+| SushiSwap     | ✔          | ✔       |  ✔   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/Sushiswap.md)   |
+| Swapr         | ✔          | ✔       |  ✔   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/Swapr.md)   |
+| Symmetric     | ✔          | ✔       |  ✔   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/Symmetric.md)   |
+| Unit Protocol | ✔          | ✔       |  -   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/Unit.md)   |
+| Uniswap V3    | ✔          | ?       |  -   |  [link](https://github.com/KarpatkeyDAO/Defyes/blob/main/docs/UniswapV3.md)   |
 
 ## Cache
 
-To reduce the number of calls to RPC endpoints, and thus significantly speed up the functions, defi-protocols implements a cache where the result of some web3 calls are stored.
+To reduce the number of calls to RPC endpoints, and thus significantly speed up the functions, Defyes implements a cache where the result of some web3 calls are stored.
 If the same web3 function is called, with the very same arguments, its result will be retrieved from the cache.
 
 By default the cache is enabled and caches all calls to web3 'eth_call' when a block other than 'latest' is specified.
@@ -4175,7 +4175,7 @@ pre-commit hook to encorage you to commit well formatted code.
 
 Run `make build` to build the docker image used to following development workflows.
 
-The default image name used is `defi-protocols`. You could override it specify `make build image=...`.
+The default image name used is `Defyes`. You could override it specify `make build image=...`.
 
 The default `CONFIG_FILE` is defined as `config.json` from the current working directory.
 
