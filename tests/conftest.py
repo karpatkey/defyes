@@ -2,7 +2,7 @@ import logging
 
 import pytest
 
-from defi_protocols import add_stderr_logger
+from defyes import add_stderr_logger
 
 
 def pytest_addoption(parser):

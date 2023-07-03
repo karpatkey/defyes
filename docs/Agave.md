@@ -10,8 +10,8 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols.constants import XDAI
-  from defi_protocols import Agave
+  from defyes.constants import XDAI
+  from defyes import Agave
 
   pdp_contract = Agave.get_contract(Agave.PDP_XDAI, XDAI)
   tokens = Agave.get_reserves_tokens(pdp_contract, 'latest')
@@ -31,9 +31,9 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols.constants import XDAI
-  from defi_protocols.functions import get_node
-  from defi_protocols import Agave
+  from defyes.constants import XDAI
+  from defyes.functions import get_node
+  from defyes import Agave
 
   web3 = get_node(XDAI, 'latest', 0)
   f2 = Agave.get_reserves_tokens_balances(web3, '0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', XDAI)
@@ -55,8 +55,8 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols.constants import XDAI
-  from defi_protocols import Agave
+  from defyes.constants import XDAI
+  from defyes import Agave
 
   f3 = Agave.get_data('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', XDAI)
   print(f3)
@@ -75,8 +75,8 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols.constants import XDAI
-  from defi_protocols import Agave
+  from defyes.constants import XDAI
+  from defyes import Agave
 
   f4 = Agave.get_all_rewards('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', XDAI)
   print(f4)
@@ -96,11 +96,11 @@ FIXME: this function does not exist anymore
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Agave
+  from defyes import Agave
 
   f5 = Agave.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', XDAI, reward=True)
 

@@ -1,7 +1,7 @@
 from decimal import Decimal
 
-from defi_protocols import QiDao
-from defi_protocols.constants import XDAI, GnosisTokenAddr
+from defyes import QiDao
+from defyes.constants import XDAI, GnosisTokenAddr
 
 
 def test_get_vaul_address():

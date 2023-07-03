@@ -2,9 +2,9 @@ from decimal import Decimal
 
 import pytest
 
-from defi_protocols import IronBank
-from defi_protocols.constants import OPTIMISM
-from defi_protocols.functions import get_node
+from defyes import IronBank
+from defyes.constants import OPTIMISM
+from defyes.functions import get_node
 
 # 2023.04.27
 TEST_BLOCK = 94882677

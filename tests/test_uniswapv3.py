@@ -2,9 +2,9 @@ from decimal import Decimal
 
 import pytest
 
-from defi_protocols import UniswapV3
-from defi_protocols.constants import ETHEREUM, ETHTokenAddr
-from defi_protocols.functions import get_node
+from defyes import UniswapV3
+from defyes.constants import ETHEREUM, ETHTokenAddr
+from defyes.functions import get_node
 
 WALLET_N1 = "0x849D52316331967b6fF1198e5E32A0eB168D039d"
 WALLET_N2 = "0x0EFcCBb9E2C09Ea29551879bd9Da32362b32fc89"

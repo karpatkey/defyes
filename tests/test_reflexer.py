@@ -1,7 +1,7 @@
 from decimal import Decimal
 
-from defi_protocols import Reflexer
-from defi_protocols.constants import ETHTokenAddr
+from defyes import Reflexer
+from defyes.constants import ETHTokenAddr
 
 LPTOKEN_ADDR = "0xd6f3768e62ef92a9798e5a8cedd2b78907cecef9"
 WALLET = "0x849D52316331967b6fF1198e5E32A0eB168D039d"

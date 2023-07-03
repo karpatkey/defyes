@@ -1,5 +1,5 @@
 # Manifest syntax https://docs.python.org/2/distutils/sourcedist.html
-graft defi_protocols
+graft defyes
 
 global-exclude __pycache__  *.pyc *.pyo *.orig *,cover
 

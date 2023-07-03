@@ -2,9 +2,9 @@ from decimal import Decimal
 
 import pytest
 
-from defi_protocols import Convex
-from defi_protocols.constants import CRV_ETH, CVX_ETH, DAI_ETH, ETHEREUM, LDO_ETH, USDC_ETH, USDT_ETH, X3CRV_ETH
-from defi_protocols.functions import get_contract, get_node
+from defyes import Convex
+from defyes.constants import CRV_ETH, CVX_ETH, DAI_ETH, ETHEREUM, LDO_ETH, USDC_ETH, USDT_ETH, X3CRV_ETH
+from defyes.functions import get_contract, get_node
 
 web3 = get_node(ETHEREUM)
 

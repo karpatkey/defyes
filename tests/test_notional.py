@@ -1,8 +1,8 @@
 from decimal import Decimal
 
-from defi_protocols import Notional
-from defi_protocols.constants import ETHEREUM, ZERO_ADDRESS, ETHTokenAddr
-from defi_protocols.functions import get_node
+from defyes import Notional
+from defyes.constants import ETHEREUM, ZERO_ADDRESS, ETHTokenAddr
+from defyes.functions import get_node
 
 cETH = "0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5"
 nETH = "0xabc07BF91469C5450D6941dD0770E6E6761B90d6"

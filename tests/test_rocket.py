@@ -1,7 +1,7 @@
 from decimal import Decimal
 
-from defi_protocols import RocketPool
-from defi_protocols.constants import ETHEREUM, ZERO_ADDRESS
+from defyes import RocketPool
+from defyes.constants import ETHEREUM, ZERO_ADDRESS
 
 ROCKET_ADDR = "0xae78736Cd615f374D3085123A210448E74Fc6393"
 WALLET = "0xEADB3840596cabF312F2bC88A4Bb0b93A4E1FF5F"

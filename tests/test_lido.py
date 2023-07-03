@@ -2,9 +2,9 @@ from decimal import Decimal
 
 import pytest
 
-from defi_protocols import Lido
-from defi_protocols.constants import ETHEREUM, ZERO_ADDRESS, ETHTokenAddr
-from defi_protocols.functions import get_node
+from defyes import Lido
+from defyes.constants import ETHEREUM, ZERO_ADDRESS, ETHTokenAddr
+from defyes.functions import get_node
 
 WALLET_N1 = "0x3591D9351C736Daa7867fA6629D3A10880d78b83"
 

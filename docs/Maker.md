@@ -9,11 +9,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Maker
+  from defyes import Maker
 
   f1 = Maker.get_vault_data(1, 'latest')
   
@@ -40,11 +40,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Maker
+  from defyes import Maker
 
   f2 = Maker.underlying(1, 'latest')
   

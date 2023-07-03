@@ -2,9 +2,9 @@ from decimal import Decimal
 
 import pytest
 
-from defi_protocols import Curve
-from defi_protocols.constants import CRV_ETH, DAI_ETH, ETHEREUM, USDC_ETH, USDT_ETH, X3CRV_ETH
-from defi_protocols.functions import get_node
+from defyes import Curve
+from defyes.constants import CRV_ETH, DAI_ETH, ETHEREUM, USDC_ETH, USDT_ETH, X3CRV_ETH
+from defyes.functions import get_node
 
 # 2023.04.06
 TEST_BLOCK = 16993460

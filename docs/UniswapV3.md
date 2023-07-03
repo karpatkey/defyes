@@ -31,11 +31,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import UniswapV3
+  from defyes import UniswapV3
 
   f2 = UniswapV3.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', 214704, 'latest', ETHEREUM)
 
@@ -58,11 +58,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import UniswapV3
+  from defyes import UniswapV3
 
   f3 = UniswapV3.allnfts('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', ETHEREUM)
 
@@ -86,11 +86,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import UniswapV3
+  from defyes import UniswapV3
 
   f4 = UniswapV3.get_fee(346143, 'latest', ETHEREUM)
 

@@ -2,9 +2,9 @@ from decimal import Decimal
 
 import pytest
 
-from defi_protocols import Bancor
-from defi_protocols.constants import E_ADDRESS, ETHEREUM, ETHTokenAddr
-from defi_protocols.functions import get_node
+from defyes import Bancor
+from defyes.constants import E_ADDRESS, ETHEREUM, ETHTokenAddr
+from defyes.functions import get_node
 
 WALLET_N1 = "0x849d52316331967b6ff1198e5e32a0eb168d039d"
 WALLET_N2 = "0xc0167f4B1bb78912DF9920Bd146151942620Da15"

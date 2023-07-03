@@ -11,4 +11,4 @@ JQ=$JQ" | .apikeys.optimism        = \"${APIKEYS_OPTIMISM}\""
 JQ=$JQ" | .apikeys.arbitrum        = \"${APIKEYS_ARBITRUM}\""
 echo $JQ 
 
-jq "$JQ" < defi_protocols/config.json > /tmp/tmp_config.json
+jq "$JQ" < defyes/config.json > /tmp/tmp_config.json

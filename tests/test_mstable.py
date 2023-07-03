@@ -1,7 +1,7 @@
 from decimal import Decimal
 
-from defi_protocols import mStable
-from defi_protocols.constants import ETHEREUM, ETHTokenAddr
+from defyes import mStable
+from defyes.constants import ETHEREUM, ETHTokenAddr
 
 WALLET = "0x83dE1603DF0249c0155e30c636598FEE5E11DBdc"
 TOKEN_ADDR = "0x455fb969dc06c4aa77e7db3f0686cc05164436d2"

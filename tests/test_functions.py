@@ -3,8 +3,8 @@ import datetime
 import pytz
 from pytest import raises
 
-from defi_protocols.constants import ETHEREUM, STETH_ETH, USDC_ETH, XDAI, ETHTokenAddr
-from defi_protocols.functions import date_to_block, get_node, get_symbol, search_proxy_impl_address
+from defyes.constants import ETHEREUM, STETH_ETH, USDC_ETH, XDAI, ETHTokenAddr
+from defyes.functions import date_to_block, get_node, get_symbol, search_proxy_impl_address
 
 
 def test_get_node():

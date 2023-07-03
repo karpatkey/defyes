@@ -9,11 +9,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import SushiSwap
+  from defyes import SushiSwap
 
   web3 = get_node(ETHEREUM, 'latest', 0)
 
@@ -40,11 +40,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import SushiSwap
+  from defyes import SushiSwap
 
   web3 = get_node(ETHEREUM, 'latest', 0)
 
@@ -70,11 +70,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import SushiSwap
+  from defyes import SushiSwap
 
   f3 = SushiSwap.get_lptoken_data('0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', 'latest', ETHEREUM)
 
@@ -100,11 +100,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import SushiSwap
+  from defyes import SushiSwap
 
   f4 = SushiSwap.get_virtual_total_supply('0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', 'latest', ETHEREUM)
 
@@ -128,11 +128,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import SushiSwap
+  from defyes import SushiSwap
 
   web3 = get_node(ETHEREUM, 'latest', 0)
 
@@ -164,11 +164,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import SushiSwap
+  from defyes import SushiSwap
 
   web3 = get_node(ETHEREUM, 'latest', 0)
 
@@ -200,11 +200,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import SushiSwap
+  from defyes import SushiSwap
 
   web3 = get_node(ETHEREUM, 'latest', 0)
 
@@ -235,11 +235,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import SushiSwap
+  from defyes import SushiSwap
 
   f8 = SushiSwap.get_all_rewards('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', 'latest', ETHEREUM)
 
@@ -267,11 +267,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import SushiSwap
+  from defyes import SushiSwap
 
   f9 = SushiSwap.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', 'latest', ETHEREUM)
 
@@ -298,11 +298,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import SushiSwap
+  from defyes import SushiSwap
 
   f10 = SushiSwap.pool_balances('0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', 'latest', ETHEREUM)
 
@@ -325,11 +325,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import SushiSwap
+  from defyes import SushiSwap
 
   f11 = SushiSwap.swap_fees('0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', 16392251, 'latest', ETHEREUM)
 
@@ -355,11 +355,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import SushiSwap
+  from defyes import SushiSwap
 
   f12 = SushiSwap.get_wallet_by_tx('0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', 'latest', ETHEREUM)
 
@@ -379,11 +379,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import SushiSwap
+  from defyes import SushiSwap
 
   f13 = SushiSwap.get_rewards_per_unit('0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', ETHEREUM)
 

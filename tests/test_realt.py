@@ -2,9 +2,9 @@ from decimal import Decimal
 
 import pytest
 
-from defi_protocols import RealT
-from defi_protocols.constants import XDAI
-from defi_protocols.functions import get_node
+from defyes import RealT
+from defyes.constants import XDAI
+from defyes.functions import get_node
 
 TEST_BLOCK = 27450341
 TEST_WALLET = "0x10e4597ff93cbee194f4879f8f1d54a370db6969"

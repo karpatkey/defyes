@@ -30,7 +30,7 @@ pip3 install git+https://github.com/KarpatkeyDAO/Defyes.git
 
 ## Config 
 
-- First you will have to modify the [config.json](https://github.com/KarpatkeyDAO/Defyes/blob/main/defi_protocols/config.json)
+- First you will have to modify the [config.json](https://github.com/KarpatkeyDAO/Defyes/blob/main/defyes/config.json)
 
 - You should provide `RPC` endpoints and `EXPLORER API KEYS`
 
@@ -44,7 +44,7 @@ pip3 install git+https://github.com/KarpatkeyDAO/Defyes.git
   export CONFIG_PATH=/tmp/config.json
   ```
   ```python
-  from defi_protocols.constants import config_data
+  from defyes.constants import config_data
 
   print(config_data)
   ```
@@ -130,12 +130,12 @@ Example usage:
 
 ### Cache config
 
-By default the cache is stored in a non persistent directory `/tmp/defi_protocols/`.
+By default the cache is stored in a non persistent directory `/tmp/defyes/`.
 To change the directory use the environment variable `DEFI_PROTO_CACHE_DIR=/path/to/dir`.
 
 To disable the cache define the `DEFI_PROTO_CACHE_DISABLE` environment variable.
 
-To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protocols.cache.clean()`.
+To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defyes.cache.clean()`.
 
 
 ## Docs
@@ -532,7 +532,7 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
   ## General setup for an application
 
-  defi_protocols will emit several logs using the standard libary logging module. It is expected that the application does the logging setup, for example using `logging.basicConfig`. You can use the standard logger interface to change the log level for defi_protocols’s logger:
+  defyes will emit several logs using the standard libary logging module. It is expected that the application does the logging setup, for example using `logging.basicConfig`. You can use the standard logger interface to change the log level for defyes’s logger:
 
   ```python
   import logging
@@ -569,9 +569,9 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Aave
+    from defyes import Aave
 
     f1 = get_contract('0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d', ETHEREUM)
 
@@ -594,9 +594,9 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Aave
+    from defyes import Aave
 
     web3 = get_node(ETHEREUM, 'latest', 0)
 
@@ -619,9 +619,9 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Aave
+    from defyes import Aave
 
     f3 = Aave.get_data('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', ETHEREUM)
 
@@ -645,9 +645,9 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Aave
+    from defyes import Aave
 
     f4 = Aave.get_all_rewards('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', ETHEREUM)
 
@@ -669,9 +669,9 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Aave
+    from defyes import Aave
 
     f5 = Aave.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', ETHEREUM, reward=True)
 
@@ -703,11 +703,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Agave
+    from defyes import Agave
 
 
     f1 = Agave.get_contract('0x24dCbd376Db23e4771375092344f5CbEA3541FC0', XDAI)
@@ -730,11 +730,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Agave
+    from defyes import Agave
 
     web3 = get_node(XDAI, 'latest', 0)
 
@@ -759,11 +759,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Agave
+    from defyes import Agave
 
     f3 = Agave.get_data('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', XDAI)
 
@@ -785,11 +785,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Agave
+    from defyes import Agave
 
     f4 = Agave.get_all_rewards('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', XDAI)
 
@@ -811,11 +811,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Agave
+    from defyes import Agave
 
     f5 = Agave.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', XDAI, reward=True)
 
@@ -852,11 +852,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Aura
+    from defyes import Aura
 
     f0 = get_contract('0xA57b8d98dAE62B26Ec3bcC4a365338157060B234', ETHEREUM)
 
@@ -881,11 +881,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Aura
+    from defyes import Aura
 
     web3 = get_node(ETHEREUM, 'latest', 0)
 
@@ -912,11 +912,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Aura
+    from defyes import Aura
 
     web3 = get_node(ETHEREUM, 'latest', 0)
 
@@ -942,11 +942,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Aura
+    from defyes import Aura
 
     f4 = Aura.get_extra_rewards_airdrop('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', ETHEREUM)
 
@@ -969,11 +969,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Aura
+    from defyes import Aura
 
     ```
 
@@ -997,11 +997,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Aura
+    from defyes import Aura
 
     f6 = Aura.get_all_rewards('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0xCfCA23cA9CA720B6E98E3Eb9B6aa0fFC4a5C08B9', 'latest', ETHEREUM)
 
@@ -1028,11 +1028,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Aura
+    from defyes import Aura
 
     f7 = Aura.get_locked('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', ETHEREUM)
 
@@ -1061,11 +1061,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Aura
+    from defyes import Aura
 
     f8 = Aura.get_staked('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', ETHEREUM)
 
@@ -1094,11 +1094,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Aura
+    from defyes import Aura
 
     f9 = Aura.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0xCfCA23cA9CA720B6E98E3Eb9B6aa0fFC4a5C08B9', 'latest', ETHEREUM)
 
@@ -1125,11 +1125,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Aura
+    from defyes import Aura
 
     f10 = Aura.pool_balances('0xCfCA23cA9CA720B6E98E3Eb9B6aa0fFC4a5C08B9', 'latest', ETHEREUM)
 
@@ -1166,11 +1166,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Balancer
+    from defyes import Balancer
 
     f1 = Balancer.get_lptoken_data('0x7B50775383d3D6f0215A8F290f2C9e2eEBBEceb2', 'latest', ETHEREUM)
 
@@ -1201,11 +1201,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Balancer
+    from defyes import Balancer
 
     
     web3 = get_node(ETHEREUM, 'latest', 0)
@@ -1239,11 +1239,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Balancer
+    from defyes import Balancer
 
     web3 = get_node(ETHEREUM, 'latest', 0)
     f1 = get_contract('0x68d019f64A7aa97e2D4e7363AEE42251D08124Fb', ETHEREUM)
@@ -1271,11 +1271,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Balancer
+    from defyes import Balancer
 
     web3 = get_node(ETHEREUM, 'latest', 0)
     f4 = Balancer.get_vebal_rewards(web3, '0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', ETHEREUM, decimals=True)
@@ -1303,11 +1303,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Balancer
+    from defyes import Balancer
     
     f5 = Balancer.get_all_rewards('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x7B50775383d3D6f0215A8F290f2C9e2eEBBEceb2', 'latest', ETHEREUM)
     
@@ -1336,11 +1336,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Balancer
+    from defyes import Balancer
     
     f6 = Balancer.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x7B50775383d3D6f0215A8F290f2C9e2eEBBEceb2', 'latest', ETHEREUM)
     
@@ -1370,11 +1370,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Balancer
+    from defyes import Balancer
     
     f7 = Balancer.pool_balances('0x7B50775383d3D6f0215A8F290f2C9e2eEBBEceb2', 'latest', ETHEREUM) 
 
@@ -1398,11 +1398,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Balancer
+    from defyes import Balancer
     
     f8 = Balancer.swap_fees('0x7B50775383d3D6f0215A8F290f2C9e2eEBBEceb2', 16374265, 'latest', ETHEREUM)
 
@@ -1433,11 +1433,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Bancor
+    from defyes import Bancor
 
     f1 = Bancor.underlying('0x36FAbE4cAeF8c190550b6f93c306A5644E7dCef6', '0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', ETHEREUM)
 
@@ -1459,11 +1459,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Bancor
+    from defyes import Bancor
 
     f2 = Bancor.underlying_all('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', ETHEREUM)
 
@@ -1496,11 +1496,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Convex
+    from defyes import Convex
 
     f1 = Convex.get_pool_info('0x9fC689CCaDa600B6DF723D9E47D84d76664a1F23', 'latest')
 
@@ -1529,11 +1529,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Convex
+    from defyes import Convex
 
     web3 = get_node(ETHEREUM, 'latest', 0)
     f1 = get_contract('0xf34DFF761145FF0B05e917811d488B441F33a968', ETHEREUM)
@@ -1560,11 +1560,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Convex
+    from defyes import Convex
 
     web3 = get_node(ETHEREUM, 'latest', 0)
     f1 = get_contract('0xf34DFF761145FF0B05e917811d488B441F33a968', ETHEREUM)
@@ -1589,11 +1589,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Convex
+    from defyes import Convex
 
     ```
 
@@ -1616,11 +1616,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Convex
+    from defyes import Convex
 
     f1 = get_contract('0xf34DFF761145FF0B05e917811d488B441F33a968', ETHEREUM)
     f4 = Convex.get_all_rewards('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'f1', 'latest', ETHEREUM)
@@ -1649,11 +1649,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Convex
+    from defyes import Convex
 
     f5 = Convex.get_locked('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', ETHEREUM)
     
@@ -1683,11 +1683,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Convex
+    from defyes import Convex
 
     f6 = Convex.get_staked('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', ETHEREUM)
     
@@ -1716,11 +1716,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Convex
+    from defyes import Convex
 
     f7 = Convex.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x9fC689CCaDa600B6DF723D9E47D84d76664a1F23', 'latest', ETHEREUM)
     
@@ -1748,11 +1748,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Convex
+    from defyes import Convex
 
     f8 = Convex.pool_balances('0x9fC689CCaDa600B6DF723D9E47D84d76664a1F23', 'latest', ETHEREUM)
     
@@ -1797,11 +1797,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Curve
+    from defyes import Curve
 
     web3 = get_node(ETHEREUM, 'latest', 0)
     f1 = Curve.get_registry_contract(web3, 3, 'latest', ETHEREUM)
@@ -1822,11 +1822,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Curve
+    from defyes import Curve
 
     web3 = get_node(XDAI, 'latest', 0)
     
@@ -1852,11 +1852,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Curve
+    from defyes import Curve
 
     f3 = Curve.get_gauge_version('0x1891E46859DBf78EeEfb652425755494eE8aD7bf', 'latest', XDAI)
 
@@ -1878,11 +1878,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Curve
+    from defyes import Curve
 
     web3 = get_node(XDAI, 'latest', 0)
     
@@ -1908,11 +1908,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Curve
+    from defyes import Curve
 
     web3 = get_node(ETHEREUM, 'latest', 0)
     
@@ -1938,11 +1938,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Curve
+    from defyes import Curve
 
     f6 = Curve.get_lptoken_data('0xc4AD29ba4B3c580e6D59105FFf484999997675Ff', 'latest', ETHEREUM)
 
@@ -1970,11 +1970,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Curve
+    from defyes import Curve
 
     f7 = Curve.get_all_rewards('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0xc4AD29ba4B3c580e6D59105FFf484999997675Ff', 'latest', ETHEREUM)
 
@@ -2002,11 +2002,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Curve
+    from defyes import Curve
 
     f8 = Curve.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x1337BedC9D22ecbe766dF105c9623922A27963EC', 'latest', XDAI )
 
@@ -2032,11 +2032,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Curve
+    from defyes import Curve
 
     
     ```
@@ -2058,11 +2058,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Curve
+    from defyes import Curve
 
     f10 = Curve.pool_balances('0x1337BedC9D22ecbe766dF105c9623922A27963EC', 'latest', XDAI)
 
@@ -2086,11 +2086,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Curve
+    from defyes import Curve
 
     f11 = Curve.swap_fees('0x1337BedC9D22ecbe766dF105c9623922A27963EC', 25913602, 'latest', XDAI)
 
@@ -2122,11 +2122,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Elk
+    from defyes import Elk
 
 
     f1 = Elk.get_lptoken_data('0xA27E5775317F3f301B5b08BabCdE0a20FEAE7f09', 'latest', ETHEREUM)
@@ -2151,11 +2151,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Elk
+    from defyes import Elk
 
     web3 = get_node(ETHEREUM, 'latest', 0)
     
@@ -2185,11 +2185,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Elk
+    from defyes import Elk
 
     web3 = get_node(ETHEREUM, 'latest', 0)
     f2 = get_contract('0xF220eA963D27Ebe782f09403017B29692A4fC4aE', ETHEREUM)
@@ -2218,11 +2218,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Elk
+    from defyes import Elk
 
     web3 = get_node(ETHEREUM, 'latest', 0)
     f3 = get_contract('0xF220eA963D27Ebe782f09403017B29692A4fC4aE', ETHEREUM)
@@ -2250,11 +2250,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Elk
+    from defyes import Elk
 
     f5 = Elk.get_all_rewards('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0xF220eA963D27Ebe782f09403017B29692A4fC4aE', 'latest', ETHEREUM)
 
@@ -2282,11 +2282,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Elk
+    from defyes import Elk
 
     f6 = Elk.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0xA27E5775317F3f301B5b08BabCdE0a20FEAE7f09', 'latest', ETHEREUM)
 
@@ -2314,11 +2314,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Elk
+    from defyes import Elk
 
     f7 = Elk.pool_balances('0xA27E5775317F3f301B5b08BabCdE0a20FEAE7f09', 'latest', ETHEREUM)
     
@@ -2342,11 +2342,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Elk
+    from defyes import Elk
 
     f8 = Elk.swap_fees('0xA27E5775317F3f301B5b08BabCdE0a20FEAE7f09', 16380015, 'latest', ETHEREUM)
 
@@ -2377,11 +2377,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Honeyswap
+    from defyes import Honeyswap
 
     f1 = Honeyswap.get_lptoken_data('0xCd9652F006EFDE64f07030F10A1945EAD8AC1855', 'latest', ETHEREUM)
     
@@ -2409,11 +2409,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Honeyswap
+    from defyes import Honeyswap
 
     f2 = Honeyswap.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0xCd9652F006EFDE64f07030F10A1945EAD8AC1855', 'latest', ETHEREUM)
 
@@ -2441,11 +2441,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Honeyswap
+    from defyes import Honeyswap
 
     f3 = Honeyswap.pool_balances('0xCd9652F006EFDE64f07030F10A1945EAD8AC1855', 'latest', ETHEREUM)
 
@@ -2467,11 +2467,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Honeyswap
+    from defyes import Honeyswap
 
     f4 = Honeyswap.swap_fees('0xCd9652F006EFDE64f07030F10A1945EAD8AC1855', 0, 'latest', ETHEREUM)
 
@@ -2502,11 +2502,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Maker
+    from defyes import Maker
 
     f1 = Maker.get_vault_data(1, 'latest')
     
@@ -2533,11 +2533,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Maker
+    from defyes import Maker
 
     f2 = Maker.underlying(1, 'latest')
     
@@ -2570,11 +2570,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
     
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import QiDao
+    from defyes import QiDao
 
     f1 = QiDao.get_vault_address('0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb', XDAI)
 
@@ -2596,11 +2596,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import QiDao
+    from defyes import QiDao
 
     f2 = QiDao.get_vault_data(1, '0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb', 'latest', XDAI)
 
@@ -2628,11 +2628,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import QiDao
+    from defyes import QiDao
 
     f3 = QiDao.underlying(1, '0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb', 'latest', XDAI)
 
@@ -2662,11 +2662,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Reflexer
+    from defyes import Reflexer
 
     f1 = Reflexer.lptoken_underlying('0xd6F3768E62Ef92a9798E5A8cEdD2b78907cEceF9', 10000, 'latest', ETHEREUM)
 
@@ -2691,11 +2691,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Reflexer
+    from defyes import Reflexer
 
     f2 = Reflexer.pool_balance('0xd6F3768E62Ef92a9798E5A8cEdD2b78907cEceF9', 'latest', ETHEREUM)
 
@@ -2719,11 +2719,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Reflexer
+    from defyes import Reflexer
 
     f3 = Reflexer.balance_of_lptoken_underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0xd6F3768E62Ef92a9798E5A8cEdD2b78907cEceF9', 'latest', ETHEREUM)
 
@@ -2745,11 +2745,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Reflexer
+    from defyes import Reflexer
 
     
     f4 = Reflexer.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0xd6F3768E62Ef92a9798E5A8cEdD2b78907cEceF9', 'latest', ETHEREUM)
@@ -2779,11 +2779,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import SushiSwap
+    from defyes import SushiSwap
 
     web3 = get_node(ETHEREUM, 'latest', 0)
 
@@ -2810,11 +2810,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import SushiSwap
+    from defyes import SushiSwap
 
     web3 = get_node(ETHEREUM, 'latest', 0)
 
@@ -2840,11 +2840,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import SushiSwap
+    from defyes import SushiSwap
 
     f3 = SushiSwap.get_lptoken_data('0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', 'latest', ETHEREUM)
 
@@ -2870,11 +2870,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import SushiSwap
+    from defyes import SushiSwap
 
     f4 = SushiSwap.get_virtual_total_supply('0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', 'latest', ETHEREUM)
 
@@ -2898,11 +2898,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import SushiSwap
+    from defyes import SushiSwap
 
     web3 = get_node(ETHEREUM, 'latest', 0)
 
@@ -2934,11 +2934,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import SushiSwap
+    from defyes import SushiSwap
 
     web3 = get_node(ETHEREUM, 'latest', 0)
 
@@ -2970,11 +2970,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import SushiSwap
+    from defyes import SushiSwap
 
     web3 = get_node(ETHEREUM, 'latest', 0)
 
@@ -3005,11 +3005,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import SushiSwap
+    from defyes import SushiSwap
 
     f8 = SushiSwap.get_all_rewards('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', 'latest', ETHEREUM)
 
@@ -3037,11 +3037,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import SushiSwap
+    from defyes import SushiSwap
 
     f9 = SushiSwap.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', 'latest', ETHEREUM)
 
@@ -3068,11 +3068,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import SushiSwap
+    from defyes import SushiSwap
 
     f10 = SushiSwap.pool_balances('0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', 'latest', ETHEREUM)
 
@@ -3095,11 +3095,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import SushiSwap
+    from defyes import SushiSwap
 
     f11 = SushiSwap.swap_fees('0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', 16392251, 'latest', ETHEREUM)
 
@@ -3125,11 +3125,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import SushiSwap
+    from defyes import SushiSwap
 
     f12 = SushiSwap.get_wallet_by_tx('0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', 'latest', ETHEREUM)
 
@@ -3149,11 +3149,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import SushiSwap
+    from defyes import SushiSwap
 
     f13 = SushiSwap.get_rewards_per_unit('0x397FF1542f962076d0BFE58eA045FfA2d347ACa0', ETHEREUM)
 
@@ -3188,11 +3188,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Swapr
+    from defyes import Swapr
 
     web3 = get_node(ETHEREUM, 'latest', 0)
 
@@ -3219,11 +3219,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Swapr
+    from defyes import Swapr
 
     web3 = get_node(ETHEREUM, 'latest', 0)
 
@@ -3249,11 +3249,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Swapr
+    from defyes import Swapr
 
     f3 = Swapr.get_lptoken_data('0x7515Be43D16f871588ADc135d58a9c30A71Eb34F', 'latest', ETHEREUM)
 
@@ -3282,11 +3282,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Swapr
+    from defyes import Swapr
 
     f4 = Swapr.get_all_rewards('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x7515Be43D16f871588ADc135d58a9c30A71Eb34F', 'latest', ETHEREUM)
 
@@ -3314,11 +3314,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Swapr
+    from defyes import Swapr
 
     f5 = Swapr.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x7515Be43D16f871588ADc135d58a9c30A71Eb34F', 'latest', ETHEREUM)
 
@@ -3344,11 +3344,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Swapr
+    from defyes import Swapr
 
     f6 = Swapr.pool_balances('0x7515Be43D16f871588ADc135d58a9c30A71Eb34F', 'latest', ETHEREUM)
 
@@ -3371,11 +3371,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Swapr
+    from defyes import Swapr
 
     f7 = Swapr.swap_fees('0x7515Be43D16f871588ADc135d58a9c30A71Eb34F', 16392504, 'latest', ETHEREUM)
 
@@ -3407,11 +3407,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Symmetric
+    from defyes import Symmetric
 
     web3 = get_node(XDAI, 'latest', 0)
 
@@ -3438,11 +3438,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Symmetric
+    from defyes import Symmetric
 
     web3 = get_node(XDAI, 'latest', 0)
 
@@ -3468,11 +3468,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Symmetric
+    from defyes import Symmetric
 
     web3 = get_node(XDAI, 'latest', 0)
 
@@ -3498,11 +3498,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Symmetric
+    from defyes import Symmetric
 
     web3 = get_node(XDAI, 'latest', 0)
 
@@ -3528,11 +3528,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Symmetric
+    from defyes import Symmetric
 
     web3 = get_node(XDAI, 'latest', 0)
 
@@ -3563,11 +3563,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Symmetric
+    from defyes import Symmetric
 
     web3 = get_node(XDAI, 'latest', 0)
 
@@ -3599,11 +3599,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Symmetric
+    from defyes import Symmetric
 
     web3 = get_node(XDAI, 'latest', 0)
 
@@ -3636,11 +3636,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Symmetric
+    from defyes import Symmetric
 
     f8 = Symmetric.get_all_rewards('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x8B78873717981F18C9B8EE67162028BD7479142b', 'latest', XDAI)
 
@@ -3672,11 +3672,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Symmetric
+    from defyes import Symmetric
 
     f9 = Symmetric.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x8B78873717981F18C9B8EE67162028BD7479142b', 'latest', XDAI)
 
@@ -3706,11 +3706,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Symmetric
+    from defyes import Symmetric
 
     f10 = Symmetric.pool_balances('0x8B78873717981F18C9B8EE67162028BD7479142b', 'latest', XDAI)
 
@@ -3733,11 +3733,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Symmetric
+    from defyes import Symmetric
 
     f11 = Symmetric.get_rewards_per_unit('0x8B78873717981F18C9B8EE67162028BD7479142b', XDAI)
 
@@ -3769,11 +3769,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Symmetric
+    from defyes import Symmetric
 
     f13 = Symmetric.underlyingv1('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x8B78873717981F18C9B8EE67162028BD7479142b', 'latest', XDAI)
 
@@ -3800,11 +3800,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
 
     ```
 
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Symmetric
+    from defyes import Symmetric
 
     f14 = Symmetric.swap_fees('0x65b0e9418e102a880c92790f001a9c5810b0ef32', 25928795, 'latest', XDAI)
 
@@ -3857,11 +3857,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import UniswapV3
+    from defyes import UniswapV3
 
     f2 = UniswapV3.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', 214704, 'latest', ETHEREUM)
 
@@ -3884,11 +3884,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import UniswapV3
+    from defyes import UniswapV3
 
     f3 = UniswapV3.allnfts('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', ETHEREUM)
 
@@ -3912,11 +3912,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import UniswapV3
+    from defyes import UniswapV3
 
     f4 = UniswapV3.get_fee(346143, 'latest', ETHEREUM)
 
@@ -3950,11 +3950,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Unit
+    from defyes import Unit
 
     f1 = Unit.get_vault_address(ETHEREUM)
 
@@ -3977,11 +3977,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Unit
+    from defyes import Unit
 
     f2 = Unit.get_cdp_registry_address(ETHEREUM)
 
@@ -4003,11 +4003,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Unit
+    from defyes import Unit
 
     f3 = Unit.get_cdp_manager_address(ETHEREUM)
 
@@ -4030,11 +4030,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Unit
+    from defyes import Unit
 
     f4 = Unit.get_cdp_viewer_address(ETHEREUM)
 
@@ -4055,11 +4055,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Unit
+    from defyes import Unit
 
     f5 = Unit.get_cdp_viewer_data('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', 'latest', ETHEREUM)
 
@@ -4081,11 +4081,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Unit
+    from defyes import Unit
 
     f6 = Unit.get_cdp_data('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', 'latest', ETHEREUM)
 
@@ -4112,11 +4112,11 @@ To wipe the cache use the env var `DEFI_PROTO_CLEAN_CACHE` or call `defi_protoco
   - <details><summary><b>Example</b></summary>
 
     ```
-    from defi_protocols import *
+    from defyes import *
 
-    from defi_protocols.functions import *
+    from defyes.functions import *
 
-    from defi_protocols import Unit
+    from defyes import Unit
 
     f7 = Unit.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', ETHEREUM)
 

@@ -1,6 +1,6 @@
 CONFIG_PATH ?= config.json
 image := Defyes
-path := defi_protocols tests
+path := defyes tests
 repo_dir := $(shell git rev-parse --show-toplevel)
 docker_base_run := docker run --rm -i \
   -v $(PWD):/repo \

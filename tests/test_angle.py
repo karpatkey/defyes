@@ -2,8 +2,8 @@ from decimal import Decimal
 
 import pytest
 
-from defi_protocols import Angle
-from defi_protocols.constants import ETHEREUM
+from defyes import Angle
+from defyes.constants import ETHEREUM
 
 agEUR = "0x1a7e4e63778B4f12a199C062f3eFdD288afCBce8"
 WALLET = "0x849D52316331967b6fF1198e5E32A0eB168D039d"

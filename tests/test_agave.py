@@ -2,9 +2,9 @@ from decimal import Decimal
 
 import pytest
 
-from defi_protocols import Agave
-from defi_protocols.constants import AGVE_XDAI, XDAI
-from defi_protocols.functions import get_contract, get_node
+from defyes import Agave
+from defyes.constants import AGVE_XDAI, XDAI
+from defyes.functions import get_contract, get_node
 
 STK_AGAVE = "0x610525b415c1BFAeAB1a3fc3d85D87b92f048221"
 TEST_WALLET_ADDRESS = "0xc4d46395c01aa86389d4216c2830167878d7cab8"

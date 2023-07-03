@@ -2,9 +2,9 @@ from decimal import Decimal
 
 import pytest
 
-from defi_protocols import Stakewise
-from defi_protocols.constants import ETHEREUM, XDAI
-from defi_protocols.functions import get_node
+from defyes import Stakewise
+from defyes.constants import ETHEREUM, XDAI
+from defyes.functions import get_node
 
 WALLET_N1 = "0x05E61adDCef87ad8548236eb5Cbf2f699C834935"
 WALLET_N2 = "0x53811010085382D49eF12bCC55902bbFCEB57790"

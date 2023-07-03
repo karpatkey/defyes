@@ -1,8 +1,8 @@
 from decimal import Decimal
 
-from defi_protocols import Maker
-from defi_protocols.constants import DAI_ETH, ETHEREUM, ETHTokenAddr
-from defi_protocols.functions import get_node
+from defyes import Maker
+from defyes.constants import DAI_ETH, ETHEREUM, ETHTokenAddr
+from defyes.functions import get_node
 
 TEST_BLOCK = 17070386
 WEB3 = get_node(blockchain=ETHEREUM, block=TEST_BLOCK)

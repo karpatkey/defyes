@@ -1,7 +1,7 @@
 import pytest
 
-from defi_protocols.constants import ETHEREUM, XDAI
-from defi_protocols.util.api import RequestFromScan
+from defyes.constants import ETHEREUM, XDAI
+from defyes.util.api import RequestFromScan
 
 ADDRESS_N1 = "0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f"
 ABI_N1 = '{"internalType":"bytes","name":"signatures","type":"bytes"}],"name":"execTransaction","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"payable","type":"function"}'

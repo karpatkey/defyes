@@ -1,7 +1,7 @@
 from decimal import Decimal
 from unittest.mock import patch
 
-from defi_protocols import Votium
+from defyes import Votium
 
 WALLET = "0x849d52316331967b6ff1198e5e32a0eb168d039d"
 
@@ -27,7 +27,7 @@ def test_get_rewards_per_token():
 
 # Check output
 def test_get_all_rewards():
-    with patch("defi_protocols.Votium.get_rewards_per_token") as mock_inner:
+    with patch("defyes.Votium.get_rewards_per_token") as mock_inner:
         a = [None] * 44
         a[4] = 439.9597422149969
         a[17] = 14.214765596330048

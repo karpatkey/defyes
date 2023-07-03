@@ -17,11 +17,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Curve
+  from defyes import Curve
 
   web3 = get_node(ETHEREUM, 'latest', 0)
   f1 = Curve.get_registry_contract(web3, 3, 'latest', ETHEREUM)
@@ -42,11 +42,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Curve
+  from defyes import Curve
 
   web3 = get_node(XDAI, 'latest', 0)
   
@@ -72,11 +72,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Curve
+  from defyes import Curve
 
   f3 = Curve.get_gauge_version('0x1891E46859DBf78EeEfb652425755494eE8aD7bf', 'latest', XDAI)
 
@@ -98,11 +98,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Curve
+  from defyes import Curve
 
   web3 = get_node(XDAI, 'latest', 0)
   
@@ -128,11 +128,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Curve
+  from defyes import Curve
 
   web3 = get_node(ETHEREUM, 'latest', 0)
   
@@ -158,11 +158,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Curve
+  from defyes import Curve
 
   f6 = Curve.get_lptoken_data('0xc4AD29ba4B3c580e6D59105FFf484999997675Ff', 'latest', ETHEREUM)
 
@@ -190,11 +190,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Curve
+  from defyes import Curve
 
   f7 = Curve.get_all_rewards('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0xc4AD29ba4B3c580e6D59105FFf484999997675Ff', 'latest', ETHEREUM)
 
@@ -222,11 +222,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Curve
+  from defyes import Curve
 
   f8 = Curve.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x1337BedC9D22ecbe766dF105c9623922A27963EC', 'latest', XDAI )
 
@@ -252,11 +252,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Curve
+  from defyes import Curve
 
   
   ```
@@ -278,11 +278,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Curve
+  from defyes import Curve
 
   f10 = Curve.pool_balances('0x1337BedC9D22ecbe766dF105c9623922A27963EC', 'latest', XDAI)
 
@@ -306,11 +306,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Curve
+  from defyes import Curve
 
   f11 = Curve.swap_fees('0x1337BedC9D22ecbe766dF105c9623922A27963EC', 25913602, 'latest', XDAI)
 

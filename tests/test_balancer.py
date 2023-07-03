@@ -1,8 +1,8 @@
 from decimal import Decimal
 
-from defi_protocols import Balancer
-from defi_protocols.constants import BAL_POL, ETHEREUM, POLYGON, XDAI, ETHTokenAddr, GnosisTokenAddr
-from defi_protocols.functions import date_to_block, get_contract, get_node
+from defyes import Balancer
+from defyes.constants import BAL_POL, ETHEREUM, POLYGON, XDAI, ETHTokenAddr, GnosisTokenAddr
+from defyes.functions import date_to_block, get_contract, get_node
 
 WALLET_N1 = "0x31cD267D34EC6368eac930Be4f412dfAcc71A844"
 WALLET_N2 = "0x4b0429F3db75dbA6B82c32a200C9C298ffC05839"

@@ -2,9 +2,9 @@ from decimal import Decimal
 
 import pytest
 
-from defi_protocols import Swapr
-from defi_protocols.constants import GNO_XDAI, XDAI
-from defi_protocols.functions import get_contract, get_node
+from defyes import Swapr
+from defyes.constants import GNO_XDAI, XDAI
+from defyes.functions import get_contract, get_node
 
 TEST_BLOCK = 27450341
 TEST_WALLET = "0x458cd345b4c05e8df39d0a07220feb4ec19f5e6f"

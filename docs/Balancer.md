@@ -9,11 +9,11 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Balancer
+  from defyes import Balancer
 
   f1 = Balancer.get_lptoken_data('0x7B50775383d3D6f0215A8F290f2C9e2eEBBEceb2', 'latest', ETHEREUM)
 
@@ -44,11 +44,11 @@ and to a specific Gauge
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Balancer
+  from defyes import Balancer
 
   
   web3 = get_node(ETHEREUM, 'latest', 0)
@@ -82,11 +82,11 @@ and to a specific Gauge
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Balancer
+  from defyes import Balancer
 
   web3 = get_node(ETHEREUM, 'latest', 0)
   f1 = get_contract('0x68d019f64A7aa97e2D4e7363AEE42251D08124Fb', ETHEREUM)
@@ -114,11 +114,11 @@ and to a specific Gauge
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Balancer
+  from defyes import Balancer
 
   web3 = get_node(ETHEREUM, 'latest', 0)
   f4 = Balancer.get_vebal_rewards(web3, '0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', ETHEREUM, decimals=True)
@@ -146,11 +146,11 @@ and to a specific Gauge
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Balancer
+  from defyes import Balancer
   
   f5 = Balancer.get_all_rewards('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x7B50775383d3D6f0215A8F290f2C9e2eEBBEceb2', 'latest', ETHEREUM)
   
@@ -179,11 +179,11 @@ and to a specific Gauge
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Balancer
+  from defyes import Balancer
   
   f6 = Balancer.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', '0x7B50775383d3D6f0215A8F290f2C9e2eEBBEceb2', 'latest', ETHEREUM)
   
@@ -213,11 +213,11 @@ and to a specific Gauge
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Balancer
+  from defyes import Balancer
   
   f7 = Balancer.pool_balances('0x7B50775383d3D6f0215A8F290f2C9e2eEBBEceb2', 'latest', ETHEREUM) 
 
@@ -241,11 +241,11 @@ and to a specific Gauge
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defi_protocols import *
+  from defyes import *
 
-  from defi_protocols.functions import *
+  from defyes.functions import *
 
-  from defi_protocols import Balancer
+  from defyes import Balancer
   
   f8 = Balancer.swap_fees('0x7B50775383d3D6f0215A8F290f2C9e2eEBBEceb2', 16374265, 'latest', ETHEREUM)
 

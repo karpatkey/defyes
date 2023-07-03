@@ -1,7 +1,7 @@
 from decimal import Decimal
 
-from defi_protocols import Aave
-from defi_protocols.constants import ETHEREUM, ETHTokenAddr
+from defyes import Aave
+from defyes.constants import ETHEREUM, ETHTokenAddr
 
 STK_AAVE = "0x4da27a545c0c5B758a6BA100e3a049001de870f5"
 STK_ABPT = "0xa1116930326D21fB917d5A27F1E9943A9595fb47"

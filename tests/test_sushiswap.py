@@ -1,9 +1,9 @@
 from decimal import Decimal
 
-from defi_protocols import SushiSwap
-from defi_protocols.cache import const_call
-from defi_protocols.constants import CVX_ETH, ETHEREUM, SUSHI_ETH, USDC_ETH, WETH_ETH, XDAI
-from defi_protocols.functions import get_node
+from defyes import SushiSwap
+from defyes.cache import const_call
+from defyes.constants import CVX_ETH, ETHEREUM, SUSHI_ETH, USDC_ETH, WETH_ETH, XDAI
+from defyes.functions import get_node
 
 SUSHISWAP_POOL_USDC_WETH = "0x397FF1542f962076d0BFE58eA045FfA2d347ACa0"
 UNUSED_ADDRESS = "0xCafe7CceDfB2deBE0a49830D3C2777721E3728A5"

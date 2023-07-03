@@ -1,6 +1,6 @@
 from unittest import mock
 
-from defi_protocols.cache import TemporaryCache, cache_call, const_call
+from defyes.cache import TemporaryCache, cache_call, const_call
 
 
 def build_web3_contract_mock():
@@ -47,7 +47,7 @@ def test_const_call():
 
 def test_const_cache_disabled():
     web3_contract_function, centinel = build_web3_contract_mock()
-    with mock.patch("defi_protocols.cache.is_enabled", wraps=lambda: False):
+    with mock.patch("defyes.cache.is_enabled", wraps=lambda: False):
         const_call(web3_contract_function)
         const_call(web3_contract_function)
         assert centinel.call_count == 2

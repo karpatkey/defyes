@@ -27,13 +27,13 @@ jobs:
         run: pip install -r requirements-dev.txt
 
       - name: Linter -- check black
-        run: black --fast --check defi_protocols tests
+        run: black --fast --check defyes tests
 
       - name: Linter -- check isort
-        run: isort --check defi_protocols tests
+        run: isort --check defyes tests
 
       - name: Linter -- check flake8
-        run: flake8 defi_protocols tests
+        run: flake8 defyes tests
 
       - name: Download cache from latest main artifact
         continue-on-error: true
@@ -50,7 +50,7 @@ jobs:
           s.headers["X-GitHub-Api-Version"] = "2022-11-28"
 
           def main():
-              path = Path("/tmp/defi_protocols")
+              path = Path("/tmp/defyes")
               path.mkdir(exist_ok=True)
               cache_zip = path / "cache-db.zip"
               download_last_artifact("cache-db", branch="main", to=cache_zip)
@@ -139,4 +139,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: cache-db
-          path: /tmp/defi_protocols/cache.db
+          path: /tmp/defyes/cache.db
