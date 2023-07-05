@@ -8,14 +8,7 @@ from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 from defyes import Balancer
 from defyes.cache import const_call
 from defyes.constants import AURA_ETH, ETHEREUM
-from defyes.functions import (
-    get_contract,
-    get_contract_creation,
-    get_decimals,
-    get_node,
-    last_block,
-    to_token_amount,
-)
+from defyes.functions import get_contract, get_contract_creation, get_decimals, get_node, last_block, to_token_amount
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # BOOSTER

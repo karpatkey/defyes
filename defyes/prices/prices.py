@@ -8,13 +8,7 @@ import requests
 from tqdm import tqdm
 from web3 import Web3
 
-from defyes.constants import (
-    API_ETHERSCAN_GETTOKENINFO,
-    API_KEY_ETHERSCAN,
-    ETHEREUM,
-    MAX_EXECUTIONS,
-    ZERO_ADDRESS,
-)
+from defyes.constants import API_ETHERSCAN_GETTOKENINFO, API_KEY_ETHERSCAN, ETHEREUM, MAX_EXECUTIONS, ZERO_ADDRESS
 from defyes.functions import GetNodeIndexError, block_to_timestamp, get_node, timestamp_to_block
 from defyes.prices import Chainlink, CoinGecko, Zapper, _1inch
 
