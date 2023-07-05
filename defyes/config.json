@@ -1,0 +1,172 @@
+{  
+
+    "apikeys": {
+        "etherscan": "xyz",
+        "polscan": "xyz",
+        "gnosisscan": "xyz",
+        "binance": "xyz",
+        "avalanche": "xyz",
+        "fantom": "xyz",
+        "ethplorer": "xyz",
+        "optimism": "xyz",
+        "arbitrum": "xyz",
+        "zapper": "xyz"
+    },
+
+    "nodes": {
+        "ethereum": {
+            "latest": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ],
+            "archival": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ]
+        },
+        "polygon": {
+            "latest": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ],
+            "archival": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ]
+        },
+        "xdai": {
+            "latest": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ],
+            "archival": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ]
+        },
+        "binance": {
+            "latest": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ],
+            "archival": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ]
+        },
+        "avalanche": {
+            "latest": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ],
+            "archival": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ]
+        },
+        "fantom": {
+            "latest": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ],
+            "archival": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ]
+        },
+        "ropsten": {
+            "latest": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ],
+            "archival": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ]
+        },
+        "kovan": {
+            "latest": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ],
+            "archival": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ]
+        },
+        "goerli": {
+            "latest": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ],
+            "archival": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ]
+        },
+        "optimism": {
+            "latest": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ],
+            "archival": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ]
+        },
+        "arbitrum": {
+            "latest": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ],
+            "archival": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ]
+        }
+    }
+}
