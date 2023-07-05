@@ -1,5 +1,5 @@
-CONFIG_PATH ?= config.json
-image := Defyes
+CONFIG_PATH ?= fito_config.json
+image := defyes
 path := defyes tests
 repo_dir := $(shell git rev-parse --show-toplevel)
 docker_base_run := docker run --rm -i \
