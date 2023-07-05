@@ -1,4 +1,4 @@
-CONFIG_PATH ?= fito_config.json
+CONFIG_PATH ?= config.json
 image := defyes
 path := defyes tests
 repo_dir := $(shell git rev-parse --show-toplevel)
