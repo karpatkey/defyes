@@ -66,67 +66,66 @@ class Token(Addr):
             return token
 
     def __rmul__(self, left_value):
-        if isinstance(left_value, str):
-            value = Decimal(left_value).scaleb(self.decimals)
-            if int(value) != value:
-                raise ValueError(
-                    f"Preventing str precision loss. {left_value} has more decimals than this token ({self.decimals} decimals)."
-                )
-        elif isinstance(left_value, Decimal):
-            value = left_value.scaleb(self.decimals)
-            if int(value) != value:
-                raise ValueError(
-                    f"Preventing Decimal precision loss. {left_value} has more decimals than this token ({self.decimals} decimals)."
-                )
-        elif isinstance(left_value, int):
-            value = left_value * 10**self.decimals
-        elif isinstance(left_value, float):
-            raise ValueError("Preventing potential float precision loss. Use str, Decimal or int instead.")
-        else:
-            raise ValueError(f"{type(left_value)} not sopported in convetion to a TokenAmount value.")
-        return TokenAmount.from_teu(value, self)
-
-
-def format_amount(amount: Decimal) -> str:
-    value_str = str(amount)
-    if "." in value_str:
-        integer_part, decimal_part = value_str.split(".")
-        formatted_integer_part = "{:,}".format(int(integer_part)).replace(",", "_")
-        formatted_value = f"{formatted_integer_part}.{decimal_part}"
-    else:
-        formatted_value = "{:,}".format(int(value_str)).replace(",", "_")
-    return formatted_value
+        return TokenAmount(left_value, self)
 
 
 class TokenAmount:
-    def __init__(self, amount: int | Decimal, token: Token):
+    def __init__(self, amount: int | str | Decimal, token: Token):
         # amount is expressed in the Token units
-        # 1 Token = 1e^(token.decimals) teuToken
+        # 1 Token = 10**(token.decimals) teuToken
         self.amount = Decimal(amount)
         self.token = token
-        self.teu = Decimal(10**self.token.decimals)
+
+    @property
+    def decimal_teu_amount(self) -> Decimal:
+        """
+        Return a Decimal instance of the amount expressed as teu unit.
+        """
+        return self.amount.scaleb(self.token.decimals)
+
+    @property
+    def teu_amount(self) -> int:
+        """
+        Return and integer amount in teu just if it hasn't precision loss on convertion, otherwise raises a ValueError.
+        """
+        teu_amount = int(decimal_teu_amount := self.decimal_teu_amount)
+        if teu_amount != decimal_teu_amount:
+            raise ValueError(
+                f"Avoiding precision loss as the teu value {decimal_teu_amount} still has non zero decimals."
+            )
+        return teu_amount
+
+    @property
+    def teu_rounded(self) -> "TokenAmount":
+        """
+        Return a new TokenAmount instance which is rounded at 1 teu. This is the way to explicity lost precision.
+        """
+        return self.__class__(round(self.amount, self.token.decimals), self.token)
 
     @classmethod
-    def from_teu(cls, amount: int | Decimal, token: Token):
-        amount = Decimal(amount) / Decimal(10**token.decimals)
-        return cls(amount=amount, token=token)
+    def from_teu(cls, amount: int | str | Decimal, token: Token):
+        if int(amount) != (decimal_amount := Decimal(amount)):
+            raise ValueError("{amount=} must be an integer value.")
+        return cls(amount=decimal_amount.scaleb(-token.decimals), token=token)
 
-    def as_dict(self, not_in_teu: bool = False) -> dict:
+    def as_dict(self, decimal: bool = False) -> dict:
+        teu_amount = self.teu_amount  # It also asserts taht the amount hasn't fractional teu
         return {
-            "balance": self.amount if not_in_teu else int(self.amount * self.teu),
+            "balance": self.amount if decimal else teu_amount,
             "address": str(self.token),
         }
 
     def __str__(self):
-        return format_amount(self.amount)
+        abs_amount = abs(self.amount)
+        if abs_amount < Decimal("1e-6"):
+            return self.amount.to_eng_string().replace("E", "e")
+        elif abs_amount < Decimal("1e-3"):
+            return f"{self.amount.scaleb(6):f}e-6"
+        else:
+            return format(self.amount, ",").replace(",", "_")
 
     def __repr__(self):
-        _, digits, exp = self.amount.as_tuple()
-        zeros_in_decimal_part = abs(exp) - len(digits)
-        if int(self.amount) == 0 and exp < 0 and zeros_in_decimal_part > 3 and (abs(exp) > self.token.decimals / 2):
-            return f"{format_amount(self.amount * self.teu)}*teu{self.token.symbol}"
-        else:
-            return str(f"{str(self)}*{self.token.symbol}")
+        return f"{str(self)!r}*{self.token.symbol}"
 
     def __eq__(self, other):
         if isinstance(other, TokenAmount):
