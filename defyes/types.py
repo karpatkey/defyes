@@ -86,7 +86,7 @@ class TokenAmount:
     @property
     def teu_amount(self) -> int:
         """
-        Return and integer amount in teu just if it hasn't precision loss on convertion, otherwise raises a ValueError.
+        Return an integer amount in teu just if it hasn't precision loss on convertion, otherwise raises a ValueError.
         """
         teu_amount = int(decimal_teu_amount := self.decimal_teu_amount)
         if teu_amount != decimal_teu_amount:
@@ -109,7 +109,7 @@ class TokenAmount:
         return cls(amount=decimal_amount.scaleb(-token.decimals), token=token)
 
     def as_dict(self, decimal: bool = False) -> dict:
-        teu_amount = self.teu_amount  # It also asserts taht the amount hasn't fractional teu
+        teu_amount = self.teu_amount  # It also asserts that the amount hasn't fractional teu
         return {
             "balance": self.amount if decimal else teu_amount,
             "address": str(self.token),
