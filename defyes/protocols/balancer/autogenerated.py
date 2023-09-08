@@ -203,8 +203,16 @@ class PoolToken:
         return self.contract.functions.getRate().call(block_identifier=self.block)
 
     @property
+    def get_main_token(self) -> str:
+        return self.contract.functions.getMainToken().call(block_identifier=self.block)
+
+    @property
     def underlying_asset_address(self) -> str:
         return self.contract.functions.UNDERLYING_ASSET_ADDRESS().call(block_identifier=self.block)
+
+    @property
+    def rate(self) -> int:
+        return self.contract.functions.rate().call(block_identifier=self.block)
 
     @property
     def st_eth(self) -> str:
@@ -213,6 +221,10 @@ class PoolToken:
     @property
     def underlying(self) -> str:
         return self.contract.functions.UNDERLYING().call(block_identifier=self.block)
+
+    @property
+    def get_pool_id(self) -> bytes:
+        return self.contract.functions.getPoolId().call(block_identifier=self.block)
 
 
 class Vault:

@@ -78,19 +78,19 @@ def test_pool_balances():
     block = 17117344
     balances = Balancer.pool_balances(Chain.ETHEREUM, bbaUSD_ADDR, block)
     assert balances == {
-        ETHTokenAddr.USDT: Decimal("11433582.31554748359005298347"),
-        ETHTokenAddr.USDC: Decimal("13368829.78950840748853951224"),
-        ETHTokenAddr.DAI: Decimal("13416454.19566038579649334747"),
+        ETHTokenAddr.USDT: Decimal("11390997.35159545717004295106"),
+        ETHTokenAddr.USDC: Decimal("13348617.10444504902242681224"),
+        ETHTokenAddr.DAI: Decimal("13011285.62447645590205757650"),
     }
 
     usdt = Balancer.pool_balances(Chain.ETHEREUM, bbaUSDT_ADDR, block)
-    assert usdt[ETHTokenAddr.USDT] == Decimal("11433698.53586857519047922515")
+    assert usdt[ETHTokenAddr.USDT] == Decimal("11014973.47418")
 
     usdc = Balancer.pool_balances(Chain.ETHEREUM, bbaUSDC_ADDR, block)
-    assert usdc[ETHTokenAddr.USDC] == Decimal("13369125.00806304894840304454")
+    assert usdc[ETHTokenAddr.USDC] == Decimal("13116091.667863")
 
     dai = Balancer.pool_balances(Chain.ETHEREUM, bbaDAI_ADDR, block)
-    assert dai[ETHTokenAddr.DAI] == Decimal("13416679.31570410197485793129")
+    assert dai[ETHTokenAddr.DAI] == Decimal("8173013.460308747444345661")
 
     balances = Balancer.pool_balances(Chain.ETHEREUM, bbaUSDV3_ADDR, block)
     assert balances == {
@@ -99,20 +99,20 @@ def test_pool_balances():
         ETHTokenAddr.USDC: Decimal("908244.4675409999892750711044"),
     }
 
-    block = 27628264
+    block = 29830048
     balances = Balancer.pool_balances(Chain.GNOSIS, bb_ag_WXDAI_ADDR, block)
-    assert balances[GnosisTokenAddr.WXDAI] == Decimal("1295439.981731337648045247778")
+    assert balances[GnosisTokenAddr.WXDAI] == Decimal("297.671114136700998186")
 
     balances = Balancer.pool_balances(Chain.GNOSIS, B50bbagGNO50bbagUSD_ADDR, block)
     assert balances == {
-        GnosisTokenAddr.WXDAI: Decimal("327217.3285011014510966714956"),
-        GnosisTokenAddr.USDT: Decimal("182785.2866365983481610436107"),
-        GnosisTokenAddr.USDC: Decimal("304180.9070344813788008988656"),
-        GnosisTokenAddr.GNO: Decimal("7700.623246950826914818782253"),
+        GnosisTokenAddr.WXDAI: Decimal("12.64808842311978470699902288"),
+        GnosisTokenAddr.USDT: Decimal("28.70958971431260849138745292"),
+        GnosisTokenAddr.USDC: Decimal("12.05344858660931219370764335"),
+        GnosisTokenAddr.GNO: Decimal("0.5348319581477661245738463077"),
     }
 
     gno = Balancer.pool_balances(Chain.GNOSIS, bb_ag_GNO_ADDR, block)
-    assert gno[GnosisTokenAddr.GNO] == Decimal("26159.71190211541086527825594")
+    assert gno[GnosisTokenAddr.GNO] == Decimal("13.253324184854298321")
 
 
 def test_unwrap():
@@ -120,9 +120,9 @@ def test_unwrap():
     lptoken_amount = 1
     unwrap = Balancer.unwrap(Chain.ETHEREUM, bbaUSD_ADDR, lptoken_amount, block)
     assert unwrap == {
-        ETHTokenAddr.USDT: Decimal("0.2544855265987162735881749720"),
-        ETHTokenAddr.USDC: Decimal("0.3695278389467781030866438160"),
-        ETHTokenAddr.DAI: Decimal("0.3804761470992138348159360416"),
+        ETHTokenAddr.USDT: Decimal("0.2536037704765909166606592597"),
+        ETHTokenAddr.USDC: Decimal("0.3691057462360258687781876952"),
+        ETHTokenAddr.DAI: Decimal("0.3716984431123257030355323046"),
     }
 
     lptoken_amount = Decimal("0.0106223377584825466601881061023959773592650890350341796875")
@@ -136,19 +136,19 @@ def test_unwrap():
     lptoken_amount = 1000
     unwrap = Balancer.unwrap(Chain.GNOSIS, B50bbagGNO50bbagUSD_ADDR, lptoken_amount, block)
     assert unwrap == {
-        GnosisTokenAddr.WXDAI: Decimal("2072.099936394024014750631244"),
-        GnosisTokenAddr.USDT: Decimal("1157.485706971609760143788076"),
-        GnosisTokenAddr.USDC: Decimal("1926.222064722662625127836312"),
-        GnosisTokenAddr.GNO: Decimal("48.76410736953816262713084976"),
+        GnosisTokenAddr.WXDAI: Decimal("2057.534932715631909526303472"),
+        GnosisTokenAddr.USDT: Decimal("1154.268905869372659697240476"),
+        GnosisTokenAddr.USDC: Decimal("1912.892948230578252436479469"),
+        GnosisTokenAddr.GNO: Decimal("48.74728477215118382303378165"),
     }
 
     block = 17543299
     lptoken_amount = 1
     unwrap = Balancer.unwrap(Chain.ETHEREUM, bbaUSDV3_ADDR, lptoken_amount, block)
     assert unwrap == {
-        ETHTokenAddr.DAI: Decimal("0.3836613819783486198907516245"),
-        ETHTokenAddr.USDT: Decimal("0.2472909112224638002039090849"),
-        ETHTokenAddr.USDC: Decimal("0.3701358752252735701543186308"),
+        ETHTokenAddr.DAI: Decimal("0.3830201090764638710935863995"),
+        ETHTokenAddr.USDT: Decimal("0.2468271706616370953541602940"),
+        ETHTokenAddr.USDC: Decimal("0.3684855328623633958890680139"),
     }
 
 
@@ -407,15 +407,15 @@ def test_protocol_data():
                     "underlyings": [
                         {
                             "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-                            "balance": Decimal("34610.41324141304294002886857"),
+                            "balance": Decimal("34481.50498155417847374249388"),
                         },
                         {
                             "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-                            "balance": Decimal("40468.56976223580477414327278"),
+                            "balance": Decimal("40407.38426818377061669310919"),
                         },
                         {
                             "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
-                            "balance": Decimal("40612.73283657301313797645226"),
+                            "balance": Decimal("39386.25356751312943263976821"),
                         },
                     ],
                 },
@@ -443,15 +443,15 @@ def test_protocol_data():
                     "underlyings": [
                         {
                             "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-                            "balance": Decimal("8539.128631914474969130263864"),
+                            "balance": Decimal("8507.324209211599435789547375"),
                         },
                         {
                             "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-                            "balance": Decimal("9984.461044684933239332062933"),
+                            "balance": Decimal("9969.365275660933377069411768"),
                         },
                         {
                             "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
-                            "balance": Decimal("10020.02915614176748146463595"),
+                            "balance": Decimal("9717.430508450752362261707289"),
                         },
                     ],
                 },
@@ -526,15 +526,15 @@ def test_protocol_data():
                         "underlyings": [
                             {
                                 "address": "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
-                                "balance": Decimal("225689.5790202310752030943317"),
+                                "balance": Decimal("224867.5522071186644467065688"),
                             },
                             {
                                 "address": "0x4ECaBa5870353805a9F068101A40E0f32ed605C6",
-                                "balance": Decimal("157457.9259177606355118786078"),
+                                "balance": Decimal("156797.8000451423306782755605"),
                             },
                             {
                                 "address": "0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83",
-                                "balance": Decimal("193285.0087113081451905116408"),
+                                "balance": Decimal("191847.3777747815376180144618"),
                             },
                         ],
                         "unclaimed_rewards": [
@@ -571,19 +571,19 @@ def test_protocol_data():
                         "underlyings": [
                             {
                                 "address": "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
-                                "balance": Decimal("333762.1862551265554595821346"),
+                                "balance": Decimal("332546.5277054682282243345648"),
                             },
                             {
                                 "address": "0x4ECaBa5870353805a9F068101A40E0f32ed605C6",
-                                "balance": Decimal("232857.4576888133034458734522"),
+                                "balance": Decimal("231881.2271716350671750707592"),
                             },
                             {
                                 "address": "0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83",
-                                "balance": Decimal("285840.5220032092259613956715"),
+                                "balance": Decimal("283714.4741525013588273711511"),
                             },
                             {
                                 "address": "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
-                                "balance": Decimal("7325.982201639479819930022796"),
+                                "balance": Decimal("7323.347699280704544261534365"),
                             },
                         ],
                         "unclaimed_rewards": [

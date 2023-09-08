@@ -7,7 +7,7 @@ from web3 import Web3
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 
 from defyes.constants import Address, Chain, ETHTokenAddr
-from defyes.functions import block_to_date, date_to_block, get_logs_web3, get_symbol, last_block, to_token_amount
+from defyes.functions import block_to_date, date_to_block, get_logs_web3, last_block, to_token_amount
 from defyes.helpers import suppress_error_codes
 from defyes.node import get_node
 from defyes.prices.prices import get_price
@@ -53,65 +53,33 @@ class Vault(Vault):
 
 
 class PoolToken(PoolToken):
-    def __init__(self, blockchain: str, block: int, address: str | None = None) -> None:
-        super().__init__(blockchain, block, address)
-        self.is_wsteth = False
-
-    @property
-    def rate(self) -> str | None:
-        with suppress(ContractLogicError, BadFunctionCallOutput), suppress_error_codes():
-            return self.get_rate
-
-    @property
+    @cached_property
     def underlying(self) -> str | None:
         with suppress(ContractLogicError, BadFunctionCallOutput), suppress_error_codes():
             return super().underlying
 
-    @property
+    @cached_property
     def underlying_asset_address(self) -> str | None:
         with suppress(ContractLogicError, BadFunctionCallOutput), suppress_error_codes():
             return super().underlying_asset_address
 
-    @property
-    def steth(self) -> str | None:
+    @cached_property
+    def pool_id(self) -> str | None:
         with suppress(ContractLogicError, BadFunctionCallOutput), suppress_error_codes():
-            return self.st_eth
+            return super().get_pool_id
 
-    def get_token_addr_steth(self, scaling_factor) -> str:
-        main_token = self.underlying
-        if scaling_factor:
-            main_token = self.underlying_asset_address
-            if main_token is None:
-                main_token = self.address
-                stETH = self.steth
-                if stETH is not None:
-                    if scaling_factor != 10**18:
-                        main_token = stETH
-                    else:
-                        main_token = self.address
-                else:
-                    main_token = self.address
-
-        return main_token
-
-    def get_token_addr_wsteth(self) -> str:
-        self.is_wsteth = False
+    @cached_property
+    def main_addr(self) -> str:
         main_token = self.underlying
         if main_token is None:
             main_token = self.underlying_asset_address
             if main_token is None:
                 main_token = self.address
-                main_token_symbol = get_symbol(main_token, self.blockchain, web3=self.contract.w3).lower()
-                self.is_wsteth = main_token_symbol == "wsteth"
 
         return main_token
 
-    def calc_amount(self, token_amount: int, decimals: bool = True, scaling_factor: int = None) -> Decimal:
+    def calc_amount(self, token_amount: int, decimals: bool = True) -> Decimal:
         token_amount = Decimal(token_amount)
-        if scaling_factor and not self.is_wsteth:
-            # uncomment to have stETH being returned instead of wstETH
-            # if scaling_factor:
-            token_amount = token_amount * Decimal(scaling_factor) / Decimal(10 ** (2 * 18 - self.decimals))
         if decimals:
             token_amount = token_amount / Decimal(10**self.decimals)
         return token_amount
@@ -145,9 +113,33 @@ class LiquidityPool(LiquidityPool):
         with suppress(ContractLogicError):
             return self.get_scaling_factors
 
+    @cached_property
+    def is_meta(self) -> bool:
+        pool_tokens = Vault(self.blockchain, self.block).get_pool_data(self.poolid)
+        is_meta = True
+        for n, (token_addr, balance) in enumerate(pool_tokens):
+            if n == self.bpt_index:
+                continue
+
+            token = PoolToken(self.blockchain, self.block, token_addr)
+            if token.pool_id is None:
+                is_meta = False
+                break
+
+        return is_meta
+
     def balance_of(self, wallet: str) -> int:
         wallet = Web3.to_checksum_address(wallet)
         return super().balance_of(wallet)
+
+    def calc_amount(self, token_id: int, token_amount: int, token_decimals: int, decimals: bool = True) -> Decimal:
+        token_amount = Decimal(token_amount)
+        scaling_factor = None if self.scaling_factors is None else self.scaling_factors[token_id]
+        if scaling_factor is not None and self.is_meta:
+            token_amount = token_amount * Decimal(scaling_factor) / Decimal(10 ** (2 * 18 - token_decimals))
+        if decimals:
+            token_amount = token_amount / Decimal(10**token_decimals)
+        return token_amount
 
     def swap_fee_percentage_for(self, block: int | str) -> int:
         return self.contract.functions.getSwapFeePercentage().call(block_identifier=block)
@@ -376,17 +368,14 @@ def unwrap(blockchain: str, lp_address: str, amount: Decimal, block: int | str, 
             continue
 
         token = PoolToken(blockchain, block, token_addr)
-        if token.rate is not None:
+        if token.pool_id is not None:
             for token_addr, token_balance in unwrap(
                 blockchain, token.address, token.calc_amount(balance, decimals), block
             ).items():
                 balances[token_addr] = balances.get(token_addr, 0) + token_balance * pool_balance_fraction
         else:
-            scaling_factor = None if lp.scaling_factors is None else lp.scaling_factors[n]
-            token_addr = token.get_token_addr_wsteth()
-            token_balance = token.calc_amount(balance, decimals, scaling_factor)
-
-            balances[token_addr] = balances.get(token_addr, 0) + token_balance * pool_balance_fraction
+            token_balance = lp.calc_amount(n, balance, token.decimals, decimals)
+            balances[token.main_addr] = balances.get(token.main_addr, 0) + token_balance * pool_balance_fraction
     return balances
 
 
@@ -399,16 +388,13 @@ def pool_balances(blockchain: str, lp_address: str, block: int | str, decimals: 
             continue
 
         token = PoolToken(blockchain, block, token_addr)
-        if token.rate is not None:
+        if token.pool_id is not None:
             for token_addr, token_balance in unwrap(
                 blockchain, token.address, token.calc_amount(balance, decimals), block
             ).items():
                 balances[token_addr] = balances.get(token_addr, 0) + token_balance
         else:
-            scaling_factor = None if lp.scaling_factors is None else lp.scaling_factors[n]
-            token_addr = token.get_token_addr_wsteth()
-            token_balance = token.calc_amount(balance, decimals, scaling_factor)
-
+            token_balance = lp.calc_amount(n, balance, token.decimals, decimals)
             balances[token_addr] = balances.get(token_addr, 0) + token_balance
     return balances
 
@@ -416,7 +402,7 @@ def pool_balances(blockchain: str, lp_address: str, block: int | str, decimals: 
 def get_protocol_data_for(
     blockchain: str,
     wallet: str,
-    lp_addrs: str | list,
+    lptoken_address: str | list,
     block: int | str = "latest",
     reward: bool = False,
     decimals: bool = True,
@@ -433,10 +419,10 @@ def get_protocol_data_for(
         "positions_key": "liquidity_pool_address",
     }
 
-    if isinstance(lp_addrs, str):
-        lp_addrs = [lp_addrs]
+    if isinstance(lptoken_address, str):
+        lptoken_address = [lptoken_address]
 
-    for lp_address in lp_addrs:
+    for lp_address in lptoken_address:
         lp_address = Addr(Web3.to_checksum_address(lp_address))
         ret["positions"][lp_address] = {}
         lp_address = Web3.to_checksum_address(lp_address)

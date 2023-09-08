@@ -1,13 +1,13 @@
 from decimal import Decimal
 
-from defyes import Aave_v3
+from defyes import aavev3
 from defyes.constants import Chain
 
 TEST_ADDRESS = "0x849D52316331967b6fF1198e5E32A0eB168D039d"
 
 
 def test_underlying_all():
-    data = Aave_v3.underlying_all(TEST_ADDRESS, block=17645934, blockchain=Chain.ETHEREUM)
+    data = aavev3.underlying_all(TEST_ADDRESS, block=17645934, blockchain=Chain.ETHEREUM)
     assert data == {
         "block": 17645934,
         "blockchain": "ethereum",
@@ -48,7 +48,7 @@ def test_underlying_all():
 
 
 def test_get_data():
-    data = Aave_v3.get_data(TEST_ADDRESS, block=17645934, blockchain=Chain.ETHEREUM)
+    data = aavev3.get_data(TEST_ADDRESS, block=17645934, blockchain=Chain.ETHEREUM)
     assert data == {
         "collateral_ratio": Decimal("345.39002674115403124233125708997249603271484375"),
         "collaterals": [

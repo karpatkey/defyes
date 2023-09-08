@@ -83,6 +83,12 @@
         "poolId": 13,
         "rewarder": "0x112EA63D3A70bB7926F95DA81EaDF71Aba0f0955"
       }
+    },
+    "0x0C1B9CE6Bf6C01f587C2ee98b0ef4B20C6648753": {
+      "29822581": {
+        "poolId": 14,
+        "rewarder": "0xF4116F1be90057E6f85b0dcC14c47c84cc4575da"
+      }
     }
   },
   "ethereum": {
@@ -979,6 +985,18 @@
         "poolId": 156,
         "rewarder": "0x646E272dA2766Bdfd8079643Ffbb30830Fb87303"
       }
+    },
+    "0x8353157092ED8Be69a9DF8F95af097bbF33Cb2aF": {
+      "18070661": {
+        "poolId": 157,
+        "rewarder": "0xBDD6984C3179B099E9D383ee2F44F3A57764BF7d"
+      }
+    },
+    "0x6f0ed6f346007563D3266DE350d174a831bDE0ca": {
+      "18070673": {
+        "poolId": 158,
+        "rewarder": "0xDC71AFe0F4B04d8780bFdf048378C0c6DfD3a19A"
+      }
     }
   },
   "polygon": {
@@ -1222,6 +1240,18 @@
       "124298571": {
         "poolId": 27,
         "rewarder": "0xE14A07A75eFeE2f5F0a8bEA1D5D9fC959969ef2F"
+      }
+    },
+    "0x423A1323c871aBC9d89EB06855bF5347048Fc4A5": {
+      "128271336": {
+        "poolId": 28,
+        "rewarder": "0x416C7Ad55080aB8e294beAd9B8857266E3B3F28E"
+      }
+    },
+    "0x9791d590788598535278552EEcD4b211bFc790CB": {
+      "128271336": {
+        "poolId": 29,
+        "rewarder": "0xa7BdaD177D474f946f3cDEB4bcea9d24Cf017471"
       }
     }
   },

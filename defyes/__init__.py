@@ -1,7 +1,7 @@
 import logging
 
 from .protocols import aave  # noqa
-from .protocols import aave_v3  # noqa
+from .protocols import aavev3  # noqa
 from .protocols import agave  # noqa
 from .protocols import angle  # noqa
 from .protocols import ankr  # noqa
@@ -37,7 +37,7 @@ from .protocols import unit  # noqa
 from .protocols import votium  # noqa
 
 Aave = aave
-Aave_v3 = aave_v3
+Aave_v3 = aavev3
 Agave = agave
 Angle = angle
 Ankr = ankr
