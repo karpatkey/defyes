@@ -24,6 +24,9 @@ class BaseVault(BaseVault):
     def asset_token(self):
         return Token.get_instance(self.asset, self.blockchain, self.block)
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(address={self.address})"
+
 
 class StEthVolatilityVault(BaseVault):
     """
@@ -67,10 +70,18 @@ class UsdcFudVault(BaseVault):
     }
 
 
-vault_classes = (
-    StEthVolatilityVault,
-    EthphoriaVault,
-    UsdcFudVault,
+class VaultClasses(tuple):
+    def instances(self, blockchain, block_id):
+        for vault_class in self:
+            yield vault_class(blockchain, block_id)
+
+
+vault_classes = VaultClasses(
+    (
+        StEthVolatilityVault,
+        EthphoriaVault,
+        UsdcFudVault,
+    )
 )
 
 
@@ -107,6 +118,14 @@ def get_protocol_data(
         if asset_amount != 0 or share_amount != 0
     }
 
+    vaults_metrics = {
+        vault: {
+            "management_fee": vault.management_withdraw_fee_factor,
+            # "apy": None,
+        }
+        for vault in vault_classes.instances(blockchain, block)
+    }
+
     return {
         "blockchain": blockchain,
         "block_id": block_id,
@@ -116,5 +135,7 @@ def get_protocol_data(
         "decimals": decimals,
         "positions": positions,
         "positions_key": "vault_address",
-        "financial_metrics": {},
+        "financial_metrics": {
+            "vaults": vaults_metrics,
+        },
     }
