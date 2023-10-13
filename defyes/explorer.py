@@ -89,13 +89,21 @@ class ChainExplorer(requests.Session):
     )
 
     @cached
-    def block_from_time(self, timestamp: int) -> int:
-        response = self._get(module="block", action="getblocknobytime", closest="before", timestamp=int(timestamp))
+    def block_closest_to(self, timestamp: int, closest: str) -> int:
+        response = self._get(module="block", action="getblocknobytime", closest=closest, timestamp=int(timestamp))
         block_id = response.json()["result"]
         try:
             return int(block_id)
         except (TypeError, ValueError):
             return block_id
+
+    def block_after(self, timestamp):
+        return self.block_closest_to(timestamp, closest="after")
+
+    def block_before(self, timestamp):
+        return self.block_closest_to(timestamp, closest="before")
+
+    block_from_time = block_before
 
     @cached
     def time_from_block(self, block: int | str) -> int:
