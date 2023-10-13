@@ -74,11 +74,19 @@ def date_to_block(datestring, blockchain, utc=0) -> int:
     else:
         timestamp = date_to_timestamp(datestring, utc=utc)
 
+    return timestamp_to_block(timestamp, blockchain)
+
+
+def timestamp_to_block(timestamp, blockchain) -> int:
     return ChainExplorer(blockchain).block_from_time(timestamp)
 
 
 def block_to_date(block, blockchain, utc=0):
-    return timestamp_to_date(ChainExplorer(blockchain).time_from_block(block), utc=utc)
+    return timestamp_to_date(block_to_timestamp(block, blockchain, utc))
+
+
+def block_to_timestamp(block, blockchain, utc=0):
+    return ChainExplorer(blockchain).time_from_block(block)
 
 
 def get_blocks_per_year(blockchain):
