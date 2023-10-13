@@ -16,7 +16,7 @@ stETHev = Token.get_instance(0x5FE4B38520E856921978715C8579D2D7A4D2274F, Chain.E
 stETH = Token.get_instance(0xAE7AB96520DE3A18E5E111B5EAAB095312D7FE84, Chain.ETHEREUM)
 
 expected_protocol_data = {
-    "blockchain": "ethereum",
+    "blockchain": Chain.ETHEREUM,
     "block_id": block_id,
     "protocol": "Pods",
     "version": 0,
@@ -26,10 +26,38 @@ expected_protocol_data = {
         pods.EthphoriaVault.default_addresses[Chain.ETHEREUM]: {
             "underlyings": [{"balance": Decimal("50.284891309823081976"), "address": str(stETH)}],
             "holdings": [{"balance": Decimal("49.940538321937547614"), "address": str(stETHev)}],
-        }
+        },
     },
     "positions_key": "vault_address",
-    "financial_metrics": {},
+    "financial_metrics": {
+        pods.EthphoriaVault.default_addresses[Chain.ETHEREUM]: {
+            "management_fee": Decimal(0),
+            "periods": {
+                "current_month": 1.0003212886971298,
+                "current_year": float("nan"),
+                "last_30_days": 1.000130521933334,
+                "previous_month": 1.0047870372549657,
+            },
+        },
+        pods.StEthVolatilityVault.default_addresses[Chain.ETHEREUM]: {
+            "management_fee": Decimal("0.001"),
+            "periods": {
+                "current_month": 1.0015223607819195,
+                "current_year": 1.0225490757701234,
+                "last_30_days": 1.0016977725506917,
+                "previous_month": 1.0023797940711472,
+            },
+        },
+        pods.UsdcFudVault.default_addresses[Chain.ETHEREUM]: {
+            "management_fee": Decimal(0),
+            "periods": {
+                "current_month": 1.0002621482802374,
+                "current_year": float("nan"),
+                "last_30_days": 1.000114112303449,
+                "previous_month": 1.0012340165417097,
+            },
+        },
+    },
 }
 
 
