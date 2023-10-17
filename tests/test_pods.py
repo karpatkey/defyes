@@ -34,7 +34,7 @@ expected_protocol_data = {
             "management_fee": Decimal(0),
             "periods": {
                 "current_month": 1.0003212886971298,
-                "current_year": float("nan"),
+                "current_year": None,
                 "last_30_days": 1.000130521933334,
                 "previous_month": 1.0047870372549657,
             },
@@ -52,7 +52,7 @@ expected_protocol_data = {
             "management_fee": Decimal(0),
             "periods": {
                 "current_month": 1.0002621482802374,
-                "current_year": float("nan"),
+                "current_year": None,
                 "last_30_days": 1.000114112303449,
                 "previous_month": 1.0012340165417097,
             },
