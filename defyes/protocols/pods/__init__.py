@@ -68,8 +68,8 @@ class BaseVault(BaseVault):
 
     @cached_property
     def at_previous_month_beginning(self) -> BaseVault:
-        prev_month_somewhere = self.at_month_beginning.time - Duration.days(28)
-        prev_month_beginning = Time.from_utc(prev_month_somewhere.utc.year, prev_month_somewhere.utc.month, 1)
+        prev_month_last_day = self.month_beginning - Duration.days(1)
+        prev_month_beginning = Time.from_utc(prev_month_last_day.utc.year, prev_month_last_day.utc.month, 1)
         prev_block = self._chain_explorer.block_after(prev_month_beginning)
         return self.__class__(self.blockchain, prev_block, self.address)
 
