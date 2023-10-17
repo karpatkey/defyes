@@ -52,8 +52,7 @@ class BaseVault(BaseVault):
 
     @cached_property
     def at_30days_before(self) -> BaseVault:
-        t30days = 30 * 24 * 3600
-        prev_time = self.time - t30days
+        prev_time = self.time - Duration.days(30)
         prev_block = self._chain_explorer.block_after(prev_time)
         return self.__class__(self.blockchain, prev_block, self.address)
 
