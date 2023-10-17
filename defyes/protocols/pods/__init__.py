@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from decimal import Decimal
 from functools import cached_property
 from math import log10
@@ -86,28 +87,28 @@ class BaseVault(BaseVault):
 
     @cached_property
     def last_30_days(self):
-        return Period(
+        return Interval(
             initial=self.at_30days_before.share_chained_price,
             final=self.share_chained_price,
         )
 
     @cached_property
     def current_month(self):
-        return Period(
+        return Interval(
             initial=self.at_month_beginning.share_chained_price,
             final=self.share_chained_price,
         )
 
     @cached_property
     def current_year(self):
-        return Period(
+        return Interval(
             initial=self.at_year_beginning.share_chained_price,
             final=self.share_chained_price,
         )
 
     @cached_property
     def previous_month(self):
-        return Period(
+        return Interval(
             initial=self.at_previous_month_beginning.share_chained_price,
             final=self.at_month_beginning.share_chained_price,
         )
@@ -144,10 +145,10 @@ class Factor(float):
         return MilliBell(1000 * log10(self))
 
 
-class Period:
-    def __init__(self, initial: ChainedPrice, final: ChainedPrice):
-        self.initial = initial
-        self.final = final
+@dataclass
+class Interval:
+    initial: ChainedPrice
+    final: ChainedPrice
 
     @cached_property
     def rate(self) -> Factor:
@@ -160,21 +161,12 @@ class Period:
                 raise
 
     @cached_property
-    def period(self) -> Duration:
+    def duration(self) -> Duration:
         return Duration(self.final.time - self.initial.time)
 
     @cached_property
     def apy(self):
-        return Factor(apy(price_factor=self.rate, time_fraction=self.period / year))
-
-    def __float__(self):
-        return self.apy
-
-    def __repr__(self):
-        return str(self.rate)
-
-    def no__repr__(self):
-        return f"(rate={self.rate.percent} period='{self.period}' APY={self.apy.percent})"
+        return Factor(apy(price_factor=self.rate, time_fraction=self.duration / year))
 
 
 def apy(price_factor, time_fraction, periods=1):
