@@ -44,11 +44,11 @@ class BaseVault(BaseVault):
 
     @cached_property
     def year_beginning(self):
-        return Time.from_utc(self.time.utc.year, 1, 1)
+        return Time.from_calendar(self.time.calendar.year, 1, 1)
 
     @cached_property
     def month_beginning(self):
-        return Time.from_utc(self.time.utc.year, self.time.utc.month, 1)
+        return Time.from_calendar(self.time.calendar.year, self.time.calendar.month, 1)
 
     @cached_property
     def at_30days_before(self) -> BaseVault:
@@ -69,7 +69,9 @@ class BaseVault(BaseVault):
     @cached_property
     def at_previous_month_beginning(self) -> BaseVault:
         prev_month_last_day = self.month_beginning - Duration.days(1)
-        prev_month_beginning = Time.from_utc(prev_month_last_day.utc.year, prev_month_last_day.utc.month, 1)
+        prev_month_beginning = Time.from_calendar(
+            prev_month_last_day.calendar.year, prev_month_last_day.calendar.month, 1
+        )
         prev_block = self._chain_explorer.block_after(prev_month_beginning)
         return self.__class__(self.blockchain, prev_block, self.address)
 

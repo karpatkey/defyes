@@ -1,10 +1,23 @@
 import time
 from datetime import datetime, timedelta, timezone
-from functools import cached_property, partial
+from functools import cached_property
 from typing import TypeVar
 
-utc = partial(datetime, tzinfo=timezone.utc)
-utc_from_timestamp = partial(datetime.fromtimestamp, tz=timezone.utc)
+default_tz = timezone.utc
+
+
+def simple_change_utc(offset_in_hours):
+    global default_tz
+    default_tz = timezone(timedelta(hours=offset_in_hours), "UTC")
+
+
+def calendar(year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
+    return datetime(year, month, day, hour, minute, second, microsecond, tzinfo=default_tz)
+
+
+def calendar_from_time(timestamp):
+    return datetime.fromtimestamp(timestamp, tz=default_tz)
+
 
 DurationOrDerived = TypeVar("DurationOrDerived", bound="Duration")
 
@@ -93,25 +106,25 @@ TimeOrDerived = TypeVar("TimeOrDerived", bound="Time")
 
 class Time(float):
     """
-    A regular float class which represent the POSIX timestamp, with a lazy conversion to UTC datetime when expecting its
-    representation or when using the .utc property.
+    A regular float class which represent the POSIX timestamp, with a lazy conversion to datetime aware with UTC default
+    when expecting its representation or when using the .calendar property.
     """
 
-    format = "%Y-%m-%d %H:%M:%S UTC"
+    format = "%Y-%m-%d %H:%M:%S %Z%z"
 
     time_interval_class = Duration
 
     @cached_property
-    def utc(self):
-        return utc_from_timestamp(self)
+    def calendar(self):
+        return calendar_from_time(self)
 
     def __repr__(self):
-        return repr(self.utc.strftime(self.format))
+        return repr(self.calendar.strftime(self.format))
 
     @classmethod
-    def from_utc(cls, year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
+    def from_calendar(cls, year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
         try:
-            return cls(utc(year, month, day, hour, minute, second, microsecond).timestamp())
+            return cls(calendar(year, month, day, hour, minute, second, microsecond).timestamp())
         except TypeError:
             return cls(datetime.strptime(year, cls.format).replace(tzinfo=timezone.utc).timestamp())
 
