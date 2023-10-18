@@ -273,7 +273,7 @@ def get_protocol_data(
     vaults_metrics = {
         vault.address: {
             "management_fee": vault.management_withdraw_fee_factor,
-            "periods": {
+            "intervals": {
                 "last_30_days": vault.last_30_days.rate,
                 "current_month": vault.current_month.rate,
                 "previous_month": vault.previous_month.rate,
