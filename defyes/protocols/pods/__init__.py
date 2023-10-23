@@ -8,8 +8,8 @@ from web3 import Web3
 from web3.exceptions import BadFunctionCallOutput
 
 from defyes.constants import Chain
-from defyes.functions import ensure_a_block_number
 from defyes.explorer import ChainExplorer
+from defyes.functions import ensure_a_block_number
 from defyes.lazytime import Duration, Time
 from defyes.types import Addr, Token, TokenAmount
 
