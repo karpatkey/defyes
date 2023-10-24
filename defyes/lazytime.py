@@ -174,8 +174,5 @@ class Time(float):
 
     __radd__ = __add__
 
-    def __radd__(self, other) -> TimeOrDerived:
-        return self.__class__(super().__radd__(other))
-
 
 Duration.absolut_time_class = Time
