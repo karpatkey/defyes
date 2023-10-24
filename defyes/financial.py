@@ -64,6 +64,6 @@ class Interval:
 
 
 def apy(price_factor, time_fraction, periods=1):
-    assert time_fraction < 1, "Extrapolation error"
+    assert time_fraction <= 1, "Extrapolation error"
     exponent = periods + (1 - time_fraction)
     return (1 + (price_factor - 1) / exponent) ** exponent
