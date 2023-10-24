@@ -7,7 +7,7 @@ from web3.exceptions import BadFunctionCallOutput
 
 from defyes.constants import Chain
 from defyes.explorer import ChainExplorer
-from defyes.finantial import ChainedPrice, Interval
+from defyes.financial import ChainedPrice, Interval
 from defyes.functions import ensure_a_block_number
 from defyes.lazytime import Duration, Time
 from defyes.types import Addr, Token, TokenAmount
