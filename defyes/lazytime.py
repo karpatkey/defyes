@@ -1,3 +1,16 @@
+"""
+# Lazy Time
+
+The main resources from this module are the clases Duration and Time, which internally use the funcions `calendar` and
+`calendar_from_time`.
+
+The idea is not to deal with mixed timezone, but you could modify the process level configuration of `default_tz` to use
+a different timezone from UTC for calendar representation of time and for calendar interpretation of time, for example
+when the user code refers to the begining of a day.
+
+In case you wanted to modify the `default_tz`, this module has a `simple_change_utc` function to just add an UTC offset.
+"""
+
 import time
 from datetime import datetime, timedelta, timezone
 from functools import cached_property
@@ -7,15 +20,26 @@ default_tz = timezone.utc
 
 
 def simple_change_utc(offset_in_hours):
+    """
+    This function modify the global `default_tz` using a datetime.timezone object as tzinfo, which is a simple way the
+    add and offset to UTC. This is simpler than `pytz`, but you could set `default_tz` manually with an tzinfo from
+    `pytz` as well.
+    """
     global default_tz
     default_tz = timezone(timedelta(hours=offset_in_hours), "UTC")
 
 
-def calendar(year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
+def calendar(year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0) -> datetime:
+    """
+    Aware `datetime`, from calendar parameters, but with tzinfo using `default_tz`.
+    """
     return datetime(year, month, day, hour, minute, second, microsecond, tzinfo=default_tz)
 
 
-def calendar_from_time(timestamp):
+def calendar_from_time(timestamp) -> datetime:
+    """
+    Aware `datetime`, from POSIX timestamp, but with tzinfo using `default_tz`.
+    """
     return datetime.fromtimestamp(timestamp, tz=default_tz)
 
 
@@ -25,7 +49,7 @@ DurationOrDerived = TypeVar("DurationOrDerived", bound="Duration")
 class Duration(float):
     """
     A regular float class which represent a duration in seconds, but it could be constructed from several time units,
-    like timedelta, but faster that that if timedelta.total_seconds() is expected included in the computation.
+    like timedelta, but faster than that if timedelta.total_seconds() is expected included in the computation.
     """
 
     @cached_property
@@ -39,30 +63,34 @@ class Duration(float):
     def sum(cls, days=0, seconds=0, microseconds=0, milliseconds=0, minutes=0, hours=0, weeks=0) -> DurationOrDerived:
         s = seconds
         if weeks:
-            s += weeks * 604800
+            s += weeks * 604_800
         if days:
-            s += days * 86400
+            s += days * 86_400
         if hours:
-            s += hours * 3600
+            s += hours * 3_600
         if minutes:
             s += minutes * 60
         if milliseconds:
-            s += milliseconds / 1000
+            s += milliseconds / 1_000
         if microseconds:
-            s += microseconds / 1000000
+            s += microseconds / 1_000_000
         return cls(s)
 
     @classmethod
+    def seconds(cls, seconds) -> DurationOrDerived:
+        return cls(seconds)
+
+    @classmethod
     def weeks(cls, weeks) -> DurationOrDerived:
-        return cls(604800 * weeks)
+        return cls(604_800 * weeks)
 
     @classmethod
     def days(cls, days) -> DurationOrDerived:
-        return cls(86400 * days)
+        return cls(86_400 * days)
 
     @classmethod
     def hours(cls, hours) -> DurationOrDerived:
-        return cls(3600 * hours)
+        return cls(3_600 * hours)
 
     @classmethod
     def minutes(cls, minutes) -> DurationOrDerived:
@@ -70,14 +98,16 @@ class Duration(float):
 
     @classmethod
     def milliseconds(cls, milliseconds) -> DurationOrDerived:
-        return cls(milliseconds / 1000)
+        return cls(milliseconds / 1_000)
 
     @classmethod
     def microseconds(cls, microseconds) -> DurationOrDerived:
-        return cls(microseconds / 1000000)
+        return cls(microseconds / 1_000_000)
 
     def __sub__(self, other) -> DurationOrDerived:
         return self.__class__(super().__sub__(other))
+
+    __rsub__ = __sub__
 
     def __add__(self, other) -> DurationOrDerived:
         result = super().__add__(other)
@@ -91,14 +121,14 @@ class Duration(float):
     def __mul__(self, other) -> DurationOrDerived:
         return self.__class__(super().__mul__(other))
 
-    def __div__(self, other) -> DurationOrDerived:
-        return self.__class__(super().__div__(other))
+    __rmul__ = __mul__
+
+    def __truediv__(self, other) -> DurationOrDerived:
+        result = super().__truediv__(other)
+        return result if isinstance(other, self.__class__) else self.__class__(result)
 
     def __neg__(self) -> DurationOrDerived:
         return self.__class__(super().__neg__())
-
-
-Duration.seconds = classmethod(Duration)
 
 
 TimeOrDerived = TypeVar("TimeOrDerived", bound="Time")
