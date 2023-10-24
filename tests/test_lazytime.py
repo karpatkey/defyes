@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from defyes import lazytime
-from defyes.lazytime import Duration
+from defyes.lazytime import Duration, Time
 
 timestamp = 1698075172.5
 
@@ -130,3 +130,46 @@ def test_duration_neg():
     assert isinstance(d := -Duration(3), Duration)
     assert isinstance(d, float)
     assert d == -3
+
+
+def test_time_is_float():
+    assert isinstance(t := Time.from_now(), Time)
+    assert isinstance(t, float)
+
+
+def test_time_calendar(utc):
+    assert isinstance(dt := Time(0).calendar, datetime)
+    assert dt == datetime(1970, 1, 1, tzinfo=timezone.utc)
+
+
+def test_time_repr(utc):
+    assert repr(Time(0)) == "'1970-01-01 00:00:00 UTC+0000'"
+
+
+def test_time_from_calendar(utc):
+    assert Time.from_calendar(1970, 1, 1, 0, 0, 1, 100_000) == 1.1
+    lazytime.simple_change_utc(-3)
+    assert Time.from_calendar(1970, 1, 1, 0, 0, 1, 100_000) == 10_801.1
+
+
+def test_time_sub():
+    assert isinstance(f := Time(10) - Time(9), Duration)
+    assert isinstance(f, float)
+    assert f == 1
+
+    assert isinstance(f := Time(10) - Duration(9), Time)
+    assert isinstance(f, float)
+    assert f == 1
+
+    assert isinstance(f := Time(10) - 9, Time)
+    assert isinstance(f, float)
+    assert f == 1
+
+
+@pytest.mark.parametrize(
+    "d", [Time(10) + Duration(9), Duration(9) + Time(10), Time(10) + 9, 9 + Time(10)], ids=["T+D", "D+T", "T+f", "f+T"]
+)
+def test_time_add(d):
+    assert isinstance(d, Time)
+    assert isinstance(d, float)
+    assert d == 19

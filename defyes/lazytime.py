@@ -145,14 +145,14 @@ class Time(float):
     time_interval_class = Duration
 
     @cached_property
-    def calendar(self):
+    def calendar(self) -> datetime:
         return calendar_from_time(self)
 
     def __repr__(self):
         return repr(self.calendar.strftime(self.format))
 
     @classmethod
-    def from_calendar(cls, year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
+    def from_calendar(cls, year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0) -> TimeOrDerived:
         try:
             return cls(calendar(year, month, day, hour, minute, second, microsecond).timestamp())
         except TypeError:
