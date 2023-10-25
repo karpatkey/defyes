@@ -175,7 +175,10 @@ class VaultAssetShare(NamedTuple):
     share_amount: TokenAmount
 
 
-def underlyings_holdings(wallet: Addr, block_id: int, blockchain: Chain = Chain.ETHEREUM) -> Iterator[VaultAssetShare]:
+def underlyings_holdings(
+    wallet: Addr, block: int | str = "latest", blockchain: Chain = Chain.ETHEREUM
+) -> Iterator[VaultAssetShare]:
+    block_id = ensure_a_block_number(block, blockchain)
     for vault_class in vault_classes:
         vault = vault_class(blockchain, block_id)
         shares = vault.balance_of(wallet)
