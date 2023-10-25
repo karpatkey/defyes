@@ -16,7 +16,7 @@ class FormatedFloat(float):
 
 
 class Percent(FormatedFloat):
-    template = "{:.3f}%"
+    template = "{:.4g}%"
 
 
 class MilliBell(FormatedFloat):
@@ -25,11 +25,11 @@ class MilliBell(FormatedFloat):
 
 class Factor(float):
     @property
-    def percent(self) -> float:
+    def percent(self) -> Percent:
         return Percent(100 * (self - 1))
 
     @property
-    def millibell(self) -> float:
+    def millibell(self) -> MilliBell:
         return MilliBell(1000 * log10(self))
 
 
