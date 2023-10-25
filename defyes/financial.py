@@ -59,11 +59,10 @@ class Interval:
         return Duration(self.final.time - self.initial.time)
 
     @cached_property
-    def apy(self):
-        return Factor(apy(price_factor=self.rate, time_fraction=self.duration / year))
+    def apy(self) -> Factor:
+        return apy(price_factor=self.rate, time_fraction=self.duration / year)
 
 
-def apy(price_factor, time_fraction, periods=1):
+def apy(price_factor, time_fraction) -> Factor:
     assert time_fraction <= 1, "Extrapolation error"
-    exponent = periods + (1 - time_fraction)
-    return (1 + (price_factor - 1) / exponent) ** exponent
+    return Factor(price_factor ** (1 / time_fraction))

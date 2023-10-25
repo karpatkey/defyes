@@ -1,6 +1,7 @@
 import pytest
 from pytest import approx
 
+from defyes import financial
 from defyes.financial import ChainedPrice, Duration, Factor, FormatedFloat, Interval, MilliBell, Percent, Time
 
 
@@ -58,8 +59,14 @@ def test_interval(p):
     if p == 1:  # year
         assert interval.apy == 2
         assert interval.apy.percent == 100
-        assert round(interval.apy.millibell) == 301
+        assert interval.apy.millibell == approx(301, abs=1)
     elif p == 0.5:  # half year
-        assert interval.apy == approx(2.152, abs=1e-3)  # I expect it to be 4
-        assert interval.apy.percent == approx(115, abs=1)  # I expect it to be 300%
-        assert round(interval.apy.millibell) == approx(333, abs=1)  # I expect it to be 602mB
+        assert interval.apy == approx(4, abs=1e-3)
+        assert interval.apy.percent == approx(300, abs=1)
+        assert interval.apy.millibell == approx(602, abs=1)
+
+
+def test_apy():
+    apy = financial.apy(price_factor=2, time_fraction=0.5)
+    assert apy == 4
+    assert apy.percent == 300
