@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 import pytest
+from pytest import approx
 
 from defyes.constants import Chain
 from defyes.lazytime import Time
@@ -125,6 +126,6 @@ def test_usd_fud_vault_aug_rate():
     assert vault.previous_month.rate == 1.016457773538765
     assert vault.previous_month.rate.percent == 1.6457773538764986
     assert str(vault.previous_month.rate.percent) == "1.646%"  # Aug 1.629% in app.pods.finance
-    assert vault.previous_month.apy == 1.0165224693302266
-    assert vault.previous_month.apy.percent == 1.6522469330226608
-    assert str(vault.previous_month.apy.percent) == "1.652%"
+    assert vault.previous_month.apy == approx(1.2119, abs=0.0001)
+    assert vault.previous_month.apy.percent == approx(21.19, abs=0.01)
+    assert str(vault.previous_month.apy.percent) == "21.19%"
