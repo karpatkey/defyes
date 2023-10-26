@@ -3,7 +3,7 @@ import datetime
 import pytz
 
 from defyes.constants import Chain, ETHTokenAddr
-from defyes.functions import block_to_date, date_to_block, get_symbol, search_proxy_impl_address
+from defyes.functions import block_to_date, date_to_block, get_block_samples, get_symbol, search_proxy_impl_address
 
 
 def test_date_to_block():
@@ -17,7 +17,7 @@ def test_date_to_block():
 
 def test_block_to_date():
     block = 16671547
-    assert block_to_date(block, Chain.ETHEREUM) == "2023-02-20 18:29:59"
+    assert block_to_date(block, Chain.ETHEREUM) == "2023-02-20 18:29:59 UTC+0000"
 
 
 def test_get_symbol():
@@ -35,6 +35,27 @@ def test_get_symbol():
 
     symbol = get_symbol("0x89d24A6b4CcB1B6fAA2625fE562bDD9a23260359", "ethereum")
     assert symbol == "DAI"
+
+
+def test_get_block_samples():
+    start_date = "2023-02-20 18:30:00"
+    end_date = "2023-02-22 18:30:00"
+    samples = get_block_samples(start_date, 10, Chain.ETHEREUM, end_date, utc=0, dates=True)
+    assert samples == [
+        [16671547, 16673134, 16674708, 16676287, 16677878, 16679456, 16681039, 16682615, 16684189, 16685763],
+        [
+            "2023-02-20 18:30:00 UTC+0000",
+            "2023-02-20 23:50:00 UTC+0000",
+            "2023-02-21 05:10:00 UTC+0000",
+            "2023-02-21 10:30:00 UTC+0000",
+            "2023-02-21 15:50:00 UTC+0000",
+            "2023-02-21 21:10:00 UTC+0000",
+            "2023-02-22 02:30:00 UTC+0000",
+            "2023-02-22 07:50:00 UTC+0000",
+            "2023-02-22 13:10:00 UTC+0000",
+            "2023-02-22 18:30:00 UTC+0000",
+        ],
+    ]
 
 
 def test_search_proxy_impl_address():

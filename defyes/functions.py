@@ -1,4 +1,3 @@
-import calendar
 import json
 import logging
 import math
@@ -15,6 +14,7 @@ from defyes.cache import cache_call, const_call
 from defyes.constants import ABI_TOKEN_SIMPLIFIED, Address, APIKey, Chain
 from defyes.explorer import ChainExplorer
 from defyes.helpers import suppress_error_codes
+from defyes.lazytime import Time
 from defyes.node import get_node
 
 logger = logging.getLogger(__name__)
@@ -49,19 +49,6 @@ def ensure_a_block_number(block: int | str, blockchain: Chain):
         raise ValueError("block should be an integer or just the string 'latest'")
 
 
-def timestamp_to_date(timestamp, utc=0):
-    return datetime.utcfromtimestamp(timestamp + 3600 * utc).strftime("%Y-%m-%d %H:%M:%S")
-
-
-def date_to_timestamp(datestring, utc=0):
-    #   localTimestamp = math.floor(time.mktime(datetime.strptime(datestring,'%Y-%m-%d %H:%M:%S').timetuple()) + 3600 * utc)
-    utc_timestamp = math.floor(
-        calendar.timegm(datetime.strptime(datestring, "%Y-%m-%d %H:%M:%S").timetuple()) - 3600 * utc
-    )
-
-    return utc_timestamp
-
-
 def date_to_block(datestring, blockchain, utc=0) -> int:
     """
     Returns the block number of a specified date.
@@ -69,24 +56,16 @@ def date_to_block(datestring, blockchain, utc=0) -> int:
     The date can be a string (in the format '%Y-%m-%d %H:%M:%S') or a datetime object. UTC is asumed as timezone.
     An example datestring: '2023-02-20 18:30:00'.
     """
-    if hasattr(datestring, "utctimetuple"):
-        timestamp = calendar.timegm(datestring.utctimetuple())
+    if isinstance(datestring, datetime):
+        timestamp = datestring.timestamp()
     else:
-        timestamp = date_to_timestamp(datestring, utc=utc)
+        timestamp = Time.from_string(datestring)
 
-    return timestamp_to_block(timestamp, blockchain)
-
-
-def timestamp_to_block(timestamp, blockchain) -> int:
     return ChainExplorer(blockchain).block_from_time(timestamp)
 
 
 def block_to_date(block, blockchain, utc=0):
-    return timestamp_to_date(block_to_timestamp(block, blockchain, utc))
-
-
-def block_to_timestamp(block, blockchain, utc=0):
-    return ChainExplorer(blockchain).time_from_block(block)
+    return str(Time(ChainExplorer(blockchain).time_from_block(block)))
 
 
 def get_blocks_per_year(blockchain):
@@ -481,21 +460,17 @@ def get_4byte_signature(hex_signature: str) -> list:
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_block_samples(start_date, samples, blockchain, end_date="latest", utc=0, dates=False):
-    start_timestamp = date_to_timestamp(start_date, utc=utc)
-    if end_date == "latest":
-        end_timestamp = math.floor(datetime.now().timestamp())
-    else:
-        end_timestamp = date_to_timestamp(end_date, utc=utc)
+    start_date = Time.from_string(start_date)
+    end_date = Time.from_now() if end_date == "latest" else Time.from_string(end_date)
+    delta = end_date - start_date
 
-    period = int((end_timestamp - start_timestamp) / (samples - 1))
-
-    timestamps = [start_timestamp + i * period for i in range(samples)]
-
-    dates_strings = [
-        datetime.utcfromtimestamp(timestamp + 3600 * utc).strftime("%Y-%m-%d %H:%M:%S") for timestamp in timestamps
-    ]
-
-    blocks = [ChainExplorer(blockchain).block_from_time(timestamps[i]) for i in range(samples)]
+    dates_strings = []
+    blocks = []
+    t = start_date
+    for _ in range(samples):
+        dates_strings.append(str(t))
+        blocks.append(ChainExplorer(blockchain).block_from_time(t))
+        t += delta / (samples - 1)
 
     if dates is True:
         return [blocks, dates_strings]
