@@ -16,6 +16,8 @@ from datetime import datetime, timedelta, timezone
 from functools import cached_property
 from typing import TypeVar
 
+from dateutil.parser import parse
+
 default_tz = timezone.utc
 
 
@@ -157,6 +159,13 @@ class Time(float):
             return cls(calendar(year, month, day, hour, minute, second, microsecond).timestamp())
         except TypeError:
             return cls(datetime.strptime(year, cls.format).replace(tzinfo=timezone.utc).timestamp())
+
+    @classmethod
+    def from_string(cls, string: str):
+        dt = parse(string)
+        if not dt.tzinfo:
+            dt = dt.replace(tzinfo=default_tz)
+        return cls(dt.timestamp())
 
     @classmethod
     def from_now(cls):
