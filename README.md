@@ -512,13 +512,7 @@ To wipe the cache use the env var `DEFI_PROTO_CACHE_CLEAR` or call `defyes.cache
 
   ** Example needed **
 
-  ### 23: get_block_samples(start_date, samples, blockchain, end_date='latest', utc=0, dates=False)
-
-  > Description: function returns blah blahh blaaahhh
-
-  ** Work needs to be done **
-
-  ### 24: is_archival(endpoint) -> bool
+  ### 23: is_archival(endpoint) -> bool
 
   > Description: function returns if node is an archival node or a full node.
 

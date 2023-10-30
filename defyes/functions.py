@@ -459,26 +459,6 @@ def get_4byte_signature(hex_signature: str) -> list:
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def get_block_samples(start_date, samples, blockchain, end_date="latest", utc=0, dates=False):
-    start_date = Time.from_string(start_date)
-    end_date = Time.from_now() if end_date == "latest" else Time.from_string(end_date)
-    delta = end_date - start_date
-
-    dates_strings = []
-    blocks = []
-    t = start_date
-    for _ in range(samples):
-        dates_strings.append(str(t))
-        blocks.append(ChainExplorer(blockchain).block_from_time(t))
-        t += delta / (samples - 1)
-
-    if dates is True:
-        return [blocks, dates_strings]
-    else:
-        return blocks
-
-
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def is_archival(endpoint) -> bool:
     """
     Checks whether a node is an archival node or a full node.
