@@ -11,7 +11,8 @@ def test_formated_float():
     assert repr(f) == "3.142"
 
 
-def test_percent():
+def test_percent(monkeypatch):
+    monkeypatch.setattr(Percent, "template", "{:.3f}%")
     f = Percent(0.3456)
     assert isinstance(f, float)
     assert repr(f) == "0.346%"
