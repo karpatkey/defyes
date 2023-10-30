@@ -170,13 +170,13 @@ vault_classes = VaultClasses(
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class Balance:
     vault: BaseVault
     asset_amount: TokenAmount
     share_amount: TokenAmount
 
-    @property
+    @cached_property
     def has_some_amount(self):
         return self.asset_amount != 0 or self.share_amount != 0
 
