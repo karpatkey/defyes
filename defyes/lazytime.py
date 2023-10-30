@@ -151,7 +151,7 @@ class Time(float):
         return calendar_from_time(self)
 
     def __repr__(self):
-        return repr(self.calendar.strftime(self.format))
+        return repr(str(self))
 
     def __str__(self):
         return self.calendar.strftime(self.format)
