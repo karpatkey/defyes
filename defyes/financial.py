@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from functools import cached_property
 from math import log10
-from typing import NamedTuple
 
 from .lazytime import Duration, Time
 
@@ -33,13 +32,14 @@ class Factor(float):
         return MilliBell(1000 * log10(self))
 
 
-class ChainedPrice(NamedTuple):
+@dataclass(frozen=True)
+class ChainedPrice:
     price: float
     block_id: int
     time: Time
 
 
-@dataclass
+@dataclass(frozen=True)
 class Interval:
     initial: ChainedPrice
     final: ChainedPrice
