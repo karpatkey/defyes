@@ -1,6 +1,7 @@
+from dataclasses import dataclass
 from decimal import Decimal
 from functools import cached_property
-from typing import Iterator, NamedTuple
+from typing import Iterator
 
 from web3 import Web3
 from web3.exceptions import BadFunctionCallOutput
@@ -169,21 +170,25 @@ vault_classes = VaultClasses(
 )
 
 
-class VaultAssetShare(NamedTuple):
+@dataclass(frozen=True)
+class Balance:
     vault: BaseVault
     asset_amount: TokenAmount
     share_amount: TokenAmount
 
+    @cached_property
+    def has_some_amount(self):
+        return self.asset_amount != 0 or self.share_amount != 0
+
 
 def underlyings_holdings(
     wallet: Addr, block: int | str = "latest", blockchain: Chain = Chain.ETHEREUM
-) -> Iterator[VaultAssetShare]:
+) -> Iterator[Balance]:
     block_id = ensure_a_block_number(block, blockchain)
-    for vault_class in vault_classes:
-        vault = vault_class(blockchain, block_id)
+    for vault in vault_classes.instances(blockchain, block_id):
         shares = vault.balance_of(wallet)
         assets = vault.preview_redeem(shares) + vault.idle_assets_of(wallet)  # includes management fee
-        yield VaultAssetShare(
+        yield Balance(
             vault,
             TokenAmount.from_teu(assets, vault.asset_token),
             TokenAmount.from_teu(shares, vault.share_token),
@@ -197,12 +202,12 @@ def get_protocol_data(
     block_id = ensure_a_block_number(block, blockchain)
 
     positions = {
-        vault.address: {
-            "underlyings": [asset_amount.as_dict(decimals)],
-            "holdings": [share_amount.as_dict(decimals)],
+        balance.vault.address: {
+            "underlyings": [balance.asset_amount.as_dict(decimals)],
+            "holdings": [balance.share_amount.as_dict(decimals)],
         }
-        for vault, asset_amount, share_amount in underlyings_holdings(wallet, block_id, blockchain)
-        if asset_amount != 0 or share_amount != 0
+        for balance in underlyings_holdings(wallet, block_id, blockchain)
+        if balance.has_some_amount
     }
 
     vaults_metrics = {
