@@ -143,7 +143,9 @@ def test_time_calendar(utc):
 
 
 def test_time_repr(utc):
-    assert repr(Time(0)) == "'1970-01-01 00:00:00 UTC+0000'"
+    assert repr(Time(0)) == "'1970-01-01 00:00:00'"
+    lazytime.simple_change_utc(2)
+    assert repr(Time(0)) == "'1970-01-01 02:00:00 UTC+0200'"
 
 
 def test_time_from_calendar(utc):

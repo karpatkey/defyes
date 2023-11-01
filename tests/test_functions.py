@@ -17,7 +17,7 @@ def test_date_to_block():
 
 def test_block_to_date():
     block = 16671547
-    assert block_to_date(block, Chain.ETHEREUM) == "2023-02-20 18:29:59 UTC+0000"
+    assert block_to_date(block, Chain.ETHEREUM) == "2023-02-20 18:29:59"
 
 
 def test_get_symbol():

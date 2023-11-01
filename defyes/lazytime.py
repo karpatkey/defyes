@@ -142,7 +142,9 @@ class Time(float):
     when expecting its representation or when using the .calendar property.
     """
 
-    format = "%Y-%m-%d %H:%M:%S %Z%z"
+    @property
+    def format(self):
+        return "%Y-%m-%d %H:%M:%S" if default_tz == timezone.utc else "%Y-%m-%d %H:%M:%S %Z%z"
 
     time_interval_class = Duration
 
