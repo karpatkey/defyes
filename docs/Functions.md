@@ -37,57 +37,6 @@
   ```
   </details>
 
-### 3: timestamp_to_date(timestamp, utc=0)
-
-> Description: function retuns timestamp to date conversion
-
-- <details><summary><b>Example</b></summary>
-
-  ```
-  a = timestamp_to_date(1663181616)
-  print(a)
-  ```
-
-  ```
-  output:
-  2022-09-14 18:53:36
-  ```
-  </details>
-
-### 4: timestamp_to_block(timestamp, blockchain) -> int
-
-> Description: function returns timestamp to block conversion
-
-- <details><summary><b>Example</b></summary>
-
-  ```
-  a = timestamp_to_block(1663181616, Chain.ETHEREUM)
-  print(a)
-  ```
-
-  ```
-  output:
-  15534540
-  ```
-  </details>
-
-### 5: date_to_timestamp(datestring, utc=0)
-
-> Description: function returns date to timestamp conversion
-
-- <details><summary><b>Example</b></summary>
-
-  ```bash
-  a = date_to_timestamp('2022-01-14 00:00:00')
-  print(a)
-  ```
-
-  ```
-  output:
-  1642118400
-  ```
-  </details>
-
 ### 6: date_to_block(datestring, blockchain, utc=0) -> int
 
 > Description: function returns date to block conversion
@@ -103,24 +52,6 @@
   ```
   output:
   14000270
-  ```
-  </details>
-
-### 7: block_to_timestamp(block, blockchain)
-
-> Description: function returns block to timestamp conversion
-
-- <details><summary><b>Example</b></summary>
-
-  ```bash
-  a = block_to_timestamp(14000200, Chain.ETHEREUM)
-  print(a)
-
-  ```
-
-  ```
-  output:
-  1642117536
   ```
   </details>
 
