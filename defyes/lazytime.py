@@ -123,8 +123,8 @@ TimeOrDerived = TypeVar("TimeOrDerived", bound="Time")
 
 class Time(float):
     """
-    A regular float class which represent the POSIX timestamp, with a lazy conversion to datetime aware with repr_tz
-    when expecting its string or datetime representation.
+    A regular float class which represents the float POSIX timestamp in seconds, with a lazy conversion to an aware
+    datetime, or string, using `repr_tz` as default timezone for representation.
     """
 
     utc_format = "%Y-%m-%d %H:%M:%S"
