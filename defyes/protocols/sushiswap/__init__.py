@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Union
@@ -12,15 +11,8 @@ from web3.exceptions import ABIFunctionNotFound
 from defyes.cache import const_call
 from defyes.constants import Address, Chain
 from defyes.explorer import ChainExplorer
-from defyes.functions import (
-    block_to_date,
-    date_to_block,
-    get_contract,
-    get_decimals,
-    get_logs_web3,
-    last_block,
-    to_token_amount,
-)
+from defyes.functions import get_contract, get_decimals, get_logs_web3, last_block, to_token_amount
+from defyes.lazytime import Duration, Time
 from defyes.node import get_node
 from defyes.prices.prices import get_price
 
@@ -750,13 +742,8 @@ def get_swap_fees_APR(
     days: int = 1,
     apy: bool = False,
 ) -> int:
-    block_start = date_to_block(
-        datetime.strftime(
-            datetime.strptime(block_to_date(block_end, blockchain), "%Y-%m-%d %H:%M:%S") - timedelta(days=days),
-            "%Y-%m-%d %H:%M:%S",
-        ),
-        blockchain,
-    )
+    chain_explorer = ChainExplorer(blockchain)
+    block_start = chain_explorer.block_from_time(Time(chain_explorer.time_from_block(block_end)) - Duration.days(days))
     fees = swap_fees(lptoken_address, block_start, block_end, blockchain, web3)
     token0 = fees["swaps"][0]["token"]
     token0_fees = [0]

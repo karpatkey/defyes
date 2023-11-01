@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Union
 
@@ -9,15 +8,8 @@ from web3.exceptions import ContractLogicError
 from defyes.cache import const_call
 from defyes.constants import Address, Chain, ETHTokenAddr, GnosisTokenAddr
 from defyes.explorer import ChainExplorer
-from defyes.functions import (
-    balance_of,
-    block_to_date,
-    date_to_block,
-    get_contract,
-    get_decimals,
-    get_logs_web3,
-    to_token_amount,
-)
+from defyes.functions import balance_of, get_contract, get_decimals, get_logs_web3, to_token_amount
+from defyes.lazytime import Duration, Time
 from defyes.node import get_node
 from defyes.prices.prices import get_price
 
@@ -742,15 +734,10 @@ def get_base_apr(
     if web3 is None:
         web3 = get_node(blockchain, block=block_end)
 
-    block_start = date_to_block(
-        datetime.strftime(
-            datetime.strptime(block_to_date(block_end, blockchain), "%Y-%m-%d %H:%M:%S") - timedelta(days=days),
-            "%Y-%m-%d %H:%M:%S",
-        ),
-        blockchain,
-    )
+    chain_explorer = ChainExplorer(blockchain)
+    block_start = chain_explorer.block_from_time(Time(chain_explorer.time_from_block(block_end)) - Duration.days(days))
     lptoken_address = Web3.to_checksum_address(lptoken_address)
-    address_abi = ChainExplorer(blockchain).abi_from_address(lptoken_address)
+    address_abi = chain_explorer.abi_from_address(lptoken_address)
 
     lp_contract = get_contract(lptoken_address, blockchain, web3, abi=address_abi, block=block_end)
 
