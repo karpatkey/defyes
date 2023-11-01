@@ -61,6 +61,10 @@ def date_to_block(datestring, blockchain, utc=0) -> int:
     else:
         timestamp = Time.from_string(datestring)
 
+    return timestamp_to_block(timestamp, blockchain)
+
+
+def timestamp_to_block(timestamp, blockchain) -> int:
     return ChainExplorer(blockchain).block_from_time(timestamp)
 
 

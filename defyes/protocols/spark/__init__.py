@@ -72,6 +72,7 @@ class Pool(Pool):
 class PoolAddressesProvider(PoolAddressesProvider):
     default_addresses: dict[str, str] = {
         Chain.ETHEREUM: Addr("0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE"),
+        Chain.GNOSIS: Addr("0xA98DaCB3fC964A6A0d2ce3B77294241585EAbA6d"),
     }
 
     @cached_property
@@ -86,6 +87,7 @@ class PoolAddressesProvider(PoolAddressesProvider):
 class ProtocolDataProvider(ProtocolDataProvider):
     default_addresses: dict[str, str] = {
         Chain.ETHEREUM: Addr("0xFc21d6d146E6086B8359705C8b28512a983db0cb"),
+        Chain.GNOSIS: Addr("0x2a002054A06546bB5a264D57A81347e23Af91D18"),
     }
 
     @property

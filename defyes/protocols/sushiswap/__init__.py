@@ -446,21 +446,23 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=T
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
     pool_info = get_pool_info(web3, lptoken_address, block, blockchain)
-
-    if pool_info is None:
-        print("Error: Incorrect SushiSwap LPToken Address: ", lptoken_address)
-        return None
-
-    pool_id = pool_info["pool_info"]["poolId"]
-    chef_contract = pool_info["chef_contract"]
-
     lptoken_data = get_lptoken_data(lptoken_address, block, blockchain, web3=web3)
 
     pool_balance_fraction = lptoken_data["contract"].functions.balanceOf(wallet).call(block_identifier=block)
     pool_balance_fraction /= Decimal(lptoken_data["virtualTotalSupply"])
 
-    pool_staked_fraction = chef_contract.functions.userInfo(pool_id, wallet).call(block_identifier=block)[0]
-    pool_staked_fraction /= Decimal(lptoken_data["virtualTotalSupply"])
+    if lptoken_address == "0xE6B448c0345bF6AA52ea3A5f17aabd0e58F23912":
+        pool_staked_fraction = 0
+    else:
+        if pool_info is None:
+            print("Error: Incorrect SushiSwap LPToken Address: ", lptoken_address)
+            return None
+
+        pool_id = pool_info["pool_info"]["poolId"]
+        chef_contract = pool_info["chef_contract"]
+
+        pool_staked_fraction = chef_contract.functions.userInfo(pool_id, wallet).call(block_identifier=block)[0]
+        pool_staked_fraction /= Decimal(lptoken_data["virtualTotalSupply"])
 
     for n, reserve in enumerate(lptoken_data["reserves"]):
         try:
