@@ -1,14 +1,15 @@
 """
 # Lazy Time
 
-The main resources from this module are the clases Duration and Time, which internally use the funcions `calendar` and
-`calendar_from_time`.
+The main resources from this module are the clases Duration and Time.
 
-The idea is not to deal with mixed timezone, but you could modify the process level configuration of `default_tz` to use
-a different timezone from UTC for calendar representation of time and for calendar interpretation of time, for example
-when the user code refers to the begining of a day.
+The calendar interpretation of time is always aware with default UTC. It includes string and tuple/args interpretation.
+But you could specify for example UTC-0300 at the end of the string or a `tzinfo` when using `Time.from_calendar`.
 
-In case you wanted to modify the `default_tz`, this module has a `simple_change_utc` function to just add an UTC offset.
+You could modify the process level value of `repr_tz` to use a different timezone just for calendar representation of
+time, which includes string and datetime representation.
+
+In case you wanted to modify the `repr_tz`, you could use the helper `utc(hours)` to generate a tzinfo object.
 """
 
 import time
@@ -16,33 +17,17 @@ from datetime import datetime, timedelta, timezone
 from functools import cached_property
 from typing import TypeVar
 
-from dateutil.parser import parse
-
-default_tz = timezone.utc
+repr_tz = timezone.utc
 
 
-def simple_change_utc(offset_in_hours):
+def utc(hours=0):
     """
-    This function modify the global `default_tz` using a datetime.timezone object as tzinfo, which is a simple way the
-    add and offset to UTC. This is simpler than `pytz`, but you could set `default_tz` manually with an tzinfo from
-    `pytz` as well.
+    Generate a tzinfo object with an offset with respect to UTC, otherwise return timezone.utc.
     """
-    global default_tz
-    default_tz = timezone(timedelta(hours=offset_in_hours), "UTC")
-
-
-def calendar(year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0) -> datetime:
-    """
-    Aware `datetime`, from calendar parameters, but with tzinfo using `default_tz`.
-    """
-    return datetime(year, month, day, hour, minute, second, microsecond, tzinfo=default_tz)
-
-
-def calendar_from_time(timestamp) -> datetime:
-    """
-    Aware `datetime`, from POSIX timestamp, but with tzinfo using `default_tz`.
-    """
-    return datetime.fromtimestamp(timestamp, tz=default_tz)
+    if hours == 0:
+        return timezone.utc
+    else:
+        return timezone(timedelta(hours=hours), "UTC")
 
 
 DurationOrDerived = TypeVar("DurationOrDerived", bound="Duration")
@@ -138,19 +123,22 @@ TimeOrDerived = TypeVar("TimeOrDerived", bound="Time")
 
 class Time(float):
     """
-    A regular float class which represent the POSIX timestamp, with a lazy conversion to datetime aware with UTC default
-    when expecting its representation or when using the .calendar property.
+    A regular float class which represent the POSIX timestamp, with a lazy conversion to datetime aware with repr_tz
+    when expecting its string or datetime representation.
     """
+
+    utc_format = "%Y-%m-%d %H:%M:%S"
+    general_format = "%Y-%m-%d %H:%M:%S %Z%z"
 
     @property
     def format(self):
-        return "%Y-%m-%d %H:%M:%S" if default_tz == timezone.utc else "%Y-%m-%d %H:%M:%S %Z%z"
+        return self.utc_format if repr_tz == timezone.utc else self.general_format
 
     time_interval_class = Duration
 
     @cached_property
     def calendar(self) -> datetime:
-        return calendar_from_time(self)
+        return datetime.fromtimestamp(self, tz=repr_tz)
 
     def __repr__(self):
         return repr(str(self))
@@ -159,17 +147,22 @@ class Time(float):
         return self.calendar.strftime(self.format)
 
     @classmethod
-    def from_calendar(cls, year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0) -> TimeOrDerived:
+    def from_calendar(
+        cls, year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc
+    ) -> TimeOrDerived:
         try:
-            return cls(calendar(year, month, day, hour, minute, second, microsecond).timestamp())
+            return cls(datetime(year, month, day, hour, minute, second, microsecond, tzinfo=tzinfo).timestamp())
         except TypeError:
             return cls(datetime.strptime(year, cls.format).replace(tzinfo=timezone.utc).timestamp())
 
     @classmethod
     def from_string(cls, string: str):
-        dt = parse(string)
+        try:
+            dt = datetime.strptime(string, cls.utc_format)
+        except ValueError:
+            dt = datetime.strptime(string, cls.general_format)
         if not dt.tzinfo:
-            dt = dt.replace(tzinfo=default_tz)
+            dt = dt.replace(tzinfo=timezone.utc)
         return cls(dt.timestamp())
 
     @classmethod

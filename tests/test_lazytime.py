@@ -6,31 +6,12 @@ from defyes import lazytime
 from defyes.lazytime import Duration, Time
 
 timestamp = 1698075172.5
+utc2 = timezone(timedelta(hours=2), "UTC")
 
 
 @pytest.fixture()
-def utc(monkeypatch):
-    monkeypatch.setattr(lazytime, "default_tz", timezone.utc)
-
-
-def test_calendar(utc):
-    assert lazytime.calendar(2023, 10, 23, 13, 34, 54) == datetime(2023, 10, 23, 13, 34, 54, tzinfo=timezone.utc)
-    lazytime.simple_change_utc(-3)
-    assert lazytime.calendar(2023, 10, 23, 10, 34, 54) == datetime(2023, 10, 23, 13, 34, 54, tzinfo=timezone.utc)
-    # Calendar changes from the hour 13 to 10 to be the same UTC time
-
-
-def test_calendar_from_time(utc):
-    dt = lazytime.calendar_from_time(timestamp)
-    assert dt == datetime(2023, 10, 23, 15, 32, 52, 500000, tzinfo=timezone.utc)
-    assert dt.tzinfo == timezone.utc
-
-    lazytime.simple_change_utc(-3)
-    dt = lazytime.calendar_from_time(timestamp)
-    assert dt == datetime(2023, 10, 23, 15, 32, 52, 500000, tzinfo=timezone.utc)
-    # The default_tz change doesn't affect the comparison with the same datetime UTC instant, but it has a different
-    # timezone
-    assert dt.tzinfo != timezone.utc
+def repr_tz_utc(monkeypatch):
+    monkeypatch.setattr(lazytime, "repr_tz", timezone.utc)
 
 
 def test_duration_is_float():
@@ -137,21 +118,51 @@ def test_time_is_float():
     assert isinstance(t, float)
 
 
-def test_time_calendar(utc):
-    assert isinstance(dt := Time(0).calendar, datetime)
-    assert dt == datetime(1970, 1, 1, tzinfo=timezone.utc)
+def test_time_calendar_type(repr_tz_utc):
+    assert isinstance(Time(0).calendar, datetime)
 
 
-def test_time_repr(utc):
+def test_time_calendar_just_change_representation(repr_tz_utc):
+    dt0 = Time(0).calendar
+    assert dt0 == datetime(1970, 1, 1, tzinfo=timezone.utc)
+
+    lazytime.repr_tz = lazytime.utc(2)
+    dt2 = Time(0).calendar
+    assert dt2 == datetime(1970, 1, 1, 2, tzinfo=utc2)
+
+    assert dt0 == dt2
+
+
+def test_time_repr(repr_tz_utc):
     assert repr(Time(0)) == "'1970-01-01 00:00:00'"
-    lazytime.simple_change_utc(2)
+    lazytime.repr_tz = lazytime.utc(2)
     assert repr(Time(0)) == "'1970-01-01 02:00:00 UTC+0200'"
 
 
-def test_time_from_calendar(utc):
+def test_time_from_calendar_is_always_utc_default(repr_tz_utc):
     assert Time.from_calendar(1970, 1, 1, 0, 0, 1, 100_000) == 1.1
-    lazytime.simple_change_utc(-3)
-    assert Time.from_calendar(1970, 1, 1, 0, 0, 1, 100_000) == 10_801.1
+    lazytime.repr_tz = lazytime.utc(-3)  # it does nothing
+    assert Time.from_calendar(1970, 1, 1, 0, 0, 1, 100_000) == 1.1
+
+
+def test_time_from_calendar_different_tzinfo(repr_tz_utc):
+    assert Time.from_calendar(1970, 1, 1, 2, 0, 1, 100_000, tzinfo=utc2) == 1.1
+    lazytime.repr_tz = lazytime.utc(-3)  # it does nothing
+    assert Time.from_calendar(1970, 1, 1, 2, 0, 1, 100_000, tzinfo=utc2) == 1.1
+
+
+def test_time_from_string(repr_tz_utc):
+    assert Time.from_string("1970-01-01 00:00:00") == 0
+    assert Time.from_string("1970-01-01 02:00:00 UTC+0200") == 0
+
+
+def test_time_from_string_invariant(repr_tz_utc):
+    """
+    Changing the repr_tz doesn't affect the string parsing.
+    """
+    lazytime.repr_tz = lazytime.utc(2)
+    assert Time.from_string("1970-01-01 00:00:00") == 0
+    assert Time.from_string("1970-01-01 02:00:00 UTC+0200") == 0
 
 
 def test_time_sub():
