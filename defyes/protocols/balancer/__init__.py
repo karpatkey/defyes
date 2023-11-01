@@ -1,5 +1,4 @@
 from contextlib import suppress
-from datetime import datetime, timedelta
 from decimal import Decimal
 from functools import cached_property
 
@@ -7,8 +6,10 @@ from web3 import Web3
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 
 from defyes.constants import Address, Chain, ETHTokenAddr
-from defyes.functions import block_to_date, date_to_block, get_decimals, get_logs_web3, last_block, to_token_amount
+from defyes.explorer import ChainExplorer
+from defyes.functions import get_decimals, get_logs_web3, last_block, to_token_amount
 from defyes.helpers import suppress_error_codes
+from defyes.lazytime import Duration, Time
 from defyes.node import get_node
 from defyes.prices.prices import get_price
 from defyes.types import Addr, Token, TokenAmount
@@ -517,13 +518,8 @@ def get_protocol_data_for(
 def get_swap_fees_apr(
     lptoken_address: str, blockchain: str, block: int | str = "latest", days: int = 1, apy: bool = False
 ) -> Decimal:
-    block_start = date_to_block(
-        datetime.strftime(
-            datetime.strptime(block_to_date(block, blockchain), "%Y-%m-%d %H:%M:%S") - timedelta(days=days),
-            "%Y-%m-%d %H:%M:%S",
-        ),
-        blockchain,
-    )
+    chain_explorer = ChainExplorer(blockchain)
+    block_start = chain_explorer.block_from_time(Time(chain_explorer.time_from_block(block)) - Duration.days(days))
 
     node = get_node(blockchain, block)
     vault_address = Vault(blockchain, block).address
