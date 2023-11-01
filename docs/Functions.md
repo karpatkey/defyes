@@ -37,7 +37,7 @@
   ```
   </details>
 
-### 6: date_to_block(datestring, blockchain, utc=0) -> int
+### 6: date_to_block(datestring, blockchain) -> int
 
 > Description: function returns date to block conversion
 
@@ -55,7 +55,7 @@
   ```
   </details>
 
-### 8: block_to_date(block, blockchain, utc=0)
+### 8: block_to_date(block, blockchain)
 
 > Description: function returns block to date conversion
 

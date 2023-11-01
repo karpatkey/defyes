@@ -49,7 +49,7 @@ def ensure_a_block_number(block: int | str, blockchain: Chain):
         raise ValueError("block should be an integer or just the string 'latest'")
 
 
-def date_to_block(datestring, blockchain, utc=0) -> int:
+def date_to_block(datestring, blockchain) -> int:
     """
     Returns the block number of a specified date.
 
@@ -68,7 +68,7 @@ def timestamp_to_block(timestamp, blockchain) -> int:
     return ChainExplorer(blockchain).block_from_time(timestamp)
 
 
-def block_to_date(block, blockchain, utc=0):
+def block_to_date(block, blockchain):
     return str(Time(ChainExplorer(blockchain).time_from_block(block)))
 
 
