@@ -101,7 +101,7 @@ def test_get_aura_mint_amount():
 
     bal_token, bal_earned = Aura.get_rewards(node, rewarder_contract, WALLET_N1, block, Chain.ETHEREUM)
 
-    aura_minted = Aura.get_aura_mint_amount(node, bal_earned, block, Chain.ETHEREUM)
+    aura_minted = Aura.get_aura_mint_amount(node, bal_earned, block, Chain.ETHEREUM, aura_OHMwstETHvault_ADDR)
     assert aura_minted == [ETHTokenAddr.AURA, Decimal("6.427305705218515080534")]
 
 

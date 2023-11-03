@@ -87,8 +87,8 @@ REWARDER_FACTORY_XDAI = "0x0F641b291Ba374Ec9B17a878c54B98005a0BAcaE"
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ABIs
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Booster ABI - poolInfo, poolLength, rewardFactory, minter
-ABI_BOOSTER = '[{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"poolInfo","outputs":[{"internalType":"address","name":"lptoken","type":"address"},{"internalType":"address","name":"token","type":"address"},{"internalType":"address","name":"gauge","type":"address"},{"internalType":"address","name":"crvRewards","type":"address"},{"internalType":"address","name":"stash","type":"address"},{"internalType":"bool","name":"shutdown","type":"bool"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"poolLength","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"rewardFactory","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"minter","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]'
+# Booster ABI - poolInfo, poolLength, rewardFactory, minter, getRewardMultipliers, REWARD_MULTIPLIER_DENOMINATOR
+ABI_BOOSTER = '[{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"poolInfo","outputs":[{"internalType":"address","name":"lptoken","type":"address"},{"internalType":"address","name":"token","type":"address"},{"internalType":"address","name":"gauge","type":"address"},{"internalType":"address","name":"crvRewards","type":"address"},{"internalType":"address","name":"stash","type":"address"},{"internalType":"bool","name":"shutdown","type":"bool"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"poolLength","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"rewardFactory","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"minter","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"getRewardMultipliers","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"REWARD_MULTIPLIER_DENOMINATOR","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]'
 
 # REWARDER ABI - balanceOf, earned, extraRewards, extraRewardsLength, rewardToken, rewards, stakingToken, totalSupply
 ABI_REWARDER = '[{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"earned","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"extraRewards","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"extraRewardsLength","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"rewardToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"rewards","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"stakingToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]'
@@ -240,11 +240,19 @@ def get_extra_rewards_airdrop(wallet, block, blockchain, web3=None, decimals=Tru
 # get_aura_mint_amount
 # WARNING: Check the amount of AURA retrieved
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def get_aura_mint_amount(web3, bal_earned, block, blockchain, decimals=True):
+def get_aura_mint_amount(web3, bal_earned, block, blockchain, rewarder, decimals=True):
     aura_amount = 0
 
     if blockchain == Chain.ETHEREUM:
         aura_address = ETHTokenAddr.AURA
+
+        booster_contract = get_contract(BOOSTER, blockchain, web3=web3, abi=ABI_BOOSTER, block=block)
+        reward_multiplier = booster_contract.functions.getRewardMultipliers(rewarder).call(block_identifier=block)
+        REWARD_MULTIPLIER_DENOMINATOR = booster_contract.functions.REWARD_MULTIPLIER_DENOMINATOR().call(
+            block_identifier=block
+        )
+
+        bal_earned = bal_earned * reward_multiplier / REWARD_MULTIPLIER_DENOMINATOR
 
         aura_contract = get_contract(aura_address, blockchain, web3=web3, abi=ABI_AURA, block=block)
 
@@ -318,7 +326,9 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
 
         # bal_rewards[1] = bal_rewards_amount - aura_mint_amount is calculated using the bal_rewards_amount
         if bal_rewards[1] >= 0:
-            aura_mint_amount = get_aura_mint_amount(web3, bal_rewards[1], block, blockchain, decimals=decimals)
+            aura_mint_amount = get_aura_mint_amount(
+                web3, bal_rewards[1], block, blockchain, rewarder, decimals=decimals
+            )
 
             if len(aura_mint_amount) > 0:
                 if aura_mint_amount[0] in all_rewards.keys():
@@ -390,7 +400,9 @@ def get_staked(wallet, block, blockchain, web3=None, reward=False, decimals=True
 
         # AURA Rewards
         if rewards[0][1] > 0:
-            rewards.append(get_aura_mint_amount(web3, rewards[0][1], block, blockchain, decimals=decimals))
+            rewards.append(
+                get_aura_mint_amount(web3, rewards[0][1], block, blockchain, AURABAL_REWARDER, decimals=decimals)
+            )
 
         result += rewards
 
