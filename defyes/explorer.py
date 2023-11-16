@@ -214,7 +214,7 @@ class ChainExplorer(requests.Session):
                 implementation_address = Web3.to_checksum_address(implementation_address)
 
         return implementation_address
-    
+
     @cached
     def get_contract_name(self, address: str):
         contract_name = ""
