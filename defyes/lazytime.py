@@ -121,20 +121,51 @@ class Duration(float):
 TimeOrDerived = TypeVar("TimeOrDerived", bound="Time")
 
 
+class RelativeTime(Duration):
+    cases = [
+        ("second", "seconds", Duration.minutes(1)),
+        ("minute", "minutes", Duration.hours(1)),
+        ("hour", "hours", Duration.days(1)),
+        ("day", "days", Duration.weeks(1)),
+        ("week", "weeks", Duration.days(30)),
+        ("month", "months", Duration.days(365)),
+        ("year", "years", float("inf")),
+    ]
+
+    @classmethod
+    def _abs_unit(cls, time):
+        abs_t = abs(time)
+        divider = 1
+        for singular, plural, limit in cls.cases:
+            if abs_t < limit:
+                t_units = int(abs_t / divider)
+                return (1, singular) if t_units == 1 else (t_units, plural)
+            divider = limit
+
+    @cached_property
+    def humanized(self):
+        if abs(self) < 1:
+            return "now"
+        abs_t_units, unit = self._abs_unit(self)
+        if self < 0:
+            return f"about {abs_t_units:.0f} {unit} ago"
+        else:
+            return f"in about {abs_t_units:.0f} {unit}"
+
+
 class Time(float):
     """
     A regular float class which represents the float POSIX timestamp in seconds, with a lazy conversion to an aware
     datetime, or string, using `repr_tz` as default timezone for representation.
     """
 
-    utc_format = "%Y-%m-%d %H:%M:%S"
-    general_format = "%Y-%m-%d %H:%M:%S %Z%z"
-
-    @property
-    def format(self):
-        return self.utc_format if repr_tz == timezone.utc else self.general_format
+    isoformat = {
+        "sep": " ",
+        "timespec": "auto",
+    }
 
     time_interval_class = Duration
+    relative_time_class = RelativeTime
 
     @cached_property
     def calendar(self) -> datetime:
@@ -144,7 +175,8 @@ class Time(float):
         return repr(str(self))
 
     def __str__(self):
-        return self.calendar.strftime(self.format)
+        string = self.calendar.isoformat(**self.isoformat)
+        return string[:-6] if string.endswith("+00:00") else string
 
     @classmethod
     def from_calendar(
@@ -153,21 +185,23 @@ class Time(float):
         try:
             return cls(datetime(year, month, day, hour, minute, second, microsecond, tzinfo=tzinfo).timestamp())
         except TypeError:
-            return cls(datetime.strptime(year, cls.format).replace(tzinfo=timezone.utc).timestamp())
+            string = year
+            return cls.from_string(string)
 
     @classmethod
     def from_string(cls, string: str):
-        try:
-            dt = datetime.strptime(string, cls.utc_format)
-        except ValueError:
-            dt = datetime.strptime(string, cls.general_format)
+        dt = datetime.fromisoformat(string)
         if not dt.tzinfo:
             dt = dt.replace(tzinfo=timezone.utc)
         return cls(dt.timestamp())
 
     @classmethod
-    def from_now(cls):
+    def now(cls):
         return cls(time.time())
+
+    @property
+    def since_now(self) -> relative_time_class:
+        return self.relative_time_class(self - time.time())
 
     def __sub__(self, other) -> time_interval_class | TimeOrDerived:
         result = super().__sub__(other)

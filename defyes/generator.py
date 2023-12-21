@@ -5,9 +5,6 @@ import re
 import textwrap
 from pathlib import Path
 
-import black
-import isort
-
 
 def get_module_path(module_file):
     return Path(module_file).resolve().parent
@@ -184,6 +181,9 @@ def generate_contract_class(class_name, abi_path, const_call_methods=[]):
 
 
 def generate_classes():
+    import black  # Because it's used just during development
+    import isort  # Because it's used just during development
+
     setup_paths = current_module_path.glob("**/autogen_config.json")
     black_config = get_black_config()
 
@@ -224,6 +224,8 @@ def generate_classes():
 
 
 def get_black_config():
+    import black  # Because it's used just during development
+
     pyproject_toml = black.find_pyproject_toml(".")
     conf_dict = black.parse_pyproject_toml(pyproject_toml)
     target_versions_strings = conf_dict.pop("target_version", ["py310"])

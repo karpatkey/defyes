@@ -13,16 +13,25 @@ from defyes.node import get_node
 logger = logging.getLogger(__name__)
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# PROTOCOL DATA PROVIDER
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Protocol Data Provider - Ethereum
-PDP_ETHEREUM = "0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d"
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# LENDING POOL ADDRESSES PROVIDER REGISTRY
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Lending Pool Addresses Provider Registry - Ethereum
-LPAPR_ETHEREUM = "0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5"
+PROTOCOL_DATA_PROVIDER = {
+    Chain.ETHEREUM: "0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d",
+    Chain.POLYGON: "0x7551b5D2763519d4e37e8B81929D336De671d46d",
+    Chain.AVALANCHE: "0x65285E9dfab318f57051ab2b139ccCf232945451",
+}
+
+POOL_ADDRESSES_PROVIDER = {
+    Chain.ETHEREUM: "0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5",
+    Chain.POLYGON: "0xd05e3E715d945B59290df0ae8eF85c1BdB684744",
+    Chain.AVALANCHE: "0xb6A86025F0FE1862B372cb0ca18CE3EDe02A318f",
+}
+
+CHAINLINK_NATIVE_USD = {
+    Chain.ETHEREUM: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+    Chain.POLYGON: "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0",
+    Chain.AVALANCHE: "0x0A77230d17318075983913bC2145DB16C7366156",
+}
+
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # STAKED ABPT TOKEN
@@ -30,12 +39,6 @@ LPAPR_ETHEREUM = "0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5"
 #
 STAKED_ABPT_TOKEN = "0xa1116930326D21fB917d5A27F1E9943A9595fb47"
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# CHAINLINK PRICE FEEDS
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ETHEREUM
-# ETH/USD Price Feed
-CHAINLINK_ETH_USD = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419"
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ABIs
@@ -59,22 +62,6 @@ ABI_PRICE_ORACLE = '[{"inputs":[{"internalType":"address","name":"asset","type":
 ABI_STKAAVE = '[{"inputs":[],"name":"REWARD_TOKEN","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"staker","type":"address"}],"name":"getTotalRewardsBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"assets","outputs":[{"internalType":"uint128","name":"emissionPerSecond","type":"uint128"},{"internalType":"uint128","name":"lastUpdateTimestamp","type":"uint128"},{"internalType":"uint256","name":"index","type":"uint256"}],"stateMutability":"view","type":"function"},\
                 {"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},\
                 {"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"pure","type":"function"}]'
-
-
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_protocol_data_provider
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def get_protocol_data_provider(blockchain):
-    if blockchain == Chain.ETHEREUM:
-        return PDP_ETHEREUM
-
-
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_lpapr_address
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def get_lpapr_address(blockchain):
-    if blockchain == Chain.ETHEREUM:
-        return LPAPR_ETHEREUM
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -116,7 +103,7 @@ def get_reserves_tokens_balances(
     """
     balances = []
 
-    pdp_address = get_protocol_data_provider(blockchain)
+    pdp_address = PROTOCOL_DATA_PROVIDER[blockchain]
     if pdp_address:
         pdp_contract = get_contract(pdp_address, blockchain, web3=web3, abi=ABI_PDP, block=block)
         reserves_tokens = get_reserves_tokens(pdp_contract, block)
@@ -163,14 +150,14 @@ def get_data(wallet, block, blockchain, web3=None, decimals=True):
 
     wallet = Web3.to_checksum_address(wallet)
 
-    lpapr_address = get_lpapr_address(blockchain)
+    lpapr_address = POOL_ADDRESSES_PROVIDER[blockchain]
     lpapr_contract = get_contract(lpapr_address, blockchain, web3=web3, abi=ABI_LPAPR, block=block)
 
     lending_pool_address = const_call(lpapr_contract.functions.getLendingPool())
     lending_pool_contract = get_contract(lending_pool_address, blockchain, web3=web3, abi=ABI_LENDING_POOL, block=block)
 
     chainlink_eth_usd_contract = get_contract(
-        CHAINLINK_ETH_USD, blockchain, web3=web3, abi=ABI_CHAINLINK_ETH_USD, block=block
+        CHAINLINK_NATIVE_USD[blockchain], blockchain, web3=web3, abi=ABI_CHAINLINK_ETH_USD, block=block
     )
     chainlink_eth_usd_decimals = const_call(chainlink_eth_usd_contract.functions.decimals())
     eth_usd_price = chainlink_eth_usd_contract.functions.latestAnswer().call(block_identifier=block) / Decimal(
@@ -330,7 +317,7 @@ def get_apr(token_address, block, blockchain, web3=None, apy=False):
     if web3 is None:
         web3 = get_node(blockchain, block=block)
 
-    lpapr_address = get_lpapr_address(blockchain)
+    lpapr_address = POOL_ADDRESSES_PROVIDER[blockchain]
     lpapr_contract = get_contract(lpapr_address, blockchain, web3=web3, abi=ABI_LPAPR, block=block)
 
     lending_pool_address = const_call(lpapr_contract.functions.getLendingPool())

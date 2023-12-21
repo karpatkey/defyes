@@ -222,12 +222,18 @@ def search_proxy_impl_address(contract_address, blockchain, web3=None, block="la
 
     contract_address = Web3.to_checksum_address(contract_address)
 
+    # Query Scans to get the Implementation Address
+    if isinstance(block, str):
+        if block == "latest":
+            proxy_impl_address = ChainExplorer(blockchain).get_impl_address(contract_address)
+
     # OpenZeppelins' EIP-1967 - Example in mainnet: 0xE95A203B1a91a908F9B9CE46459d101078c2c3cb
-    IMPLEMENTATION_SLOT_EIP_1967 = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc"
-    proxy_impl_address = Web3.to_hex(
-        web3.eth.get_storage_at(contract_address, IMPLEMENTATION_SLOT_EIP_1967, block_identifier=block)
-    )
-    proxy_impl_address = Web3.to_checksum_address("0x" + proxy_impl_address[-40:])
+    if proxy_impl_address == Address.ZERO:
+        IMPLEMENTATION_SLOT_EIP_1967 = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc"
+        proxy_impl_address = Web3.to_hex(
+            web3.eth.get_storage_at(contract_address, IMPLEMENTATION_SLOT_EIP_1967, block_identifier=block)
+        )
+        proxy_impl_address = Web3.to_checksum_address("0x" + proxy_impl_address[-40:])
 
     # OpenZeppelins' EIP-1167 - Example in GC: 0x793fAF861a78B07c0C8c0ed1450D3919F3473226)
     if proxy_impl_address == Address.ZERO:
@@ -253,7 +259,11 @@ def search_proxy_impl_address(contract_address, blockchain, web3=None, block="la
     # OpenZeppelins' EIP-897 DelegateProxy - Examples: stETH in mainnet (0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84)
     # It also includes the custom proxy implementation of the Comptroller: 0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B
     if proxy_impl_address == Address.ZERO:
-        contract = get_contract(contract_address, blockchain, web3=web3)
+        try:
+            contract = get_contract(contract_address, blockchain, web3=web3)
+        except:
+            contract = None
+
         if contract is not None:
             for func in [obj for obj in contract.abi if obj["type"] == "function"]:
                 name = str(func["name"].lower())
@@ -272,7 +282,7 @@ def search_proxy_impl_address(contract_address, blockchain, web3=None, block="la
     if proxy_impl_address == Address.ZERO:
         contract_custom_abi = get_contract(
             contract_address,
-            Chain.ETHEREUM,
+            blockchain,
             abi='[{"inputs":[{"internalType":"uint256","name":"offset","type":"uint256"},{"internalType":"uint256","name":"length","type":"uint256"}],"name":"getStorageAt","outputs":[{"internalType":"bytes","name":"","type":"bytes"}],"stateMutability":"view","type":"function"}]',
         )
         try:
@@ -282,22 +292,22 @@ def search_proxy_impl_address(contract_address, blockchain, web3=None, block="la
             if type(e) == ContractLogicError or type(e) == BadFunctionCallOutput:
                 pass
 
-    # Query Scans to get the Implementation Address
-    if proxy_impl_address == Address.ZERO:
-        proxy_impl_address = ChainExplorer(blockchain).get_impl_address(contract_address)
-
     return proxy_impl_address
 
 
-def get_abi_function_signatures(contract_address, blockchain, web3=None, abi_address=None, block="latest"):
+def get_abi_function_signatures(
+    contract_address, blockchain, web3=None, abi_address=None, block="latest", func_names=[]
+):
     if web3 is None:
         web3 = get_node(blockchain)
 
     contract_address = Web3.to_checksum_address(contract_address)
 
     if abi_address is None:
-        proxy_impl_address = search_proxy_impl_address(contract_address, blockchain, web3=web3, block=block)
-        contract = get_contract_proxy_abi(contract_address, proxy_impl_address, blockchain, web3=web3)
+        abi_address = search_proxy_impl_address(contract_address, blockchain, web3=web3, block=block)
+
+    if abi_address == Address.ZERO:
+        contract = get_contract(contract_address, blockchain, web3=web3)
     else:
         contract = get_contract_proxy_abi(contract_address, abi_address, blockchain, web3=web3, block=block)
 
@@ -306,37 +316,46 @@ def get_abi_function_signatures(contract_address, blockchain, web3=None, abi_add
 
         functions = []
         for func in [obj for obj in abi if obj["type"] == "function"]:
-            name = func["name"]
-            input_types = [input["type"] for input in func["inputs"]]
+            if len(func_names) > 0 and func["name"] not in func_names:
+                continue
+            else:
+                name = func["name"]
+                input_types = [input["type"] for input in func["inputs"]]
+                input_names = [input["name"] for input in func["inputs"]]
 
-            function = {}
-            function["name"] = name
-            function["signature"] = "{}{}".format(name, "(")
-            function["inline_signature"] = "{}{}".format(name, "(")
-            function["components"] = []
-            function["stateMutability"] = func["stateMutability"]
+                function = {}
+                function["name"] = name
+                function["signature"] = "{}{}".format(name, "(")
+                function["inline_signature"] = "{}{}".format(name, "(")
+                function["components"] = []
+                function["components_names"] = []
+                function["stateMutability"] = func["stateMutability"]
 
-            i = 0
-            for input_type in input_types:
-                if input_type == "tuple":
-                    function["components"] = [component["type"] for component in func["inputs"][i]["components"]]
-                    function["inline_signature"] += "({})".format(",".join(function["components"]))
-                else:
-                    function["inline_signature"] += input_type
-                    function["components"].append(input_type)
+                i = 0
+                for input_type in input_types:
+                    if input_type == "tuple" or input_type == "tuple[]":
+                        function["components"] += [component["type"] for component in func["inputs"][i]["components"]]
+                        function["components_names"] += [
+                            component["name"] for component in func["inputs"][i]["components"]
+                        ]
+                        function["inline_signature"] += "({})".format(",".join(function["components"]))
+                    else:
+                        function["inline_signature"] += input_type
+                        function["components"].append(input_type)
+                        function["components_names"].append(input_names[i])
 
-                function["signature"] += input_type
+                    function["signature"] += input_type
 
-                if i < len(input_types) - 1:
-                    function["signature"] += ","
-                    function["inline_signature"] += ","
+                    if i < len(input_types) - 1:
+                        function["signature"] += ","
+                        function["inline_signature"] += ","
 
-                i += 1
+                    i += 1
 
-            function["signature"] += ")"
-            function["inline_signature"] += ")"
+                function["signature"] += ")"
+                function["inline_signature"] += ")"
 
-            functions.append(function)
+                functions.append(function)
 
         return functions
 

@@ -350,7 +350,7 @@ def get_vebal_rewards(wallet: str, blockchain: str, block: str | int, decimals: 
 
                 balances = VebalFeeDistributor(blockchain, block, addr).claim_tokens(wallet, reward_list)
                 for reward_token, balance in zip(reward_tokens, balances):
-                    balance = balance / Decimal(10**18) if decimals else Decimal(balance)
+                    balance = to_token_amount(reward_token, balance, blockchain, get_node(blockchain, block), decimals)
                     rewards[reward_token] = rewards.get(reward_token, 0) + balance
 
     return rewards
