@@ -4,13 +4,15 @@
         "etherscan": "xyz",
         "polscan": "xyz",
         "gnosisscan": "xyz",
-        "binance": "xyz",
-        "avalanche": "xyz",
-        "fantom": "xyz",
+        "bscscan": "xyz",
+        "snowtrace": "xyz",
+        "ftmscan": "xyz",
         "ethplorer": "xyz",
-        "optimism": "xyz",
-        "arbitrum": "xyz",
-        "zapper": "xyz"
+        "optimisticetherscan": "xyz",
+        "arbiscan": "xyz",
+        "zapper": "xyz",
+        "metisexplorer": "xyz",
+        "basescan": "xyz"
     },
 
     "nodes": {
@@ -43,6 +45,34 @@
             ]
         },
         "gnosis": {
+            "latest": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ],
+            "archival": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ]
+        },
+        "metis": {
+            "latest": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ],
+            "archival": [
+                "first",
+                "second",
+                "third",
+                "fourth"
+            ]
+        },
+        "base": {
             "latest": [
                 "first",
                 "second",

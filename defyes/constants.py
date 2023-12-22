@@ -21,10 +21,11 @@ class Chain(Constants):
     AVALANCHE = "avalanche"
     FANTOM = "fantom"
     OPTIMISM = "optimism"
-    AVAX = "avax"
     ROPSTEN = "ropsten"
     KOVAN = "kovan"
     GOERLI = "goerli"
+    BASE = "base"
+    METIS = "metis"
 
 
 TESTNET_CHAINS = [Chain.ROPSTEN, Chain.KOVAN, Chain.GOERLI]
@@ -151,11 +152,13 @@ class APIKey(Constants):
     ETHERSCAN = config_data["etherscan"]
     POLSCAN = config_data["polscan"]
     GNOSISSCAN = config_data["gnosisscan"]
-    BINANCE = config_data["binance"]
-    AVALANCHE = config_data["avalanche"]
-    FANTOM = config_data["fantom"]
-    OPTIMISM = config_data["optimism"]
-    ARBITRUM = config_data["arbitrum"]
+    BSCSCAN = config_data["bscscan"]
+    SNOWTRACE = config_data["snowtrace"]
+    FTMSCAN = config_data["fantom"]
+    OPTIMISTICETHERSCAN = config_data["optimism"]
+    ARBISCAN = config_data["arbiscan"]
+    BASESCAN = config_data["basescan"]
+    METISEXPLORER = config_data["metis"]
     ZAPPER = config_data["zapper"]
     ETHPLORER = config_data["ethplorer"]
     ROPSTEN = config_data["etherscan"]
@@ -167,11 +170,13 @@ class APIUrl(Constants):
     ETHERSCAN = "api.etherscan.io"
     POLSCAN = "api.polygonscan.com"
     GNOSISSCAN = "api.gnosisscan.io"
-    BINANCE = "api.bscscan.com"
-    AVALANCHE = "api.snowtrace.io"
-    FANTOM = "api.ftmscan.io"
-    OPTIMISM = "api-optimistic.etherscan.io"
-    ARBITRUM = "api.arbiscan.io"
+    BSCSCAN = "api.bscscan.com"
+    SNOWTRACE = "api.snowtrace.io"
+    FTMSCAN = "api.ftmscan.io"
+    OPTIMISTICETHERSCAN = "api-optimistic.etherscan.io"
+    ARBISCAN = "api.arbiscan.io"
+    BASESCAN = "api.basescan.org/"
+    METISEXPLORER = "api.routescan.io/v2/network/mainnet/evm/1088/etherscan/"
     ZAPPER = "api.zapper.fi"
     ETHPLORER = "api.ethplorer.io"
     ROPSTEN = "api-ropsten.etherscan.io"
