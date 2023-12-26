@@ -155,7 +155,7 @@ class APIKey(Constants):
     BSCSCAN = config_data["bscscan"]
     SNOWTRACE = config_data["snowtrace"]
     FTMSCAN = config_data["ftmscan"]
-    OPTIMISTICETHERSCAN = config_data["optimism"]
+    OPTIMISTICETHERSCAN = config_data["optimisticetherscan"]
     ARBISCAN = config_data["arbiscan"]
     BASESCAN = config_data["basescan"]
     METISEXPLORER = config_data["metisexplorer"]

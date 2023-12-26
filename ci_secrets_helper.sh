@@ -7,8 +7,8 @@ JQ=$JQ" | .nodes.arbitrum.archival = [\"${NODE_ARBITRUM}\"]"
 JQ=$JQ" | .apikeys.etherscan       = \"${APIKEYS_ETHERSCAN}\""
 JQ=$JQ" | .apikeys.polscan         = \"${APIKEYS_POLSCAN}\""
 JQ=$JQ" | .apikeys.gnosisscan      = \"${APIKEYS_GNOSISSCAN}\""
-JQ=$JQ" | .apikeys.optimism        = \"${APIKEYS_OPTIMISM}\""
-JQ=$JQ" | .apikeys.arbitrum        = \"${APIKEYS_ARBITRUM}\""
+JQ=$JQ" | .apikeys.optimisticetherscan = \"${APIKEYS_OPTIMISM}\""
+JQ=$JQ" | .apikeys.arbiscan        = \"${APIKEYS_ARBITRUM}\""
 echo $JQ 
 
 jq "$JQ" < defyes/config.json > /tmp/tmp_config.json
