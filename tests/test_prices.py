@@ -1,7 +1,25 @@
 import json
 
+import pytest
+
+from defyes.constants import Chain
 from defyes.prices.db_functions import TOKEN_MAPPING_FILE
 from defyes.prices.prices import get_price
+
+avalanche = {
+    "Wrapped AVAX": "0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7",
+}
+
+
+@pytest.mark.parametrize(
+    "token, block, blockchain, expected_price",
+    [
+        (avalanche["Wrapped AVAX"], 39455385, Chain.AVALANCHE, 47.38),
+    ],
+)
+def test_price(token, block, blockchain, expected_price):
+    price, provider, _ = get_price(token, block, blockchain)
+    assert price == pytest.approx(expected_price, abs=0.01)
 
 
 def test_get_price():

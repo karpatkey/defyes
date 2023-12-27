@@ -12,6 +12,12 @@ ADDRESS_N3 = "0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83"
 ABI_N3 = '{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}'
 ADDRESS_N4 = "0xD6A6372e371AF57c773176C41DD4a26f6084b37E"
 
+
+def test_avalanche_time_from_block():
+    time = ChainExplorer(Chain.AVALANCHE).time_from_block(39_455_385)
+    assert time == 1_703_419_194
+
+
 test_cases = [
     (Chain.GNOSIS, ADDRESS_N1, ABI_N1),
     (Chain.GNOSIS, ADDRESS_N2, ABI_N2),
