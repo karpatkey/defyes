@@ -5,9 +5,11 @@ from pathlib import Path
 
 import requests
 from web3 import Web3
+from web3.middleware import geth_poa_middleware
 from web3.providers import HTTPProvider, JSONBaseProvider
 
 from defyes import cache
+from defyes.constants import Chain
 
 logger = logging.getLogger(__name__)
 
@@ -134,4 +136,9 @@ def get_node(blockchain, block="latest"):
     web3 = get_web3_provider(providers)
     web3._network_name = blockchain
     web3._called_with_block = block
+
+    if blockchain == Chain.AVALANCHE:
+        web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        # https://web3py.readthedocs.io/en/stable/middleware.html#proof-of-authority
+
     return web3
