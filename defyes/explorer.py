@@ -75,6 +75,7 @@ class ChainExplorer(requests.Session):
         domain, apikey = EXPLORERS[blockchain]
         self.params["apikey"] = apikey
         self.url = f"https://{domain}/api"
+        self.blockchain = blockchain
 
     def _get(self, **params):
         response = self.request("GET", self.url, params=params)
@@ -113,8 +114,12 @@ class ChainExplorer(requests.Session):
             if block == "latest":
                 return int(time.time())
 
-        response = self._get(module="block", action="getblockreward", blockno=block)
-        timestamp = response.json()["result"]["timeStamp"]
+        if self.blockchain == Chain.AVALANCHE:
+            block_obj = get_node(Chain.AVALANCHE).eth.get_block(block)
+            timestamp = block_obj["timestamp"]
+        else:
+            response = self._get(module="block", action="getblockreward", blockno=block)
+            timestamp = response.json()["result"]["timeStamp"]
         try:
             return int(timestamp)
         except (TypeError, ValueError):
