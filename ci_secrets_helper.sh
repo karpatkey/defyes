@@ -12,6 +12,7 @@ JQ=$JQ" | .apikeys.optimisticetherscan = \"${APIKEYS_OPTIMISM}\""
 JQ=$JQ" | .apikeys.arbiscan        = \"${APIKEYS_ARBITRUM}\""
 JQ=$JQ" | .apikeys.metisexplorer   = \"${APIKEYS_METISEXPLORER}\""
 JQ=$JQ" | .apikeys.basescan        = \"${APIKEYS_BASESCAN}\""
+JQ=$JQ" | .apikeys.snowtrace       = \"${APIKEYS_SNOWTRACE}\""
 echo $JQ 
 
 jq "$JQ" < defyes/config.json > /tmp/tmp_config.json
