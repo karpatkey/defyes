@@ -10,11 +10,16 @@ avalanche = {
     "Wrapped AVAX": "0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7",
 }
 
+arbitrum = {
+    "LUSD": "0x93b346b6BC2548dA6A1E7d98E9a421B42541425b",
+}
+
 
 @pytest.mark.parametrize(
     "token, block, blockchain, expected_price",
     [
         (avalanche["Wrapped AVAX"], 39455385, Chain.AVALANCHE, 47.38),
+        (arbitrum["LUSD"], 163257334, Chain.ARBITRUM, 0.99),
     ],
 )
 def test_price(token, block, blockchain, expected_price):
