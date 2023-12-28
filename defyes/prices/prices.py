@@ -102,7 +102,7 @@ def _get_price_from_source(source: str, token_address: str, block: int, blockcha
         # In case there is the error for too many requests
         while price[0] == 429:
             sleep(1)
-            price = CoinGecko.get_price(token_address, block, blockchain)
+            price = CoinGecko.get_price(token_address, unix_timestamp, blockchain)
 
         price = price[1][1]
 
