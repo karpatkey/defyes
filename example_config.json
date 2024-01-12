@@ -1,0 +1,31 @@
+{
+    "apikeys": {
+        "etherscan": "",
+        "polscan": "",
+        "gnosisscan": "",
+        "bscscan": "",
+        "snowtrace": "",
+        "ftmscan": "",
+        "ethplorer": "",
+        "optimisticetherscan": "",
+        "arbiscan": "",
+        "zapper": "",
+        "metisexplorer": "",
+        "basescan": ""
+    },
+    "nodes": {
+        "ethereum": [],
+        "polygon": [],
+        "gnosis": [],
+        "metis": [],
+        "base": [],
+        "binance": [],
+        "avalanche": [],
+        "fantom": [],
+        "ropsten": [],
+        "kovan":[],
+        "goerli": [],
+        "optimism": [],
+        "arbitrum": []
+    }
+}

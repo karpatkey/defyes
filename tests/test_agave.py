@@ -1,11 +1,12 @@
 from decimal import Decimal
 
 import pytest
+from defabipedia import Chain
+from defabipedia.tokens import GnosisTokenAddr
+from karpatkit.node import get_node
 
 from defyes import Agave
-from defyes.constants import Chain, GnosisTokenAddr
 from defyes.functions import get_contract
-from defyes.node import get_node
 
 STK_AGAVE = "0x610525b415c1BFAeAB1a3fc3d85D87b92f048221"
 TEST_WALLET_ADDRESS = "0xc4d46395c01aa86389d4216c2830167878d7cab8"
@@ -15,7 +16,7 @@ TEST_BLOCK = 27187881
 # 2023.04.14
 # TEST_BLOCK = 27450341
 
-WEB3 = get_node(blockchain=Chain.GNOSIS, block=TEST_BLOCK)
+WEB3 = get_node(blockchain=Chain.GNOSIS)
 
 # 2023.03.29
 TOP_WALLET_ADDRESS = "0xb4c575308221caa398e0dd2cdeb6b2f10d7b000a"

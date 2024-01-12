@@ -1,7 +1,9 @@
 from decimal import Decimal
 
+from defabipedia import Chain
+from defabipedia.tokens import EthereumTokenAddr
+
 from defyes import Aave
-from defyes.constants import Chain, ETHTokenAddr
 
 STK_AAVE = "0x4da27a545c0c5B758a6BA100e3a049001de870f5"
 STK_ABPT = "0xa1116930326D21fB917d5A27F1E9943A9595fb47"
@@ -10,11 +12,14 @@ TEST_ADDRESS = "0xf929122994e177079c924631ba13fb280f5cd1f9"
 
 def test_get_staking_balance():
     data = Aave.get_staked(TEST_ADDRESS, block=16870553, blockchain=Chain.ETHEREUM)
-    assert data == [[ETHTokenAddr.AAVE, Decimal("11538.124991799179534465")], [ETHTokenAddr.ABPT, Decimal("0.0")]]
+    assert data == [
+        [EthereumTokenAddr.AAVE, Decimal("11538.124991799179534465")],
+        [EthereumTokenAddr.ABPT, Decimal("0.0")],
+    ]
 
 
 def test_get_apr():
-    data = Aave.get_apr(ETHTokenAddr.DAI, block=16870553, blockchain=Chain.ETHEREUM)
+    data = Aave.get_apr(EthereumTokenAddr.DAI, block=16870553, blockchain=Chain.ETHEREUM)
     assert data == [
         {"metric": "apr", "type": "supply", "value": Decimal("0.003538039323536510307201982")},
         {"metric": "apr", "type": "variable_borrow", "value": Decimal("0.013718667484985489509565151")},

@@ -1,9 +1,9 @@
 from decimal import Decimal
 
 import pytest
+from defabipedia import Chain
 from pytest import approx
 
-from defyes.constants import Chain
 from defyes.lazytime import Time
 from defyes.protocols import pods
 from defyes.protocols.pods import ChainedPrice
@@ -91,7 +91,7 @@ def test_get_protocol_data_latest():
         "positions_key": "vault_address",
     }
     assert isinstance(d["block_id"], int)
-    return all(expected.get(key) == expected.get(key) for key in expected)
+    assert all(expected.get(key) == expected.get(key) for key in expected)
 
 
 def test_underlyings_holdings():

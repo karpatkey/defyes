@@ -1,11 +1,11 @@
 from decimal import Decimal
 
+from defabipedia import Chain
+from karpatkit.cache import const_call
+from karpatkit.node import get_node
 from web3 import Web3
 
-from defyes.cache import const_call
-from defyes.constants import Chain
 from defyes.functions import get_contract
-from defyes.node import get_node
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # CHAINLINK PRICE FEEDS
@@ -83,7 +83,7 @@ def get_mainnet_price(token_address, block, web3=None, index=0):
     :return:
     """
     if web3 is None:
-        web3 = get_node(Chain.ETHEREUM, block=block)
+        web3 = get_node(Chain.ETHEREUM)
 
     token_address = Web3.to_checksum_address(token_address)
 

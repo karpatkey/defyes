@@ -1,15 +1,15 @@
 from dataclasses import dataclass, field
 from decimal import Decimal
 
+from defabipedia import Chain
 from gql import Client, gql  # thegraph queries
 from gql.transport.requests import RequestsHTTPTransport
+from karpatkit.cache import const_call
+from karpatkit.helpers import call_contract_method
+from karpatkit.node import get_node
 from web3 import Web3
 
-from defyes.cache import const_call
-from defyes.constants import Chain
 from defyes.functions import balance_of, get_contract, get_decimals
-from defyes.helpers import call_contract_method
-from defyes.node import get_node
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # SUBGRAPH API ENDPOINTS
@@ -105,7 +105,7 @@ class Connext:
             raise ValueError(f"{self.blockchain} not supported yet")
 
         if self.web3 is None:
-            self.web3 = get_node(self.blockchain, block=self.block)
+            self.web3 = get_node(self.blockchain)
         else:
             assert isinstance(self.web3, Web3), "web3 is not a Web3 instance"
 

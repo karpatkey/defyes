@@ -2,15 +2,17 @@ from contextlib import suppress
 from decimal import Decimal
 from functools import cached_property
 
+from defabipedia import Chain
+from defabipedia.tokens import EthereumTokenAddr
+from karpatkit.constants import Address
+from karpatkit.explorer import ChainExplorer
+from karpatkit.helpers import suppress_error_codes
+from karpatkit.node import get_node
 from web3 import Web3
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 
-from defyes.constants import Address, Chain, ETHTokenAddr
-from defyes.explorer import ChainExplorer
-from defyes.functions import get_decimals, get_logs_web3, last_block, to_token_amount
-from defyes.helpers import suppress_error_codes
+from defyes.functions import ensure_a_block_number, get_decimals, get_logs_web3, to_token_amount
 from defyes.lazytime import Duration, Time
-from defyes.node import get_node
 from defyes.prices.prices import get_price
 from defyes.types import Addr, Token, TokenAmount
 
@@ -192,14 +194,13 @@ def get_gauge_addresses(blockchain: str, block: int | str, lp_address: str) -> l
         ],
     }
 
-    if block == "latest":
-        block = last_block(blockchain)
+    block_id = ensure_a_block_number(block, blockchain)
 
     gauge_addresses = []
     for n, (blk, addr) in enumerate(ADDRS[blockchain], start=1):
         gauge_address = Address.ZERO
-        if block > blk:
-            gauge_factory = GaugeFactory(blockchain, block, addr)
+        if block_id > blk:
+            gauge_factory = GaugeFactory(blockchain, block_id, addr)
             if n == len(ADDRS[blockchain]):
                 with suppress(ContractLogicError, BadFunctionCallOutput), suppress_error_codes():
                     gauge_address = gauge_factory.get_pool_gauge(lp_address)
@@ -211,7 +212,7 @@ def get_gauge_addresses(blockchain: str, block: int | str, lp_address: str) -> l
                     address=gauge_factory.address,
                     blockchain=blockchain,
                     block_start=blk,
-                    block_end=block,
+                    block_end=block_id,
                     topics=[gauge_created_event],
                     web3=gauge_factory.contract.w3,
                 )
@@ -325,38 +326,42 @@ def get_vebal_rewards(wallet: str, blockchain: str, block: str | int, decimals: 
         (
             16981440,
             [
-                ETHTokenAddr.BAL,
-                ETHTokenAddr.BB_A_USD_OLD,
-                ETHTokenAddr.BB_A_USD,
-                ETHTokenAddr.BB_A_USD_V3,
-                ETHTokenAddr.USDC,
+                EthereumTokenAddr.BAL,
+                EthereumTokenAddr.BB_A_USD_OLD,
+                EthereumTokenAddr.BB_A_USD,
+                EthereumTokenAddr.BB_A_USD_V3,
+                EthereumTokenAddr.USDC,
             ],
         ),
-        (14623899, [ETHTokenAddr.BAL, ETHTokenAddr.BB_A_USD_OLD, ETHTokenAddr.BB_A_USD]),
+        (14623899, [EthereumTokenAddr.BAL, EthereumTokenAddr.BB_A_USD_OLD, EthereumTokenAddr.BB_A_USD]),
     ]
 
-    rewards = {ETHTokenAddr.BAL: 0, ETHTokenAddr.BB_A_USD_OLD: 0, ETHTokenAddr.BB_A_USD: 0, ETHTokenAddr.BB_A_USD_V3: 0}
+    rewards = {
+        EthereumTokenAddr.BAL: 0,
+        EthereumTokenAddr.BB_A_USD_OLD: 0,
+        EthereumTokenAddr.BB_A_USD: 0,
+        EthereumTokenAddr.BB_A_USD_V3: 0,
+    }
+    block_id = ensure_a_block_number(block, blockchain)
 
-    if isinstance(block, str) and block == "latest":
-        block = last_block(blockchain)
-
-    if block >= ADDRS[-1][0]:
+    if block_id >= ADDRS[-1][0]:
         for blk, addr in ADDRS:
-            if block >= blk:
+            if block_id >= blk:
                 for reward_block, reward_list in REWARD_TOKENS:
-                    if block >= reward_block:
+                    if block_id >= reward_block:
                         reward_tokens = reward_list
                         break
 
-                balances = VebalFeeDistributor(blockchain, block, addr).claim_tokens(wallet, reward_list)
+                balances = VebalFeeDistributor(blockchain, block_id, addr).claim_tokens(wallet, reward_list)
                 for reward_token, balance in zip(reward_tokens, balances):
-                    balance = to_token_amount(reward_token, balance, blockchain, get_node(blockchain, block), decimals)
+                    balance = to_token_amount(reward_token, balance, blockchain, get_node(blockchain), decimals)
                     rewards[reward_token] = rewards.get(reward_token, 0) + balance
 
     return rewards
 
 
-def unwrap(blockchain: str, lp_address: str, amount: Decimal, block: int | str, decimals: bool = True) -> None:
+def unwrap(blockchain: str, lp_address: str, amount: Decimal, block: int | str, decimals: bool = True) -> dict:
+    block_id = ensure_a_block_number(block, blockchain)
     lp = LiquidityPool(blockchain, block, lp_address)
     pool_tokens = Vault(blockchain, block).get_pool_data(lp.poolid)
     balances = {}
@@ -364,11 +369,11 @@ def unwrap(blockchain: str, lp_address: str, amount: Decimal, block: int | str, 
         if n == lp.bpt_index:
             continue
 
-        token = PoolToken(blockchain, block, addr)
+        token = PoolToken(blockchain, block_id, addr)
         if token.pool_id is not None:
             pool_token_balance = lp.exit_balance(amount, balance) / Decimal(10**token.decimals if decimals else 1)
             for token_addr, token_balance in unwrap(
-                blockchain, token.address, pool_token_balance, block, decimals
+                blockchain, token.address, pool_token_balance, block_id, decimals
             ).items():
                 balances[token_addr] = balances.get(token_addr, 0) + token_balance
         else:
@@ -377,10 +382,11 @@ def unwrap(blockchain: str, lp_address: str, amount: Decimal, block: int | str, 
     return balances
 
 
-def pool_balances(blockchain: str, lp_address: str, block: int | str, decimals: bool = True) -> None:
+def pool_balances(blockchain: str, lp_address: str, block: int | str, decimals: bool = True) -> dict:
+    block_id = ensure_a_block_number(block, blockchain)
     lp = LiquidityPool(blockchain, block, lp_address)
     lp_amount = lp.supply / Decimal(10**lp.decimals if decimals else 1)
-    return unwrap(blockchain, lp_address, lp_amount, block, decimals)
+    return unwrap(blockchain, lp_address, lp_amount, block_id, decimals)
 
 
 def get_protocol_data_for(
@@ -391,11 +397,12 @@ def get_protocol_data_for(
     reward: bool = False,
     decimals: bool = True,
     aura_staked: Decimal = None,
-) -> None:
+) -> dict:
     wallet = Addr(Web3.to_checksum_address(wallet))
+    block_id = ensure_a_block_number(block, blockchain)
     ret = {
         "blockchain": blockchain,
-        "block_id": block,
+        "block_id": block_id,
         "protocol": "Balancer",
         "version": 0,
         "wallet": wallet,
@@ -410,8 +417,8 @@ def get_protocol_data_for(
         lp_address = Addr(Web3.to_checksum_address(lp_address))
         ret["positions"][lp_address] = {}
         lp_address = Web3.to_checksum_address(lp_address)
-        gauge_addresses = get_gauge_addresses(blockchain, block, lp_address)
-        lp = LiquidityPool(blockchain, block, lp_address)
+        gauge_addresses = get_gauge_addresses(blockchain, block_id, lp_address)
+        lp = LiquidityPool(blockchain, block_id, lp_address)
 
         # holdings
         pool_liquidity_fraction = 0
@@ -423,7 +430,7 @@ def get_protocol_data_for(
 
         pool_staked_fractions = []
         for gauge_addr in gauge_addresses:
-            gauge = Gauge(blockchain, block, gauge_addr)
+            gauge = Gauge(blockchain, block_id, gauge_addr)
             lp_balance_staked = gauge.balance_of(wallet)
             if lp_balance_staked:
                 amount = TokenAmount.from_teu(lp_balance_staked, Token.get_instance(lp_address, blockchain))
@@ -432,7 +439,7 @@ def get_protocol_data_for(
 
         pool_locked_fraction = 0
         if blockchain == Chain.ETHEREUM:
-            vebal = Vebal(blockchain, block)
+            vebal = Vebal(blockchain, block_id)
             lp_balance_locked = vebal.balance_of(wallet, lp.address)
             if lp_balance_locked:
                 amount = TokenAmount.from_teu(lp_balance_locked, Token.get_instance(vebal.token, blockchain))
@@ -440,7 +447,7 @@ def get_protocol_data_for(
                 pool_locked_fraction = lp_balance_locked / Decimal(lp.supply)
 
         # underlyings
-        balances = pool_balances(blockchain, lp_address, block, decimals)
+        balances = pool_balances(blockchain, lp_address, block_id, decimals)
         for addr, balance in balances.items():
             amount = balance * pool_liquidity_fraction
             if amount:
@@ -479,7 +486,7 @@ def get_protocol_data_for(
         # rewards
         if reward:
             for gauge_addr in gauge_addresses:
-                gauge = Gauge(blockchain, block, gauge_addr)
+                gauge = Gauge(blockchain, block_id, gauge_addr)
                 rewards = gauge.get_rewards(wallet)
                 for addr, reward_balance in rewards.items():
                     if reward_balance:
@@ -498,9 +505,9 @@ def get_protocol_data_for(
                         )
 
             if blockchain == Chain.ETHEREUM:
-                vebal = Vebal(blockchain, block)
+                vebal = Vebal(blockchain, block_id)
                 if lp_address == vebal.token:
-                    vebal_rewards = get_vebal_rewards(wallet, blockchain, block, decimals)
+                    vebal_rewards = get_vebal_rewards(wallet, blockchain, block_id, decimals)
                     for addr, reward_balance in vebal_rewards.items():
                         if reward_balance:
                             token_amount = TokenAmount(reward_balance, Token.get_instance(addr, blockchain))
@@ -518,12 +525,14 @@ def get_protocol_data_for(
 def get_swap_fees_apr(
     lptoken_address: str, blockchain: str, block: int | str = "latest", days: int = 1, apy: bool = False
 ) -> Decimal:
+    block_id = ensure_a_block_number(block, blockchain)
     chain_explorer = ChainExplorer(blockchain)
-    block_start = chain_explorer.block_from_time(Time(chain_explorer.time_from_block(block)) - Duration.days(days))
+    block_start = chain_explorer.block_from_time(Time(chain_explorer.time_from_block(block_id)) - Duration.days(days))
 
-    node = get_node(blockchain, block)
-    vault_address = Vault(blockchain, block).address
-    lp = LiquidityPool(blockchain, block, lptoken_address)
+    node = get_node(blockchain)
+    node = get_node(blockchain, block_id)
+    vault_address = Vault(blockchain, block_id).address
+    lp = LiquidityPool(blockchain, block_id, lptoken_address)
     swaps = lp.swap_fees(vault_address, block_start)
 
     # create a dictionary to store the total amountIn for each tokenIn
@@ -533,12 +542,12 @@ def get_swap_fees_apr(
 
     fee = 0
     for token, amount in totals.items():
-        fee += amount * Decimal(get_price(token, block, blockchain, node)[0])
+        fee += amount * Decimal(get_price(token, block_id, blockchain, node)[0])
 
-    pool_balance = pool_balances(blockchain, lptoken_address, block)
+    pool_balance = pool_balances(blockchain, lptoken_address, block_id)
     tvl = 0
     for token, balance in pool_balance.items():
-        tvl += balance * Decimal(get_price(token, block, blockchain, node)[0])
+        tvl += balance * Decimal(get_price(token, block_id, blockchain, node)[0])
 
     rate = Decimal(fee / tvl)
     apr = (((1 + rate) ** Decimal(365 / days) - 1) * 100) / 2

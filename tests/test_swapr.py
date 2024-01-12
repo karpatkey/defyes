@@ -1,14 +1,16 @@
 from decimal import Decimal
 
 import pytest
+from defabipedia import Chain
+from defabipedia.tokens import GnosisTokenAddr
+from karpatkit.node import get_node
 
 from defyes import Swapr
-from defyes.constants import Chain, GnosisTokenAddr
-from defyes.functions import get_contract, get_node
+from defyes.functions import get_contract
 
 TEST_BLOCK = 27450341
 TEST_WALLET = "0x458cd345b4c05e8df39d0a07220feb4ec19f5e6f"
-WEB3 = get_node(blockchain=Chain.GNOSIS, block=TEST_BLOCK)
+WEB3 = get_node(blockchain=Chain.GNOSIS)
 
 # DXS is the lptoken for BER+GNO pair
 DXS = "0x1Ad6A0cFF3870b252492597B557F3e61F130663D"

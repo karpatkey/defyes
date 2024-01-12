@@ -1,11 +1,11 @@
 import logging
 from decimal import Decimal
 
+from karpatkit.cache import const_call
+from karpatkit.node import get_node
 from web3 import Web3
 
-from defyes.cache import const_call
 from defyes.functions import get_contract, get_decimals, get_logs_web3, to_token_amount
-from defyes.node import get_node
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ SWAP_EVENT_SIGNATURE = "Swap(address,uint256,uint256,uint256,uint256,address)"
 
 def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     lptoken_data = {}
 
@@ -55,7 +55,7 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=T
     result = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -89,7 +89,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
     balances = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
     lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
@@ -111,7 +111,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
     result = {}
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block_start)
+        web3 = get_node(blockchain)
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 

@@ -2,15 +2,17 @@ import logging
 from decimal import Decimal
 from typing import Union
 
+from defabipedia import Chain
+from defabipedia.tokens import EthereumTokenAddr, GnosisTokenAddr
+from karpatkit.cache import const_call
+from karpatkit.constants import Address
+from karpatkit.explorer import ChainExplorer
+from karpatkit.node import get_node
 from web3 import Web3
 from web3.exceptions import ContractLogicError
 
-from defyes.cache import const_call
-from defyes.constants import Address, Chain, ETHTokenAddr, GnosisTokenAddr
-from defyes.explorer import ChainExplorer
 from defyes.functions import balance_of, get_contract, get_decimals, get_logs_web3, to_token_amount
 from defyes.lazytime import Duration, Time
-from defyes.node import get_node
 from defyes.prices.prices import get_price
 
 logger = logging.getLogger(__name__)
@@ -138,7 +140,7 @@ def get_gauge_version(gauge_address, block, blockchain, web3=None, only_version=
     # FIXME: nested try/except abuse
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     # The ABI used to get the Gauge Contract is a general ABI for all types. This is because some gauges do not have
     # their ABIs available in the explorers
@@ -274,8 +276,8 @@ def get_pool_data(web3, minter, block, blockchain):
             continue
 
         # IMPORTANT: AD-HOC FIX UNTIL WE FIND A WAY TO SOLVE HOW META POOLS WORK FOR DIFFERENT POOL TYPES AND SIDE-CHAINS
-        # if token_address == ETHTokenAddr.X3CRV or token_address == X3CRV_POL or token_address == GnosisTokenAddr.X3CRV:
-        if token_address == ETHTokenAddr.X3CRV:
+        # if token_address == EthereumTokenAddr.X3CRV or token_address == X3CRV_POL or token_address == GnosisTokenAddr.X3CRV:
+        if token_address == EthereumTokenAddr.X3CRV:
             pool_data["is_metapool"] = True
 
             x3crv_minter = get_pool_address(web3, token_address, block, blockchain)
@@ -314,7 +316,7 @@ def get_pool_data(web3, minter, block, blockchain):
 
 def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     lptoken_data = {}
 
@@ -340,7 +342,7 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
     all_rewards = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -377,7 +379,7 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
 
         # CRV rewards
         if blockchain == Chain.ETHEREUM:
-            token_address = ETHTokenAddr.CRV
+            token_address = EthereumTokenAddr.CRV
         elif blockchain == Chain.GNOSIS:
             token_address = GnosisTokenAddr.CRV
 
@@ -402,7 +404,7 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
         if gauge_version == "LiquidityGaugeV3":
             # CRV rewards
             if blockchain == Chain.ETHEREUM:
-                token_address = ETHTokenAddr.CRV
+                token_address = EthereumTokenAddr.CRV
             elif blockchain == Chain.GNOSIS:
                 token_address = GnosisTokenAddr.CRV
 
@@ -451,7 +453,7 @@ def underlying(
     balances = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -538,7 +540,7 @@ def unwrap(lptoken_amount, lptoken_address, block, blockchain, web3=None, decima
     balances = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
@@ -601,7 +603,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True, 
     balances = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
@@ -636,7 +638,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True, 
 
         balance = pool_contract.functions.balances(i).call(block_identifier=block)
         # Fetches the 3CR underlying balances in the 3pool
-        if token_address != ETHTokenAddr.X3CRV and token_address != GnosisTokenAddr.X3CRV:
+        if token_address != EthereumTokenAddr.X3CRV and token_address != GnosisTokenAddr.X3CRV:
             balances.append([token_address, to_token_amount(token_address, balance, blockchain, web3, decimals)])
         else:
             if meta is False:
@@ -668,7 +670,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
     result = {}
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block_start)
+        web3 = get_node(blockchain)
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
@@ -732,7 +734,7 @@ def get_base_apr(
     apy: bool = False,
 ) -> int:
     if web3 is None:
-        web3 = get_node(blockchain, block=block_end)
+        web3 = get_node(blockchain)
 
     chain_explorer = ChainExplorer(blockchain)
     block_start = chain_explorer.block_from_time(Time(chain_explorer.time_from_block(block_end)) - Duration.days(days))
@@ -766,7 +768,7 @@ def swap_fees_v2(
     apy: bool = False,
 ) -> int:
     if web3 is None:
-        web3 = get_node(blockchain, block=block_end)
+        web3 = get_node(blockchain)
     rate = get_base_apr(lptoken_address, blockchain, block_end, web3, days, apy)
     lptoken_address = Web3.to_checksum_address(lptoken_address)
     address_abi = ChainExplorer(blockchain).abi_from_address(lptoken_address)

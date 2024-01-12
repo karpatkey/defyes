@@ -1,14 +1,15 @@
 from decimal import Decimal
 
 import pytest
+from defabipedia import Chain
+from defabipedia.tokens import GnosisTokenAddr
+from karpatkit.node import get_node
 
 from defyes import RealT
-from defyes.constants import Chain, GnosisTokenAddr
-from defyes.node import get_node
 
 TEST_BLOCK = 27450341
 TEST_WALLET = "0x10e4597ff93cbee194f4879f8f1d54a370db6969"
-WEB3 = get_node(blockchain=Chain.GNOSIS, block=TEST_BLOCK)
+WEB3 = get_node(blockchain=Chain.GNOSIS)
 
 
 @pytest.mark.parametrize("decimals", [False, True])

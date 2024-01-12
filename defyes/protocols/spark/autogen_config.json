@@ -4,7 +4,7 @@
       "getPool"
     ]
   },
-  "pool": {},
-  "oracle": {},    
+  "lending_pool": {},
+  "price_oracle": {},
   "protocol_data_provider": {}
 }

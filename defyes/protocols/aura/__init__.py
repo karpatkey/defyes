@@ -2,13 +2,14 @@ import json
 from decimal import Decimal
 from pathlib import Path
 
+from defabipedia import Chain
+from defabipedia.tokens import EthereumTokenAddr
+from karpatkit.cache import const_call
+from karpatkit.helpers import call_contract_method
+from karpatkit.node import get_node
 from web3 import Web3
 
-from defyes.cache import const_call
-from defyes.constants import Chain, ETHTokenAddr
 from defyes.functions import get_contract, get_decimals, get_logs_web3, last_block, to_token_amount
-from defyes.helpers import call_contract_method
-from defyes.node import get_node
 
 from .. import balancer
 
@@ -215,7 +216,7 @@ def get_extra_rewards_airdrop(wallet, block, blockchain, web3=None, decimals=Tru
     extra_rewards_airdrop = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -223,14 +224,14 @@ def get_extra_rewards_airdrop(wallet, block, blockchain, web3=None, decimals=Tru
         EXTRA_REWARDS_DISTRIBUTOR, blockchain, web3=web3, abi=ABI_EXTRA_REWARDS_DISTRIBUTOR, block=block
     )
 
-    extra_reward = extra_rewards_distributor.functions.claimableRewards(wallet, ETHTokenAddr.AURA).call(
+    extra_reward = extra_rewards_distributor.functions.claimableRewards(wallet, EthereumTokenAddr.AURA).call(
         block_identifier=block
     )
 
     if extra_reward > 0:
         extra_rewards_airdrop = [
-            ETHTokenAddr.AURA,
-            to_token_amount(ETHTokenAddr.AURA, extra_reward, blockchain, web3, decimals),
+            EthereumTokenAddr.AURA,
+            to_token_amount(EthereumTokenAddr.AURA, extra_reward, blockchain, web3, decimals),
         ]
 
     return extra_rewards_airdrop
@@ -244,7 +245,7 @@ def get_aura_mint_amount(web3, bal_earned, block, blockchain, rewarder, decimals
     aura_amount = 0
 
     if blockchain == Chain.ETHEREUM:
-        aura_address = ETHTokenAddr.AURA
+        aura_address = EthereumTokenAddr.AURA
 
         booster_contract = get_contract(BOOSTER, blockchain, web3=web3, abi=ABI_BOOSTER, block=block)
         reward_multiplier = booster_contract.functions.getRewardMultipliers(rewarder).call(block_identifier=block)
@@ -300,7 +301,7 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
     all_rewards = {}
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -353,7 +354,7 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_locked(wallet, block, blockchain, web3=None, reward=False, decimals=True):
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -361,7 +362,9 @@ def get_locked(wallet, block, blockchain, web3=None, reward=False, decimals=True
 
     aura_locker = aura_locker_contract.functions.balances(wallet).call(block_identifier=block)[0]
 
-    result = [[ETHTokenAddr.AURA, to_token_amount(ETHTokenAddr.AURA, aura_locker, blockchain, web3, decimals)]]
+    result = [
+        [EthereumTokenAddr.AURA, to_token_amount(EthereumTokenAddr.AURA, aura_locker, blockchain, web3, decimals)]
+    ]
 
     if reward is True:
         rewards = []
@@ -380,7 +383,7 @@ def get_locked(wallet, block, blockchain, web3=None, reward=False, decimals=True
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_staked(wallet, block, blockchain, web3=None, reward=False, decimals=True):
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -414,7 +417,7 @@ def get_staked(wallet, block, blockchain, web3=None, reward=False, decimals=True
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_compounded(wallet, block, blockchain, web3=None, reward=False, decimals=True):
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -446,7 +449,7 @@ def underlying(
     balances = {}
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -498,7 +501,7 @@ def update_db(output_file=DB_FILE, block="latest"):
     for blockchain in [Chain.GNOSIS, Chain.ETHEREUM, Chain.POLYGON, Chain.ARBITRUM, Chain.OPTIMISM]:
         db_data[blockchain] = {}
 
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
         if blockchain == Chain.ETHEREUM:
             booster_address = BOOSTER

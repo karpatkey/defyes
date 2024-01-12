@@ -1,8 +1,9 @@
 from decimal import Decimal
 from unittest.mock import Mock
 
+from defabipedia import Chain
+
 from defyes import HiddenHand
-from defyes.constants import Chain
 
 WALLET_N1 = "0x849D52316331967b6fF1198e5E32A0eB168D039d"
 

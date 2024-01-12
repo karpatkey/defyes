@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
 
+from defabipedia import Chain
 from web3 import Web3
 
-from defyes.constants import Chain
 from defyes.functions import get_symbol
 
 TOKEN_MAPPING_FILE = Path(__file__).parent / "token_mapping.json"

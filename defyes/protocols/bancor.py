@@ -1,8 +1,8 @@
+from karpatkit.cache import const_call
+from karpatkit.node import get_node
 from web3 import Web3
 
-from defyes.cache import const_call
 from defyes.functions import get_contract, to_token_amount
-from defyes.node import get_node
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # LITERALS
@@ -33,7 +33,7 @@ def underlying(
     balances = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
     bancor_poolcontract = get_contract(token_address, blockchain, web3=web3, abi=ABI_POOL, block=block)
@@ -67,7 +67,7 @@ def underlying_all(wallet: str, block: int, blockchain: str, web3=None, decimals
     balances = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 

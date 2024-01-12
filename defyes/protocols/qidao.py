@@ -1,12 +1,13 @@
 from decimal import Decimal
 
+from defabipedia import Chain
+from defabipedia.tokens import GnosisTokenAddr, PolygonTokenAddr
+from karpatkit.cache import const_call
+from karpatkit.explorer import ChainExplorer
+from karpatkit.node import get_node
 from web3 import Web3
 
-from defyes.cache import const_call
-from defyes.constants import Chain, GnosisTokenAddr, PolygonTokenAddr
-from defyes.explorer import ChainExplorer
 from defyes.functions import get_contract, get_decimals, to_token_amount
-from defyes.node import get_node
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # QIDAO_VAULTS
@@ -82,7 +83,7 @@ def get_vault_data(vault_id, collateral_address, block, blockchain, web3=None, d
     vault_data = {}
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     collateral_address = Web3.to_checksum_address(collateral_address)
 
@@ -208,7 +209,7 @@ def underlying(vault_id, collateral_address, block, blockchain, web3=None, decim
     result = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     collateral_address = Web3.to_checksum_address(collateral_address)
     vault_address = get_vault_address(collateral_address, blockchain)

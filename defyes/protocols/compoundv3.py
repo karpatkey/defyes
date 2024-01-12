@@ -1,10 +1,10 @@
 from typing import List, Union
 
+from karpatkit.cache import const_call
+from karpatkit.node import get_node
 from web3 import Web3
 
-from defyes.cache import const_call
 from defyes.functions import get_contract, to_token_amount
-from defyes.node import get_node
 
 CUSDCV3_ADDRESS = "0xc3d688B66703497DAA19211EEdff47f25384cdc3"
 CWETHV3_ADDRESS = "0xA17581A9E3356d9A858b789D68B4d866e593aE94"
@@ -36,7 +36,7 @@ def underlying(
         decimals (bool, optional): _description_. Defaults to True.
     """
     balances = []
-    web3 = get_node(blockchain, block=block)
+    web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
     comet_address = Web3.to_checksum_address(comet_address)
@@ -65,7 +65,7 @@ def get_all_rewards(
         List[List]: _description_
     """
     rewards = []
-    web3 = get_node(blockchain, block=block)
+    web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
     comet_address = Web3.to_checksum_address(comet_address)

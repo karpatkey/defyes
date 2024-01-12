@@ -1,10 +1,10 @@
 from decimal import Decimal
 
 import pytest
+from defabipedia import Chain
+from karpatkit.node import get_node
 
 from defyes import Unit
-from defyes.constants import Chain
-from defyes.node import get_node
 
 USDP = "0x1456688345527bE1f37E9e627DA0837D6f08C925"
 FTM_ETH = "0x4E15361FD6b4BB609Fa63C81A2be19d873717870"
@@ -19,7 +19,7 @@ USG_ETH = "0x0770E27F92F0D0e716dc531037B8b87FEFEbE561"
 TEST_BLOCK = 17225800
 TEST_WALLET = "0x8442e4FCbbA519B4f4C1EA1FcE57a5379C55906C"
 COLLATERAL_ADDRESS = FTM_ETH
-WEB3 = get_node(blockchain=Chain.ETHEREUM, block=TEST_BLOCK)
+WEB3 = get_node(blockchain=Chain.ETHEREUM)
 
 
 @pytest.mark.parametrize("decimals", [True, False])

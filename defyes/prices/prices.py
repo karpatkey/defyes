@@ -1,11 +1,12 @@
 from time import sleep
 from typing import Tuple
 
+from defabipedia import Chain
+from karpatkit.constants import Address
+from karpatkit.explorer import ChainExplorer
+from karpatkit.node import get_node
 from web3 import Web3
 
-from defyes.constants import Address, Chain
-from defyes.explorer import ChainExplorer
-from defyes.node import get_node
 from defyes.prices import Chainlink, CoinGecko, _1inch
 
 # Taken from token_mappings although all of them have the same value
@@ -43,7 +44,7 @@ def get_price(token_address, block, blockchain, web3=None, source: str = "chainl
     assert source in SOURCES_LIST, "Please input an existing oracle."
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     token_address = Web3.to_checksum_address(token_address)
 
@@ -102,7 +103,7 @@ def _get_price_from_source(source: str, token_address: str, block: int, blockcha
         # In case there is the error for too many requests
         while price[0] == 429:
             sleep(1)
-            price = CoinGecko.get_price(token_address, block, blockchain)
+            price = CoinGecko.get_price(token_address, unix_timestamp, blockchain)
 
         price = price[1][1]
 

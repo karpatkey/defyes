@@ -1,7 +1,10 @@
 from decimal import Decimal
 
+from defabipedia import Chain
+from defabipedia.tokens import EthereumTokenAddr
+from karpatkit.constants import Address
+
 from defyes import Element
-from defyes.constants import Address, Chain, ETHTokenAddr
 
 LPTOKEN_ADDR = "0x06325440D014e39736583c165C2963BA99fAf14E"
 WALLET = "0x849D52316331967b6fF1198e5E32A0eB168D039d"
@@ -66,7 +69,7 @@ def test_underlying():
     underlying = Element.underlying(name, WALLET, block, blockchain=Chain.ETHEREUM)
     assert underlying == [
         [Address.E, Decimal("744.5556663118056659868728133")],
-        [ETHTokenAddr.stETH, Decimal("766.3546455242681872680648993")],
+        [EthereumTokenAddr.stETH, Decimal("766.3546455242681872680648993")],
     ]
 
 
@@ -79,7 +82,7 @@ def test_underlying_all():
             "tranche": "LP Element Principal Token yvCurve-stETH-24FEB23",
             "amounts": [
                 [Address.E, Decimal("744.5556663118056659868728133")],
-                [ETHTokenAddr.stETH, Decimal("766.3546455242681872680648993")],
+                [EthereumTokenAddr.stETH, Decimal("766.3546455242681872680648993")],
             ],
             "lptoken_address": "0x06325440D014e39736583c165C2963BA99fAf14E",
             "wallet": "0x849D52316331967b6fF1198e5E32A0eB168D039d",
@@ -89,7 +92,7 @@ def test_underlying_all():
             "tranche": "LP Element Principal Token yvcrvSTETH-15APR22",
             "amounts": [
                 [Address.E, Decimal("0.0002652668934750846726152143699")],
-                [ETHTokenAddr.stETH, Decimal("0.0002730333342642093108247451032")],
+                [EthereumTokenAddr.stETH, Decimal("0.0002730333342642093108247451032")],
             ],
             "lptoken_address": "0x06325440D014e39736583c165C2963BA99fAf14E",
             "wallet": "0x849D52316331967b6fF1198e5E32A0eB168D039d",
@@ -99,7 +102,7 @@ def test_underlying_all():
             "tranche": "LP Element Principal Token yvcrvSTETH-28JAN22",
             "amounts": [
                 [Address.E, Decimal("0.00005176494310919112209866330221")],
-                [ETHTokenAddr.stETH, Decimal("0.00005328050866033555510409296175")],
+                [EthereumTokenAddr.stETH, Decimal("0.00005328050866033555510409296175")],
             ],
             "lptoken_address": "0x06325440D014e39736583c165C2963BA99fAf14E",
             "wallet": "0x849D52316331967b6fF1198e5E32A0eB168D039d",

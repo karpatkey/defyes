@@ -1,16 +1,16 @@
 from decimal import Decimal
 
 import pytest
+from defabipedia import Chain
+from karpatkit.node import get_node
 
 from defyes import Symmetric
-from defyes.constants import Chain
-from defyes.node import get_node
 
 
 @pytest.mark.parametrize("decimals", [True, False])
 def test_get_all_rewards(decimals):
     block = 27444181
-    node = get_node(Chain.GNOSIS, block)
+    node = get_node(Chain.GNOSIS)
     wallet_v1 = "0x9b04a9eee500302980a117f514bc2de0fd1f683d"
     lptoken_address_v1 = "0x53ED0C2C6bB944D9421528E1ABD1e042B330696b"
     rewards_v1 = Symmetric.get_all_rewards(
@@ -49,7 +49,7 @@ def test_get_all_rewards(decimals):
 @pytest.mark.parametrize("decimals", [True, False])
 def test_underlying(decimals):
     block = 27443088
-    node = get_node(Chain.GNOSIS, block)
+    node = get_node(Chain.GNOSIS)
     wallet_v1 = "0x9b04a9eee500302980a117f514bc2de0fd1f683d"
     lptoken_address_v1 = "0x53ED0C2C6bB944D9421528E1ABD1e042B330696b"
     underlying_v1 = Symmetric.underlying(
@@ -159,7 +159,7 @@ def test_underlying(decimals):
 @pytest.mark.parametrize("decimals", [True, False])
 def test_pool_balances(decimals):
     block = 25502427
-    node = get_node(Chain.GNOSIS, block)
+    node = get_node(Chain.GNOSIS)
     lptoken_address_v1 = "0x53ED0C2C6bB944D9421528E1ABD1e042B330696b"
     pool_balances_v1 = Symmetric.pool_balances(lptoken_address_v1, block, Chain.GNOSIS, web3=node, decimals=decimals)
     assert pool_balances_v1 == {
@@ -201,7 +201,7 @@ def test_pool_balances(decimals):
 @pytest.mark.parametrize("decimals", [True, False])
 def test_get_rewards_per_second(decimals):
     block = 24502427
-    node = get_node(Chain.GNOSIS, block)
+    node = get_node(Chain.GNOSIS)
     lptoken_address = "0x650f5d96E83d3437bf5382558cB31F0ac5536684"
     rewards = Symmetric.get_rewards_per_second(lptoken_address, block, Chain.GNOSIS, web3=node, decimals=decimals)
     assert rewards == {

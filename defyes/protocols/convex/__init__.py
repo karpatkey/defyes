@@ -3,13 +3,14 @@ import logging
 from decimal import Decimal
 from pathlib import Path
 
+from defabipedia import Chain
+from defabipedia.tokens import EthereumTokenAddr
+from karpatkit.cache import const_call
+from karpatkit.explorer import ChainExplorer
+from karpatkit.node import get_node
 from web3 import Web3
 
-from defyes.cache import const_call
-from defyes.constants import Chain, ETHTokenAddr
-from defyes.explorer import ChainExplorer
 from defyes.functions import get_contract, last_block, to_token_amount
-from defyes.node import get_node
 
 from .. import curve
 
@@ -134,7 +135,7 @@ def get_cvx_mint_amount(web3, crv_earned, block, blockchain, decimals=True):
     """
     cvx_amount = 0
 
-    cvx_contract = get_contract(ETHTokenAddr.CVX, blockchain, web3=web3, abi=ABI_CVX, block=block)
+    cvx_contract = get_contract(EthereumTokenAddr.CVX, blockchain, web3=web3, abi=ABI_CVX, block=block)
 
     cliff_size = cvx_contract.functions.reductionPerCliff().call(block_identifier=block)
     cliff_count = cvx_contract.functions.totalCliffs().call(block_identifier=block)
@@ -152,7 +153,7 @@ def get_cvx_mint_amount(web3, crv_earned, block, blockchain, decimals=True):
         if cvx_amount > amount_till_max:
             cvx_amount = amount_till_max
 
-    return [ETHTokenAddr.CVX, cvx_amount]
+    return [EthereumTokenAddr.CVX, cvx_amount]
 
 
 def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decimals=True, rewarders=[]):
@@ -163,7 +164,7 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
     all_rewards = {}
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -210,14 +211,14 @@ def get_locked(wallet, block, blockchain, web3=None, reward=False, decimals=True
     2 - List of Tuples: [reward_token_address, balance]
     """
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
     cvx_locker_contract = get_contract(CVX_LOCKER, blockchain, web3=web3, block=block)
     cvx_locker = cvx_locker_contract.functions.balances(wallet).call(block_identifier=block)[0]
 
-    result = [[ETHTokenAddr.CVX, to_token_amount(ETHTokenAddr.CVX, cvx_locker, blockchain, web3, decimals)]]
+    result = [[EthereumTokenAddr.CVX, to_token_amount(EthereumTokenAddr.CVX, cvx_locker, blockchain, web3, decimals)]]
 
     if reward:
         rewards = []
@@ -244,14 +245,14 @@ def get_staked(wallet, block, blockchain, web3=None, reward=False, decimals=True
     2 - List of Tuples: [reward_token_address, balance]
     """
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
     cvx_staking_contract = get_contract(CVX_STAKER, blockchain, web3=web3, block=block)
     cvx_staked = cvx_staking_contract.functions.balanceOf(wallet).call(block_identifier=block)
 
-    result = [[ETHTokenAddr.CVX, to_token_amount(ETHTokenAddr.CVX, cvx_staked, blockchain, web3, decimals)]]
+    result = [[EthereumTokenAddr.CVX, to_token_amount(EthereumTokenAddr.CVX, cvx_staked, blockchain, web3, decimals)]]
 
     if reward:
         rewards = []
@@ -260,8 +261,8 @@ def get_staked(wallet, block, blockchain, web3=None, reward=False, decimals=True
         if cvx_staked_rewards > 0:
             rewards.append(
                 [
-                    ETHTokenAddr.CVXCRV,
-                    to_token_amount(ETHTokenAddr.CVXCRV, cvx_staked_rewards, blockchain, web3, decimals),
+                    EthereumTokenAddr.CVXCRV,
+                    to_token_amount(EthereumTokenAddr.CVXCRV, cvx_staked_rewards, blockchain, web3, decimals),
                 ]
             )
 
@@ -284,7 +285,7 @@ def underlying(
     balances = {}
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -326,7 +327,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
     # 1 - List of Tuples: [liquidity_token_address, balance]
     """
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
@@ -338,7 +339,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
 def update_db(output_file=DB_FILE, block="latest"):
     db_data = {"pools": {}}
 
-    web3 = get_node(Chain.ETHEREUM, block=block)
+    web3 = get_node(Chain.ETHEREUM)
     booster = get_contract(BOOSTER, Chain.ETHEREUM, web3=web3, abi=ABI_BOOSTER, block=block)
     pools_length = booster.functions.poolLength().call(block_identifier=block)
 

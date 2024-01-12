@@ -1,9 +1,10 @@
 from decimal import Decimal
 
+from defabipedia import Chain
+from defabipedia.tokens import EthereumTokenAddr, GnosisTokenAddr
 from web3 import Web3
 
 from defyes import Balancer
-from defyes.constants import Chain, ETHTokenAddr, GnosisTokenAddr
 from defyes.functions import date_to_block
 
 WALLET_N1 = "0x31cD267D34EC6368eac930Be4f412dfAcc71A844"
@@ -64,32 +65,32 @@ def test_pool_balances():
     block = 16978206
     balances = Balancer.pool_balances(Chain.ETHEREUM, B50USDC50WETH_ADDR, block)
     assert balances == {
-        ETHTokenAddr.USDC: Decimal("1129072.214823"),
-        ETHTokenAddr.WETH: Decimal("601.535954342344676691"),
+        EthereumTokenAddr.USDC: Decimal("1129072.214823"),
+        EthereumTokenAddr.WETH: Decimal("601.535954342344676691"),
     }
 
     block = 17117344
     balances = Balancer.pool_balances(Chain.ETHEREUM, bbaUSD_ADDR, block)
     assert balances == {
-        ETHTokenAddr.USDT: Decimal("11433582.31554748359005298347"),
-        ETHTokenAddr.USDC: Decimal("13368829.78950840748853951224"),
-        ETHTokenAddr.DAI: Decimal("13416454.19566038579649334747"),
+        EthereumTokenAddr.USDT: Decimal("11433582.31554748359005298347"),
+        EthereumTokenAddr.USDC: Decimal("13368829.78950840748853951224"),
+        EthereumTokenAddr.DAI: Decimal("13416454.19566038579649334747"),
     }
 
     usdt = Balancer.pool_balances(Chain.ETHEREUM, bbaUSDT_ADDR, block)
-    assert usdt[ETHTokenAddr.USDT] == Decimal("11433698.53586857519047922515")
+    assert usdt[EthereumTokenAddr.USDT] == Decimal("11433698.53586857519047922515")
 
     usdc = Balancer.pool_balances(Chain.ETHEREUM, bbaUSDC_ADDR, block)
-    assert usdc[ETHTokenAddr.USDC] == Decimal("13369125.00806304894840304454")
+    assert usdc[EthereumTokenAddr.USDC] == Decimal("13369125.00806304894840304454")
 
     dai = Balancer.pool_balances(Chain.ETHEREUM, bbaDAI_ADDR, block)
-    assert dai[ETHTokenAddr.DAI] == Decimal("13416679.31570410197485793129")
+    assert dai[EthereumTokenAddr.DAI] == Decimal("13416679.31570410197485793129")
 
     balances = Balancer.pool_balances(Chain.ETHEREUM, bbaUSDV3_ADDR, block)
     assert balances == {
-        ETHTokenAddr.DAI: Decimal("1050266.066617679685909312000"),
-        ETHTokenAddr.USDT: Decimal("765001.8540369999844466201230"),
-        ETHTokenAddr.USDC: Decimal("908244.4675409999892750711044"),
+        EthereumTokenAddr.DAI: Decimal("1050266.066617679685909312000"),
+        EthereumTokenAddr.USDT: Decimal("765001.8540369999844466201230"),
+        EthereumTokenAddr.USDC: Decimal("908244.4675409999892750711044"),
     }
 
     block = 29830048
@@ -113,23 +114,23 @@ def test_unwrap():
     lptoken_amount = 1
     unwrap = Balancer.unwrap(Chain.ETHEREUM, bbaUSD_ADDR, lptoken_amount, block)
     assert unwrap == {
-        ETHTokenAddr.USDT: Decimal("0.2544855265987162735881749721"),
-        ETHTokenAddr.USDC: Decimal("0.3695278389467781030866438160"),
-        ETHTokenAddr.DAI: Decimal("0.3804761470992138348159360414"),
+        EthereumTokenAddr.USDT: Decimal("0.2544855265987162735881749721"),
+        EthereumTokenAddr.USDC: Decimal("0.3695278389467781030866438160"),
+        EthereumTokenAddr.DAI: Decimal("0.3804761470992138348159360414"),
     }
 
     lptoken_amount = Decimal("0.0106223377584825466601881061023959773592650890350341796875")
     unwrap = Balancer.unwrap(Chain.ETHEREUM, B60WETH40DAI_ADDR, lptoken_amount, block)
     assert unwrap == {
-        ETHTokenAddr.DAI: Decimal("0.3998802387901373103114663897"),
-        ETHTokenAddr.WETH: Decimal("0.0003284487726480976462916290608"),
+        EthereumTokenAddr.DAI: Decimal("0.3998802387901373103114663897"),
+        EthereumTokenAddr.WETH: Decimal("0.0003284487726480976462916290608"),
     }
 
     lptoken_amount = Decimal("0.0106223377584825466601881061023959773592650890350341796875")
     unwrap = Balancer.unwrap(Chain.ETHEREUM, B60WETH40DAI_ADDR, lptoken_amount, block, decimals=False)
     assert unwrap == {
-        ETHTokenAddr.DAI: Decimal("399880238790137310.3114663897"),
-        ETHTokenAddr.WETH: Decimal("328448772648097.6462916290608"),
+        EthereumTokenAddr.DAI: Decimal("399880238790137310.3114663897"),
+        EthereumTokenAddr.WETH: Decimal("328448772648097.6462916290608"),
     }
 
     block = 27628264
@@ -146,9 +147,9 @@ def test_unwrap():
     lptoken_amount = 1
     unwrap = Balancer.unwrap(Chain.ETHEREUM, bbaUSDV3_ADDR, lptoken_amount, block)
     assert unwrap == {
-        ETHTokenAddr.DAI: Decimal("0.3836613819783486198907516243"),
-        ETHTokenAddr.USDT: Decimal("0.2472909112224638002039090850"),
-        ETHTokenAddr.USDC: Decimal("0.3701358752252735701543186309"),
+        EthereumTokenAddr.DAI: Decimal("0.3836613819783486198907516243"),
+        EthereumTokenAddr.USDT: Decimal("0.2472909112224638002039090850"),
+        EthereumTokenAddr.USDC: Decimal("0.3701358752252735701543186309"),
     }
 
 
@@ -158,12 +159,12 @@ def test_gauge_rewards():
     gauge_address = Balancer.get_gauge_addresses(Chain.ETHEREUM, block, B60WETH40DAI_ADDR)[0]
     gauge = Balancer.Gauge(Chain.ETHEREUM, block, gauge_address)
     rewards = gauge.get_rewards(WALLET_N1)
-    assert rewards == {ETHTokenAddr.BAL: Decimal("0.000001267800098374")}
+    assert rewards == {EthereumTokenAddr.BAL: Decimal("0.000001267800098374")}
 
     gauge_address = Balancer.get_gauge_addresses(Chain.ETHEREUM, block, BstETHSTABLE_ADDR)[0]
     gauge = Balancer.Gauge(Chain.ETHEREUM, block, gauge_address)
     rewards = gauge.get_rewards(WALLET_N3)
-    assert rewards == {ETHTokenAddr.LDO: 0, ETHTokenAddr.BAL: Decimal("0.000090529527458665")}
+    assert rewards == {EthereumTokenAddr.LDO: 0, EthereumTokenAddr.BAL: Decimal("0.000090529527458665")}
 
 
 def test_vebal_rewards():
@@ -171,10 +172,10 @@ def test_vebal_rewards():
 
     vebal_rewards = Balancer.get_vebal_rewards(WALLET_N2, Chain.ETHEREUM, block)
     assert vebal_rewards == {
-        ETHTokenAddr.BAL: Decimal("0.000019372013715193"),
-        ETHTokenAddr.BB_A_USD_OLD: Decimal("0"),
-        ETHTokenAddr.BB_A_USD: Decimal("0.000210261212072964"),
-        ETHTokenAddr.BB_A_USD_V3: Decimal("0"),
+        EthereumTokenAddr.BAL: Decimal("0.000019372013715193"),
+        EthereumTokenAddr.BB_A_USD_OLD: Decimal("0"),
+        EthereumTokenAddr.BB_A_USD: Decimal("0.000210261212072964"),
+        EthereumTokenAddr.BB_A_USD_V3: Decimal("0"),
     }
 
 

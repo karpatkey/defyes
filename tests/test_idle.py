@@ -1,7 +1,9 @@
 from decimal import Decimal
 
+from defabipedia import Chain
+from defabipedia.tokens import EthereumTokenAddr
+
 from defyes import Idle
-from defyes.constants import Chain, ETHTokenAddr
 
 TEST_WALLET = "0x849D52316331967b6fF1198e5E32A0eB168D039d"
 TEST_WALLET2 = "0x542256Ef33279C5545AA71f4b3B6298990f30Ffc"
@@ -12,8 +14,8 @@ def test_get_all_rewards():
     gauge = "0x675eC042325535F6e176638Dd2d4994F645502B9"
     rewards = Idle.get_all_rewards(TEST_WALLET2, gauge, TEST_BLOCK, Chain.ETHEREUM)
     assert rewards == [
-        [ETHTokenAddr.IDLE, Decimal("11.966264216568462645")],
-        [ETHTokenAddr.LDO, Decimal("36.724756125561987935")],
+        [EthereumTokenAddr.IDLE, Decimal("11.966264216568462645")],
+        [EthereumTokenAddr.LDO, Decimal("36.724756125561987935")],
     ]
 
 
@@ -21,7 +23,7 @@ def test_get_balances():
     amounts = Idle.get_balances(
         tranche={"AATrancheToken": "0xdf17c739b666B259DA3416d01f0310a6e429f592", "AAGauge": None},
         cdo_address="0x8E0A8A5c1e5B3ac0670Ea5a613bB15724D51Fc37",
-        underlying_token=ETHTokenAddr.stETH,
+        underlying_token=EthereumTokenAddr.stETH,
         wallet=TEST_WALLET,
         block=TEST_BLOCK,
         blockchain=Chain.ETHEREUM,
@@ -93,8 +95,8 @@ def test_underlying():
 #     underlying = Idle.underlying_all(wallet, 17295010, ETHEREUM, rewards=True)
 #     assert underlying == [
 #         [
-#             [ETHTokenAddr.STETH, Decimal("931.756327134769968317289982")],
-#             [[ETHTokenAddr.IDLE, Decimal("0")], [ETHTokenAddr.LDO, Decimal("31065.052700304643473107")]],
+#             [EthereumTokenAddr.STETH, Decimal("931.756327134769968317289982")],
+#             [[EthereumTokenAddr.IDLE, Decimal("0")], [EthereumTokenAddr.LDO, Decimal("31065.052700304643473107")]],
 #         ]
 #     ]
 
@@ -151,6 +153,12 @@ def test_get_addresses_subgraph():
                 "BBTranche": {"BBGauge": None, "BBTrancheToken": "0xcf5FD05F72cA777d71FB3e38F296AAD7cE735cB7"},
                 "CDO": "0x2398Bc075fa62Ee88d7fAb6A18Cd30bFf869bDa4",
                 "underlyingToken": "0x1a7e4e63778B4f12a199C062f3eFdD288afCBce8",
+            },
+            {
+                "AATranche": {"AAGauge": None, "AATrancheToken": "0x10036C2E5C441Cdef24A30134b6dF5ebf116205e"},
+                "BBTranche": {"BBGauge": None, "BBTrancheToken": "0x3331B21Abb39190a0426ca54D68F9E3E953Eec8e"},
+                "CDO": "0x260D1E0CB6CC9E34Ea18CE39bAB879d450Cdd706",
+                "underlyingToken": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
             },
             {
                 "AATranche": {"AAGauge": None, "AATrancheToken": "0x62Eb6a8c7A555eae3e0B17D42CA9A3299af2787E"},
@@ -241,6 +249,12 @@ def test_get_addresses_subgraph():
                 "BBTranche": {"BBGauge": None, "BBTrancheToken": "0x00B80FCCA0fE4fDc3940295AA213738435B0f94e"},
                 "CDO": "0x860B1d25903DbDFFEC579d30012dA268aEB0d621",
                 "underlyingToken": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+            },
+            {
+                "AATranche": {"AAGauge": None, "AATrancheToken": "0x2B0E31B8EE653D2077db86dea3ACf3F34ae9d5D2"},
+                "BBTranche": {"BBGauge": None, "BBTrancheToken": "0x7b713B1Cb6EaFD4061064581579ffCCf7DF21545"},
+                "CDO": "0x87E53bE99975DA318056af5c4933469a6B513768",
+                "underlyingToken": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
             },
             {
                 "AATranche": {"AAGauge": None, "AATrancheToken": "0xdf17c739b666B259DA3416d01f0310a6e429f592"},

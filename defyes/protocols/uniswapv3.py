@@ -4,10 +4,10 @@ from decimal import Decimal
 from enum import IntEnum
 from typing import ClassVar, Union
 
+from karpatkit.node import get_node
 from web3 import Web3
 
 from defyes.functions import get_contract, get_decimals
-from defyes.node import get_node
 
 logger = logging.getLogger(__name__)
 
@@ -245,7 +245,7 @@ def underlying(
     """
     balances = []
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     nft_position = NFTPosition(nftid, blockchain, block, web3, decimals)
     if nft_position.owned_by(wallet):
@@ -281,7 +281,7 @@ def get_fee(nftid: int, block: Union[int, str], blockchain: str, web3=None, deci
         a list where each element is a list with two elements, the underlying token address and its corresponding unclaimed fee
     """
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     nft_position = NFTPosition(nftid, blockchain, block, web3, decimals)
     pool = Pool(blockchain, block, web3, nft_position.token0, nft_position.token1, nft_position.fee)
@@ -319,7 +319,7 @@ def get_rate_uniswap_v3(
         the token price of the source token (token_src) quoted in destination token
     """
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     token_src = Web3.to_checksum_address(token_src)
     token_dst = Web3.to_checksum_address(token_dst)
@@ -357,7 +357,7 @@ def allnfts(wallet: str, block: Union[int, str], blockchain: str, web3=None) -> 
     nftids = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     nft_contract = get_contract(POSITIONS_NFT, blockchain, web3=web3, abi=ABI_POSITIONS_NFT, block=block)
     nfts = nft_contract.functions.balanceOf(wallet).call(block_identifier=block)

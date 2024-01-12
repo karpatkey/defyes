@@ -2,9 +2,10 @@ import itertools
 from decimal import Decimal
 
 import pytest
+from defabipedia import Chain
+from defabipedia.tokens import EthereumTokenAddr, GnosisTokenAddr, PolygonTokenAddr
 
 from defyes import pretty
-from defyes.constants import Chain, ETHTokenAddr, GnosisTokenAddr, PolygonTokenAddr
 from defyes.types import Addr, Token, TokenAmount
 
 
@@ -27,7 +28,7 @@ amounts = ["1000.234", 1002300, "0.433222344", Decimal("3902932323.22133")]
 tokens_data = [
     (PolygonTokenAddr.MAI, Chain.POLYGON),
     (GnosisTokenAddr.GNO, Chain.GNOSIS),
-    (ETHTokenAddr.BB_A_USD, Chain.ETHEREUM),
+    (EthereumTokenAddr.BB_A_USD, Chain.ETHEREUM),
 ]
 results = itertools.product(
     ["1_000.234", "1_002_300", "0.433222344", "3_902_932_323.22133"], ["miMATIC", "GNO", "bb-a-USD"]
@@ -51,16 +52,16 @@ def test_tokens(amount, token_data, expected_repr):
 
 
 def test_compare_token_amount():
-    DAI = Token.get_instance(ETHTokenAddr.DAI, Chain.ETHEREUM)
-    DAI2 = Token(ETHTokenAddr.DAI, Chain.ETHEREUM)
+    DAI = Token.get_instance(EthereumTokenAddr.DAI, Chain.ETHEREUM)
+    DAI2 = Token(EthereumTokenAddr.DAI, Chain.ETHEREUM)
     token1 = TokenAmount("1", DAI)
     token2 = TokenAmount.from_teu("1000000000000000000", DAI2)
     assert token1 == token2
 
 
 def test_repr():
-    DAI = Token.get_instance(ETHTokenAddr.DAI, Chain.ETHEREUM)
-    USDC = Token.get_instance(ETHTokenAddr.USDC, Chain.ETHEREUM)
+    DAI = Token.get_instance(EthereumTokenAddr.DAI, Chain.ETHEREUM)
+    USDC = Token.get_instance(EthereumTokenAddr.USDC, Chain.ETHEREUM)
     assert "0.0004" * USDC == "0.0004*USDC"
     assert "0.00004" * USDC == "40.00000*teuUSDC"
     assert Decimal("1.00004") * USDC == "1.00004*USDC"

@@ -13,12 +13,12 @@ import logging
 from decimal import Decimal
 from typing import Dict, List, Union
 
+from defabipedia.tokens import GnosisTokenAddr
+from karpatkit.cache import const_call
+from karpatkit.node import get_node
 from web3 import Web3
 
-from defyes.cache import const_call
-from defyes.constants import GnosisTokenAddr
 from defyes.functions import balance_of, get_contract, to_token_amount
-from defyes.node import get_node
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +108,7 @@ def get_data(wallet: str, block: Union[int, str], blockchain: str, web3=None, de
     debts = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -191,7 +191,7 @@ def get_all_rewards(
     all_rewards = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -214,7 +214,7 @@ def underlying_all(
     """
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -237,7 +237,7 @@ def get_apr(token_address: str, block: Union[int, str], blockchain: str, web3=No
     """
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     lpapr_contract = get_contract(LPAPR_GNOSIS, blockchain, web3=web3, abi=ABI_LPAPR, block=block)
 
@@ -277,7 +277,7 @@ def get_apr(token_address: str, block: Union[int, str], blockchain: str, web3=No
 
 def get_staking_apr(block: Union[int, str], blockchain: str, web3=None, apy: bool = False) -> List[Dict]:
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     seconds_per_year = 365 * 24 * 60 * 60
 
@@ -300,7 +300,7 @@ def get_staked(
     balances = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     agave_wallet = Web3.to_checksum_address(wallet)
 
@@ -319,7 +319,7 @@ def get_staked(
 
 def get_agave_tokens(blockchain: str, block: int | str, web3: Web3 = None) -> dict:
     if web3 is None:
-        web3 = get_node(blockchain, block)
+        web3 = get_node(blockchain)
 
     pdp_contract = get_contract(PDP_GNOSIS, blockchain, web3=web3, abi=ABI_PDP, block=block)
     reserve_tokens = pdp_contract.functions.getAllReservesTokens().call(block_identifier=block)
@@ -336,7 +336,7 @@ def get_extra_rewards(
     wallet: str, block: int | str, blockchain: str, web3: Web3 = None, decimals: bool = True
 ) -> List[List]:
     if web3 is None:
-        web3 = get_node(blockchain, block)
+        web3 = get_node(blockchain)
 
     rewarder_contract = web3.eth.contract(address=REWARDER_ADDRESS, abi=REWARDER_ABI)
     token_address = rewarder_contract.functions.REWARD_TOKEN().call(block_identifier=block)

@@ -3,11 +3,11 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Union
 
+from defabipedia.tokens import EthereumTokenAddr
+from karpatkit.node import get_node
 from web3 import Web3
 
-from defyes.constants import ETHTokenAddr
 from defyes.functions import balance_of, total_supply
-from defyes.node import get_node
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ LPTOKENS_DB = {
         "name": "Reflexer-FLX/WETH",
         "blockchain": "ethereum",
         "staked_token": "0x353EFAC5CaB823A41BC0d6228d7061e92Cf9Ccb0",
-        "tokens": [ETHTokenAddr.FLX, ETHTokenAddr.WETH],
+        "tokens": [EthereumTokenAddr.FLX, EthereumTokenAddr.WETH],
     },
 }
 
@@ -32,7 +32,7 @@ class LiquidityPool:
         self.addr = Web3.to_checksum_address(self.addr)
         self.blockchain = LPTOKENS_DB[self.addr]["blockchain"]
         if self.web3 is None:
-            self.web3 = get_node(self.blockchain, block=self.block)
+            self.web3 = get_node(self.blockchain)
         else:
             assert isinstance(self.web3, Web3), "web3 is not a Web3 instance"
 

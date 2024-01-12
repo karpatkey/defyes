@@ -1,7 +1,9 @@
 from decimal import Decimal
 
+from defabipedia import Chain
+from karpatkit.constants import Address
+
 from defyes import RocketPool
-from defyes.constants import Address, Chain
 
 ROCKET_ADDR = "0xae78736Cd615f374D3085123A210448E74Fc6393"
 WALLET = "0xEADB3840596cabF312F2bC88A4Bb0b93A4E1FF5F"

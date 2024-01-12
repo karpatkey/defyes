@@ -1,12 +1,13 @@
 from decimal import Decimal
 
+from defabipedia import Chain
+from defabipedia.tokens import EthereumTokenAddr
+from karpatkit.cache import const_call
+from karpatkit.explorer import ChainExplorer
+from karpatkit.node import get_node
 from web3 import Web3
 
-from defyes.cache import const_call
-from defyes.constants import Chain, ETHTokenAddr
-from defyes.explorer import ChainExplorer
 from defyes.functions import get_contract, to_token_amount
-from defyes.node import get_node
 
 NPROXY_Chain = "0x1344A36A1B56144C3Bc62E7757377D288fDE0369"
 
@@ -27,7 +28,7 @@ def get_nproxy_address(blockchain):
 
 def get_snote_address(blockchain):
     if blockchain == Chain.ETHEREUM:
-        return ETHTokenAddr.SNOTE
+        return EthereumTokenAddr.SNOTE
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -47,7 +48,7 @@ def get_markets_data(block, blockchain, web3=None, decimals=True, nproxy_contrac
     """
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     markets_data = []
 
@@ -118,7 +119,7 @@ def all_note_rewards(wallet, block, blockchain, web3=None, decimals=True, nproxy
     all_rewards = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -163,7 +164,7 @@ def get_staked(wallet, block, blockchain, web3=None, decimals=True, reward=False
     result = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -250,7 +251,7 @@ def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=F
     :return:
     """
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -290,7 +291,7 @@ def underlying(wallet, token_address, block, blockchain, web3=None, decimals=Tru
     :return:
     """
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
     token_address = Web3.to_checksum_address(token_address)

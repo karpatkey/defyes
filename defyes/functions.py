@@ -7,15 +7,16 @@ from datetime import datetime
 from decimal import Decimal
 
 import requests
+from defabipedia import Blockchain, Chain
+from karpatkit.cache import cache_call, const_call
+from karpatkit.constants import ABI_TOKEN_SIMPLIFIED, Address, APIKey
+from karpatkit.explorer import ChainExplorer
+from karpatkit.helpers import suppress_error_codes
+from karpatkit.node import get_node
 from web3 import Web3
 from web3.exceptions import ABIFunctionNotFound, BadFunctionCallOutput, ContractLogicError
 
-from defyes.cache import cache_call, const_call
-from defyes.constants import ABI_TOKEN_SIMPLIFIED, Address, APIKey, Chain
-from defyes.explorer import ChainExplorer
-from defyes.helpers import suppress_error_codes
 from defyes.lazytime import Time
-from defyes.node import get_node
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,10 @@ logger = logging.getLogger(__name__)
 # CUSTOM EXCEPTIONS
 class BlockchainError(Exception):
     pass
+
+
+def tz_aware(dt):
+    return dt.tzinfo is not None and dt.tzinfo.utcoffset(dt) is not None
 
 
 def to_token_amount(
@@ -33,14 +38,14 @@ def to_token_amount(
     return amount / Decimal(10**decimals)
 
 
-def last_block(blockchain, web3=None, block="latest"):
+def last_block(blockchain, web3=None):
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     return web3.eth.block_number
 
 
-def ensure_a_block_number(block: int | str, blockchain: Chain):
+def ensure_a_block_number(block: int | str, blockchain: Blockchain):
     if isinstance(block, int):
         return block
     elif block == "latest":
@@ -57,10 +62,11 @@ def date_to_block(datestring, blockchain) -> int:
     An example datestring: '2023-02-20 18:30:00'.
     """
     if isinstance(datestring, datetime):
+        if not tz_aware(datestring):
+            raise ValueError("Naive datetimes are unsupported.")
         timestamp = datestring.timestamp()
     else:
         timestamp = Time.from_string(datestring)
-
     return timestamp_to_block(timestamp, blockchain)
 
 
@@ -100,7 +106,7 @@ def token_info(token_address, blockchain):  # NO ESTÁ Chain.POLYGON
 
 def balance_of(address, contract_address, block, blockchain, web3=None, decimals=True) -> Decimal:
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     address = Web3.to_checksum_address(address)
     contract_address = Web3.to_checksum_address(contract_address)
@@ -122,7 +128,7 @@ def total_supply(
     token_address: str, block: int | str, blockchain: str, web3: Web3 = None, decimals: bool = True
 ) -> Decimal:
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     token_address = Web3.to_checksum_address(token_address)
 
@@ -134,7 +140,7 @@ def total_supply(
 
 def get_decimals(token_address, blockchain, web3=None, block="latest"):
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     token_address = Web3.to_checksum_address(token_address)
 
@@ -151,7 +157,7 @@ def get_symbol(token_address, blockchain, web3=None, block="latest") -> str:
     token_address = Web3.to_checksum_address(token_address)
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     special_addr_mapping = {
         Chain.ETHEREUM: "ETH",
@@ -168,7 +174,6 @@ def get_symbol(token_address, blockchain, web3=None, block="latest") -> str:
         symbol = special_addr_mapping[blockchain]
     else:
         symbol = infer_symbol(web3, blockchain, token_address)
-
         if not isinstance(symbol, str):
             symbol = symbol.hex()
             symbol = bytes.fromhex(symbol).decode("utf-8").rstrip("\x00")
@@ -193,7 +198,7 @@ def infer_symbol(web3, blockchain, token_address):
 # CONTRACTS AND ABIS
 def get_contract(contract_address, blockchain, web3=None, abi=None, block="latest"):
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     contract_address = Web3.to_checksum_address(contract_address)
 
@@ -206,7 +211,7 @@ def get_contract(contract_address, blockchain, web3=None, abi=None, block="lates
 
 def get_contract_proxy_abi(contract_address, abi_contract_address, blockchain, web3=None, block="latest"):
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     address = Web3.to_checksum_address(contract_address)
 
@@ -286,7 +291,9 @@ def search_proxy_impl_address(contract_address, blockchain, web3=None, block="la
             abi='[{"inputs":[{"internalType":"uint256","name":"offset","type":"uint256"},{"internalType":"uint256","name":"length","type":"uint256"}],"name":"getStorageAt","outputs":[{"internalType":"bytes","name":"","type":"bytes"}],"stateMutability":"view","type":"function"}]',
         )
         try:
-            proxy_impl_address = Web3.to_hex(contract_custom_abi.functions.getStorageAt(0, 1).call())
+            proxy_impl_address = Web3.to_hex(
+                contract_custom_abi.functions.getStorageAt(0, 1).call(block_identifier=block)
+            )
             proxy_impl_address = Web3.to_checksum_address("0x" + proxy_impl_address[-40:])
         except Exception as e:
             if type(e) == ContractLogicError or type(e) == BadFunctionCallOutput:
@@ -296,7 +303,7 @@ def search_proxy_impl_address(contract_address, blockchain, web3=None, block="la
 
 
 def get_abi_function_signatures(
-    contract_address, blockchain, web3=None, abi_address=None, block="latest", func_names=[]
+    contract_address, blockchain, web3=None, abi_address=None, block="latest", func_names=None
 ):
     if web3 is None:
         web3 = get_node(blockchain)
@@ -316,7 +323,7 @@ def get_abi_function_signatures(
 
         functions = []
         for func in [obj for obj in abi if obj["type"] == "function"]:
-            if len(func_names) > 0 and func["name"] not in func_names:
+            if func_names and func["name"] not in func_names:
                 continue
             else:
                 name = func["name"]
@@ -368,8 +375,6 @@ def get_data(contract_address, function_name, parameters, blockchain, web3=None,
 
     contract_address = Web3.to_checksum_address(contract_address)
 
-    contract = None
-
     if abi_address is None:
         contract = get_contract(contract_address, blockchain, web3=web3)
 
@@ -416,10 +421,10 @@ def get_logs_web3(
     topics: list = None,
     block_hash: str = None,
     web3: Web3 = None,
-) -> dict:
+) -> list:
     # FIXME: Add documentation
     if web3 is None:
-        web3 = get_node(blockchain, block=block_end)
+        web3 = get_node(blockchain)
     try:
         params = {}
         if address is not None:

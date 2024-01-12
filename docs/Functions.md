@@ -3,7 +3,7 @@
 ## Defined in functions.py
 
 
-### 1: get_node(blockchain, block='latest')
+### 1: get_node(blockchain)
 
 > Description: function returns web3 object of the node
 

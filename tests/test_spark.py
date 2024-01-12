@@ -1,9 +1,9 @@
 from decimal import Decimal
 
 import pytest
+from defabipedia import Chain
 
 from defyes import pretty
-from defyes.constants import Chain
 from defyes.protocols import spark
 from defyes.types import Addr, Token, TokenAmount
 

@@ -1,11 +1,11 @@
 import logging
 from decimal import Decimal
 
+from defabipedia import Chain
+from karpatkit.node import get_node
 from web3 import Web3
 
-from defyes.constants import Chain
 from defyes.eth_derivs import EthDerivative
-from defyes.node import get_node
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ def underlying(
 ) -> list:
     # The blockchain argument is not used but it could be in the future if Rocket Pool deploys on other ETHEREUM
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
     value = RocketPool.underlying(wallet=wallet, block=block, decimals=decimals, web3=web3, unwrapped=unwrapped)
     if unwrapped:
         return [[RocketPool.underlying_token, value]]
@@ -54,6 +54,6 @@ def unwrap(amount: int | float | Decimal, block: int | str, blockchain: str, web
     """
     # The blockchain argument is not used but it could be in the future if Rocket Pool deploys on other ETHEREUM
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
     value = RocketPool.unwrap(amount=amount, block=block, web3=web3)
     return [[RocketPool.underlying_token, value]]

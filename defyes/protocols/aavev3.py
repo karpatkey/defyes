@@ -2,13 +2,14 @@ import logging
 from decimal import Decimal
 from typing import List, Union
 
+from defabipedia import Chain
+from defabipedia.tokens import EthereumTokenAddr
+from karpatkit.cache import const_call
+from karpatkit.node import get_node
 from web3 import Web3
 from web3.exceptions import ContractLogicError
 
-from defyes.cache import const_call
-from defyes.constants import Chain, ETHTokenAddr
 from defyes.functions import get_contract, last_block, to_token_amount
-from defyes.node import get_node
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,8 @@ PROTOCOL_DATA_PROVIDER = {
     Chain.FANTOM: "0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654",
     Chain.AVALANCHE: "0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654",
     Chain.GNOSIS: "0x501B4c19dd9C2e06E94dA7b6D5Ed4ddA013EC741",
+    Chain.BASE: "0x2d8A3C5677189723C4cB8873CfC9C8976FDF38Ac",
+    Chain.METIS: "0x99411FC17Ad1B56f49719E3850B2CDcc0f9bBFd8",
 }
 
 POOL_ADDRESSES_PROVIDER = {
@@ -34,6 +37,8 @@ POOL_ADDRESSES_PROVIDER = {
     Chain.FANTOM: "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb",
     Chain.AVALANCHE: "0x770ef9f4fe897e59daCc474EF11238303F9552b6",
     Chain.GNOSIS: "0x36616cf17557639614c1cdDb356b1B83fc0B2132",
+    Chain.BASE: "0xe20fCBdBfFC4Dd138cE8b2E6FBb6CB49777ad64D",
+    Chain.METIS: "0xB9FABd7500B2C6781c35Dd48d54f81fc2299D7AF",
 }
 
 CHAINLINK_NATIVE_USD = {
@@ -44,6 +49,8 @@ CHAINLINK_NATIVE_USD = {
     Chain.FANTOM: "0xf4766552D15AE4d256Ad41B6cf2933482B0680dc",
     Chain.AVALANCHE: "0x0A77230d17318075983913bC2145DB16C7366156",
     Chain.GNOSIS: "0x678df3415fc31947dA4324eC63212874be5a82f8",
+    Chain.BASE: "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70",
+    Chain.METIS: "0xD4a5Bb03B5D66d9bf81507379302Ac2C2DFDFa6D",
 }
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -79,7 +86,7 @@ ABI_STKAAVE = '[{"inputs":[],"name":"REWARD_TOKEN","outputs":[{"internalType":"c
 
 def get_aave_v3_tokens(blockchain: str, block: int | str, web3: Web3 = None) -> dict:
     if web3 is None:
-        web3 = get_node(blockchain, block)
+        web3 = get_node(blockchain)
 
     pdp_contract = get_contract(PROTOCOL_DATA_PROVIDER[blockchain], blockchain, web3=web3, abi=ABI_PDP, block=block)
     reserve_tokens = pdp_contract.functions.getAllReservesTokens().call(block_identifier=block)
@@ -106,11 +113,11 @@ def get_all_rewards(
     all_rewards = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
-    stkaave_contract = get_contract(ETHTokenAddr.STKAAVE, blockchain, web3=web3, abi=ABI_STKAAVE, block=block)
+    stkaave_contract = get_contract(EthereumTokenAddr.STKAAVE, blockchain, web3=web3, abi=ABI_STKAAVE, block=block)
 
     reward_token = const_call(stkaave_contract.functions.REWARD_TOKEN())
 
@@ -123,7 +130,7 @@ def get_all_rewards(
 
 def underlying_all(wallet: str, block: int | str, blockchain: str, web3: Web3 = None, decimals: bool = True) -> dict:
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     protocol_data_provider_contract = get_contract(
         PROTOCOL_DATA_PROVIDER[blockchain], blockchain, web3=web3, abi=ABI_PDP, block=block
@@ -232,7 +239,7 @@ def get_data(wallet, block, blockchain, web3=None, decimals=True):
     debts = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 

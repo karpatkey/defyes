@@ -2,13 +2,13 @@ import json
 from decimal import Decimal
 from pathlib import Path
 
+from defabipedia import Chain
+from karpatkit.cache import const_call
+from karpatkit.node import get_node
 from tqdm import tqdm
 from web3 import Web3
 
-from defyes.cache import const_call
-from defyes.constants import Chain
 from defyes.functions import get_contract, get_decimals, get_logs_web3
-from defyes.node import get_node
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # STAKING REWARDS CONTRACT ADDRESSES
@@ -110,7 +110,7 @@ def get_distribution_contracts(web3, lptoken_address, staking_rewards_contract, 
 
 def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     lptoken_data = {}
 
@@ -154,7 +154,7 @@ def get_all_rewards(
     rewards = {}
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     if distribution_contracts is None:
         staking_rewards_contract = get_staking_rewards_contract(web3, block, blockchain)
@@ -200,7 +200,7 @@ def underlying(
     distribution_contracts = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -266,7 +266,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
     balances = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
@@ -295,7 +295,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
     result = {}
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block_start)
+        web3 = get_node(blockchain)
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 

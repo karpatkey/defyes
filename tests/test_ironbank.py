@@ -1,15 +1,15 @@
 from decimal import Decimal
 
 import pytest
+from defabipedia import Chain
+from karpatkit.node import get_node
 
 from defyes import IronBank
-from defyes.constants import Chain
-from defyes.node import get_node
 
 # 2023.04.27
 TEST_BLOCK = 94882677
 TEST_WALLET = "0x5eD64f02588C8B75582f2f8eFd7A5521e3F897CC"
-WEB3 = get_node(blockchain=Chain.OPTIMISM, block=TEST_BLOCK)
+WEB3 = get_node(blockchain=Chain.OPTIMISM)
 
 iUSDC = "0x1d073cf59Ae0C169cbc58B6fdD518822ae89173a"
 USDC = "0x7F5c764cBc14f9669B88837ca1490cCa17c31607"

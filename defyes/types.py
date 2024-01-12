@@ -1,10 +1,10 @@
 from decimal import Decimal
 from functools import cached_property
 
+from defabipedia import Blockchain, Chain
+from karpatkit.constants import Address
 from web3 import Web3
 
-from .cache import cache_token
-from .constants import Address, Chain
 from .contracts import Erc20
 
 simple_repr = True
@@ -27,7 +27,9 @@ class Addr(str):
 
 
 class Token(Addr):
-    def __init__(self, addr: int | str, chain: Chain = Chain.ETHEREUM, block: int | str = "latest", **kwargs):
+    _cache = {}
+
+    def __init__(self, addr: int | str, chain: Blockchain = Chain.ETHEREUM, block: int | str = "latest", **kwargs):
         self.chain = chain
         self.block = block
 
@@ -56,14 +58,14 @@ class Token(Addr):
             return self.contract.decimals
 
     @classmethod
-    def get_instance(cls, addr: int | str, chain: Chain = Chain.ETHEREUM, block: int | str = "latest"):
+    def get_instance(cls, addr: int | str, chain: Blockchain = Chain.ETHEREUM, block: int | str = "latest"):
         """
         Return the cached token, otherwise create a new instance and cache it.
         """
         try:
-            return cache_token[addr, chain]
+            return cls._cache[addr, chain]
         except KeyError:
-            cache_token[addr, chain] = (token := cls(addr, chain, block))
+            cls._cache[addr, chain] = (token := cls(addr, chain, block))
             return token
 
     def __rmul__(self, left_value):

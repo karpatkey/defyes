@@ -1,8 +1,8 @@
 import math
 
 import requests
-
-from defyes.constants import Address, Chain
+from defabipedia import Chain
+from karpatkit.constants import Address
 
 URL_COINID_PRICE_RANGE = "https://api.coingecko.com/api/v3/coins/%s/market_chart/range?vs_currency=usd&from=%d&to=%d"
 URL_BLOCKCHAINID_TOKENADDRESS_PRICE_RANGE = (
@@ -22,13 +22,7 @@ def get_price(token_address, timestamp, blockchain):
     :param blockchain:
     :return:
     """
-    if (
-        blockchain != Chain.ETHEREUM
-        and blockchain != Chain.GNOSIS
-        and blockchain != Chain.POLYGON
-        and blockchain != Chain.AVALANCHE
-        and blockchain != Chain.OPTIMISM
-    ):
+    if blockchain not in [Chain.ETHEREUM, Chain.GNOSIS, Chain.POLYGON, Chain.AVALANCHE, Chain.OPTIMISM, Chain.ARBITRUM]:
         return [timestamp, None]
 
     if token_address == Address.ZERO:
@@ -60,12 +54,11 @@ def get_price(token_address, timestamp, blockchain):
                             data = data.json()["prices"]
 
     else:
-        if blockchain == Chain.POLYGON:
-            blockchain_id = "polygon-pos"
-        elif blockchain == Chain.OPTIMISM:
-            blockchain_id = "optimistic-ethereum"
-        else:
-            blockchain_id = blockchain
+        blockchain_id = {
+            Chain.POLYGON: "polygon-pos",
+            Chain.OPTIMISM: "optimistic-ethereum",
+            Chain.ARBITRUM: "arbitrum-one",
+        }.get(blockchain, blockchain)
 
         data = requests.get(
             URL_BLOCKCHAINID_TOKENADDRESS_PRICE_RANGE

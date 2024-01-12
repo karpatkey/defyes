@@ -10,7 +10,7 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defyes.constants import Chain
+  from defabipedia import Chain
   from defyes import Agave
 
   pdp_contract = Agave.get_contract(Agave.PDP_Chain.GNOSIS, Chain.GNOSIS)
@@ -31,8 +31,8 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defyes.constants import Chain
-  from defyes.node import get_node
+  from defabipedia import Chain
+  from karpatkit.node import get_node
   from defyes import Agave
 
   web3 = get_node(Chain.GNOSIS, 'latest', 0)
@@ -55,7 +55,7 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defyes.constants import Chain
+  from defabipedia import Chain
   from defyes import Agave
 
   f3 = Agave.get_data('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', Chain.GNOSIS)
@@ -75,7 +75,7 @@
 - <details><summary><b>Example</b></summary>
 
   ```
-  from defyes.constants import Chain
+  from defabipedia import Chain
   from defyes import Agave
 
   f4 = Agave.get_all_rewards('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', Chain.GNOSIS)
@@ -101,7 +101,7 @@ FIXME: this function does not exist anymore
   from defyes.functions import *
 
   from defyes import Agave
-
+  from defabipedia import Chain
   f5 = Agave.underlying('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', Chain.GNOSIS, reward=True)
 
   print(f5)

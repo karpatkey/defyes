@@ -5,15 +5,16 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Union
 
+from defabipedia import Chain
+from karpatkit.cache import const_call
+from karpatkit.constants import Address
+from karpatkit.explorer import ChainExplorer
+from karpatkit.node import get_node
 from web3 import Web3
 from web3.exceptions import ABIFunctionNotFound
 
-from defyes.cache import const_call
-from defyes.constants import Address, Chain
-from defyes.explorer import ChainExplorer
 from defyes.functions import get_contract, get_decimals, get_logs_web3, last_block, to_token_amount
 from defyes.lazytime import Duration, Time
-from defyes.node import get_node
 from defyes.prices.prices import get_price
 
 DB_FILE = Path(__file__).parent / "db.json"
@@ -220,7 +221,7 @@ def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
     :return:
     """
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     lptoken_data = {}
     lptoken_data["contract"] = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
@@ -259,7 +260,7 @@ def get_virtual_total_supply(lptoken_address, block, blockchain, web3=None):
     :return:
     """
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     lptoken_data = {}
 
@@ -385,7 +386,7 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
     all_rewards = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -439,7 +440,7 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=T
     balances = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -508,7 +509,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
     balances = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
@@ -543,7 +544,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
     result = {}
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block_start)
+        web3 = get_node(blockchain)
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
@@ -594,7 +595,7 @@ def get_wallet_by_tx(lptoken_address, block, blockchain, web3=None):
     :return:
     """
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
@@ -636,7 +637,7 @@ def get_rewards_per_unit(lptoken_address, blockchain, web3=None, block="latest")
     result = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
@@ -700,7 +701,7 @@ def get_rewards_per_unit(lptoken_address, blockchain, web3=None, block="latest")
 
 # def get_apr(lptoken_address, blockchain, web3=None, block='latest'):
 #     if web3 is None:
-#         web3 = get_node(blockchain, block=block)
+#         web3 = get_node(blockchain)
 
 #     data = get_rewards_per_unit(lptoken_address, blockchain, web3=web3, block=block)
 

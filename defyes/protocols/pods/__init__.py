@@ -3,11 +3,11 @@ from decimal import Decimal
 from functools import cached_property
 from typing import Iterator
 
+from defabipedia import Chain
+from karpatkit.explorer import ChainExplorer
 from web3 import Web3
 from web3.exceptions import BadFunctionCallOutput
 
-from defyes.constants import Chain
-from defyes.explorer import ChainExplorer
 from defyes.financial import ChainedPrice, Interval
 from defyes.functions import ensure_a_block_number
 from defyes.lazytime import Duration, Time

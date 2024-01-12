@@ -1,14 +1,15 @@
 from decimal import Decimal
 
 import pytest
+from defabipedia import Chain
+from defabipedia.tokens import GnosisTokenAddr
+from karpatkit.node import get_node
 
 from defyes import Honeyswap
-from defyes.constants import Chain, GnosisTokenAddr
-from defyes.node import get_node
 
 TEST_BLOCK = 27450341
 TEST_WALLET = "0x458cd345b4c05e8df39d0a07220feb4ec19f5e6f"
-WEB3 = get_node(blockchain=Chain.GNOSIS, block=TEST_BLOCK)
+WEB3 = get_node(blockchain=Chain.GNOSIS)
 
 UNIv2 = "0x28dbd35fd79f48bfa9444d330d14683e7101d817"
 

@@ -1,8 +1,9 @@
+from defabipedia import Chain
+from karpatkit.constants import Address
+from karpatkit.node import get_node
 from web3 import Web3
 
-from defyes.constants import Address, Chain
 from defyes.functions import get_contract, get_decimals
-from defyes.node import get_node
 from defyes.prices import Chainlink
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -89,7 +90,7 @@ def get_rate(token_src, block, blockchain, web3=None, use_wrappers=False, token_
     :return:
     """
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     token_src = Web3.to_checksum_address(token_src)
 
@@ -140,7 +141,7 @@ def get_price(token_src, block, blockchain, web3=None, use_wrappers=False, conne
     """
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     token_src = Web3.to_checksum_address(token_src)
 

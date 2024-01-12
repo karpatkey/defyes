@@ -2,13 +2,14 @@ import logging
 from decimal import Decimal
 from typing import List, Union
 
+from defabipedia import Chain
+from defabipedia.tokens import EthereumTokenAddr
+from karpatkit.cache import const_call
+from karpatkit.node import get_node
 from web3 import Web3
 from web3.exceptions import ContractLogicError
 
-from defyes.cache import const_call
-from defyes.constants import Chain, ETHTokenAddr
 from defyes.functions import balance_of, get_contract, to_token_amount
-from defyes.node import get_node
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ ABI_STKAAVE = '[{"inputs":[],"name":"REWARD_TOKEN","outputs":[{"internalType":"c
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_stkaave_address(blockchain):
     if blockchain == Chain.ETHEREUM:
-        return ETHTokenAddr.STKAAVE
+        return EthereumTokenAddr.STKAAVE
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -146,7 +147,7 @@ def get_data(wallet, block, blockchain, web3=None, decimals=True):
     debts = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -242,7 +243,7 @@ def get_all_rewards(wallet, block, blockchain, web3=None, decimals=True):
     all_rewards = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -278,7 +279,7 @@ def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=F
     """
     result = []
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
 
@@ -315,7 +316,7 @@ def get_apr(token_address, block, blockchain, web3=None, apy=False):
     """
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     lpapr_address = POOL_ADDRESSES_PROVIDER[blockchain]
     lpapr_contract = get_contract(lpapr_address, blockchain, web3=web3, abi=ABI_LPAPR, block=block)
@@ -369,7 +370,7 @@ def get_staking_apr(block, blockchain, web3=None, apy=False):
     :return:
     """
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     seconds_per_year = 31536000
     stk_aave_address = get_stkaave_address(blockchain)
@@ -402,7 +403,7 @@ def get_staked(
     balances = []
 
     if web3 is None:
-        web3 = get_node(blockchain, block=block)
+        web3 = get_node(blockchain)
 
     aave_wallet = Web3.to_checksum_address(wallet)
 
@@ -412,10 +413,10 @@ def get_staked(
     stkaave_balance = balance_of(aave_wallet, stk_aave_address, block, blockchain, web3, decimals)
 
     if stkaave:
-        balances.append([ETHTokenAddr.STKAAVE, stkaave_balance])
+        balances.append([EthereumTokenAddr.STKAAVE, stkaave_balance])
         balances.append([STAKED_ABPT_TOKEN, stkabpt_balance])
     else:
-        balances.append([ETHTokenAddr.AAVE, stkaave_balance])
-        balances.append([ETHTokenAddr.ABPT, stkabpt_balance])
+        balances.append([EthereumTokenAddr.AAVE, stkaave_balance])
+        balances.append([EthereumTokenAddr.ABPT, stkabpt_balance])
 
     return balances

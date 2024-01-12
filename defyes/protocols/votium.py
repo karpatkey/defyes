@@ -3,6 +3,7 @@ from decimal import Decimal
 from typing import Dict
 
 import requests
+from defabipedia import Blockchain, Chain
 from web3 import Web3
 
 from defyes.functions import get_contract
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 contract_address = "0x378Ba9B73309bE80BF4C2c027aAD799766a7ED5A"
 
 
-def get_all_rewards(wallet: str, blockchain: str = "ethereum", block="latest") -> Dict:
+def get_all_rewards(wallet: str, blockchain: Blockchain = Chain.ETHEREUM, block="latest") -> Dict:
     """Get the rewards of all tokens.
 
     Args:
@@ -21,7 +22,7 @@ def get_all_rewards(wallet: str, blockchain: str = "ethereum", block="latest") -
     Returns:
         list[tuple]: List of token amount and claim status.
     """
-    if blockchain != "ethereum":
+    if blockchain != Chain.ETHEREUM:
         raise ValueError("Only ethereum blockchain is supported")
     if block != "latest":
         raise ValueError("only latest is supported")
@@ -96,7 +97,7 @@ def check_claimed_or_unclaimed(wallet, index_number):
     """
     wallet = Web3.to_checksum_address(wallet)
 
-    contract = get_contract(contract_address, "ethereum")
+    contract = get_contract(contract_address, Chain.ETHEREUM)
     claimed = contract.functions.isClaimed(wallet, index_number).call()
 
     return claimed
