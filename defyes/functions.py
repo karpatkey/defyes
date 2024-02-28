@@ -9,7 +9,8 @@ from decimal import Decimal
 import requests
 from defabipedia import Blockchain, Chain
 from karpatkit.cache import cache_call, const_call
-from karpatkit.constants import ABI_TOKEN_SIMPLIFIED, Address, APIKey
+from karpatkit.constants import ABI_TOKEN_SIMPLIFIED, Address
+from karpatkit.api_services import APIKey
 from karpatkit.explorer import ChainExplorer
 from karpatkit.helpers import suppress_error_codes
 from karpatkit.node import get_node
