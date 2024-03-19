@@ -3,7 +3,6 @@ from decimal import Decimal
 from typing import List, Union
 
 from defabipedia import Chain
-from defabipedia.tokens import EthereumTokenAddr
 from karpatkit.cache import const_call
 from karpatkit.node import get_node
 from web3 import Web3
