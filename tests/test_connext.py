@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+import pytest
 from defabipedia import Chain
 from defabipedia.tokens import GnosisTokenAddr
 from karpatkit.node import get_node
@@ -47,3 +48,8 @@ def test_unwrap():
 
     usdc = connext.unwrap(2496314.966980158115136554, CUSDCLP, block, Chain.GNOSIS, web3=node)
     assert usdc == [GnosisTokenAddr.USDC, Decimal("2504189.934387")]
+
+
+@pytest.mark.parametrize("blockchain", set(connext.SUBGRAPH_ENDPOINTS).union(connext.DIAMOND_ADDRESSES))
+def test_init(blockchain):
+    connext.Connext(blockchain, block="latest")
