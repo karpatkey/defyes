@@ -94,10 +94,10 @@ class Connext:
     assets: list = field(init=False)
 
     def __post_init__(self) -> None:
-        if DIAMOND_ADDRESSES.get(self.blockchain, None) is not None:
+        try:
             self.diamond_adrr = DIAMOND_ADDRESSES[self.blockchain]
             self.subgraph_api_endpoint = SUBGRAPH_ENDPOINTS[self.blockchain]
-        else:
+        except KeyError:
             raise ValueError(f"{self.blockchain} not supported yet")
 
         if self.web3 is None:
