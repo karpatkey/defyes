@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+import pytest
 from defabipedia import Chain
 from defabipedia.tokens import EthereumTokenAddr
 
@@ -102,6 +103,7 @@ def test_underlying():
 
 
 # FIXME: the next test is time dependent because of the subgraph, it should be rewritten with the use of some mock
+@pytest.mark.skip(reason="Test is currently time dependent. Should be rewritten with the use of some mock.")
 def test_get_addresses_subgraph():
     addresses = Idle.get_addresses_subgraph(TEST_BLOCK, Chain.ETHEREUM)
     assert addresses == {
