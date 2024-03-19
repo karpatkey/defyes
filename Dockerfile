@@ -22,13 +22,9 @@ RUN pip install --upgrade pip \
 
 WORKDIR /repo
 
-COPY ./pyproject.toml /repo
+COPY . /repo
 RUN pip install --no-cache-dir .
-
-COPY ./requirements-dev.txt /repo
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
 ENV PYTHONPATH /repo
 ENV HOME /repo/.home
-
-COPY . /repo
