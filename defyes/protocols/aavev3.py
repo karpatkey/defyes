@@ -120,9 +120,9 @@ def get_all_rewards(
     """
     Output: List of 2-element lists: [[reward_token_1_address, balance_1], [t2, b2], ... ]
     """
-    if REWARDS_CONTROLLER.get(blockchain) is not None:
+    try:
         rewards_address = REWARDS_CONTROLLER[blockchain]
-    else:
+    except KeyError:
         raise ValueError(f"{blockchain} not supported yet")
 
     all_rewards = []
