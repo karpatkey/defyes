@@ -1,0 +1,62 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "contract Token",
+                "name": "pool",
+                "type": "address"
+            }
+        ],
+        "name": "poolToken",
+        "outputs": [
+            {
+                "internalType": "contract IPoolToken",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "contract Token",
+                "name": "pool",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "poolTokenAmount",
+                "type": "uint256"
+            }
+        ],
+        "name": "withdrawalAmounts",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "totalAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "baseTokenAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "bntAmount",
+                        "type": "uint256"
+                    }
+                ],
+                "internalType": "struct WithdrawalAmounts",
+                "name": "",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]
