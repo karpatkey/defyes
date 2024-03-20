@@ -53,3 +53,8 @@ def test_unwrap():
 @pytest.mark.parametrize("blockchain", set(connext.SUBGRAPH_ENDPOINTS).union(connext.DIAMOND_ADDRESSES))
 def test_init(blockchain):
     connext.Connext(blockchain, block="latest")
+
+
+def test_init_blockchain_not_supported():
+    with pytest.raises(ValueError):
+        connext.Connext("not_existing_chain", block="latest")
