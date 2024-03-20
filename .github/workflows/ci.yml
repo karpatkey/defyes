@@ -126,6 +126,9 @@ jobs:
           NODE_OPTIMISM: ${{ secrets.NODE_OPTIMISM }}
           NODE_ARBITRUM: ${{ secrets.NODE_ARBITRUM }}
           NODE_AVALANCHE: ${{ secrets.NODE_AVALANCHE }}
+          NODE_BINANCE: ${{ secrets.NODE_BINANCE }}
+          NODE_BASE: ${{ secrets.NODE_BASE }}
+          NODE_METIS: ${{ secrets.NODE_METIS }}
           APIKEYS_ETHERSCAN: ${{ secrets.APIKEYS_ETHERSCAN }}
           APIKEYS_POLSCAN: ${{ secrets.APIKEYS_POLSCAN }}
           APIKEYS_GNOSISSCAN: ${{ secrets.APIKEYS_GNOSISSCAN }}
