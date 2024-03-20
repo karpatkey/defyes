@@ -56,6 +56,5 @@ def test_init(blockchain):
 
 
 def test_init_blockchain_not_supported():
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ValueError, match=r"not_existing_chain not supported yet"):
         connext.Connext("not_existing_chain", block="latest")
-    assert "not_existing_chain not supported yet" in str(excinfo.value)
