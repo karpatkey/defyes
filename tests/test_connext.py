@@ -1,10 +1,11 @@
 from decimal import Decimal
 
+import pytest
 from defabipedia import Chain
 from defabipedia.tokens import GnosisTokenAddr
 from karpatkit.node import get_node
 
-from defyes import Connext
+from defyes.protocols import connext
 
 WALLET_969 = "0x10e4597ff93cbee194f4879f8f1d54a370db6969"
 WALLET_e6f = "0x458cd345b4c05e8df39d0a07220feb4ec19f5e6f"
@@ -17,11 +18,11 @@ def test_underlying():
     block = 27795362
     node = get_node(Chain.GNOSIS)
 
-    next_usdc, usdc = Connext.underlying(WALLET_969, CUSDCLP, block, Chain.GNOSIS, web3=node)
+    next_usdc, usdc = connext.underlying(WALLET_969, CUSDCLP, block, Chain.GNOSIS, web3=node)
     assert next_usdc == [GnosisTokenAddr.nextUSDC, Decimal("1064967.162791")]
     assert usdc == [GnosisTokenAddr.USDC, Decimal("1439222.771596")]
 
-    next_weth, weth = Connext.underlying(WALLET_e6f, CWETHLP, block, Chain.GNOSIS, web3=node)
+    next_weth, weth = connext.underlying(WALLET_e6f, CWETHLP, block, Chain.GNOSIS, web3=node)
     assert next_weth == [GnosisTokenAddr.nextWETH, Decimal("234.524117434062197999")]
     assert weth == [GnosisTokenAddr.WETH, Decimal("301.665989542168124866")]
 
@@ -30,7 +31,7 @@ def test_underlying_all():
     block = 27795362
     node = get_node(Chain.GNOSIS)
 
-    [next_dai, wxdai], [next_usdc, usdc], [next_usdt, usdt] = Connext.underlying_all(
+    [next_dai, wxdai], [next_usdc, usdc], [next_usdt, usdt] = connext.underlying_all(
         WALLET_969, block, Chain.GNOSIS, web3=node
     )
     assert next_dai == [GnosisTokenAddr.nextDAI, Decimal("599315.782399033321427464")]
@@ -45,5 +46,15 @@ def test_unwrap():
     block = 27795362
     node = get_node(Chain.GNOSIS)
 
-    usdc = Connext.unwrap(2496314.966980158115136554, CUSDCLP, block, Chain.GNOSIS, web3=node)
+    usdc = connext.unwrap(2496314.966980158115136554, CUSDCLP, block, Chain.GNOSIS, web3=node)
     assert usdc == [GnosisTokenAddr.USDC, Decimal("2504189.934387")]
+
+
+@pytest.mark.parametrize("blockchain", set(connext.SUBGRAPH_ENDPOINTS).union(connext.DIAMOND_ADDRESSES))
+def test_init(blockchain):
+    connext.Connext(blockchain, block="latest")
+
+
+def test_init_blockchain_not_supported():
+    with pytest.raises(ValueError, match=r"not_existing_chain not supported yet"):
+        connext.Connext("not_existing_chain", block="latest")
