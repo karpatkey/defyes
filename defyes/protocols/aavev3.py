@@ -1,6 +1,6 @@
 import logging
 from decimal import Decimal
-from typing import List, Union
+from typing import List, Union, Dict
 
 from defabipedia import Chain
 from karpatkit.cache import const_call
@@ -12,9 +12,6 @@ from defyes.functions import get_contract, last_block, to_token_amount
 
 logger = logging.getLogger(__name__)
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# PROTOCOL DATA PROVIDER
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Protocol Data Provider - Ethereum
 PROTOCOL_DATA_PROVIDER = {
     Chain.ETHEREUM: "0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3",
@@ -65,16 +62,12 @@ REWARDS_CONTROLLER = {
     Chain.METIS: "0x30C1b8F0490fa0908863d6Cbd2E36400b4310A6B",
 }
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# CHAINLINK PRICE FEEDS
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ETHEREUM
+STAKED_GHO = {Chain.ETHEREUM: "0x1a88Df1cFe15Af22B3c4c783D4e6F7F9e0C1885d"}
+GHO = "0x40D16FC0246aD3160Ccc09B8D0D3A2cD28aE6C2f"
+
 # ETH/USD Price Feed
 CHAINLINK_ETH_USD = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419"
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ABIs
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Protocol Data Provider ABI - getAllReservesTokens, getUserReserveData, getReserveConfigurationData, getReserveTokensAddresses
 ABI_PDP = '[{"inputs":[],"name":"getAllReservesTokens","outputs":[{"components":[{"internalType":"string","name":"symbol","type":"string"},{"internalType":"address","name":"tokenAddress","type":"address"}],"internalType":"struct AaveProtocolDataProvider.TokenData[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"asset","type":"address"},{"internalType":"address","name":"user","type":"address"}],"name":"getUserReserveData","outputs":[{"internalType":"uint256","name":"currentATokenBalance","type":"uint256"},{"internalType":"uint256","name":"currentStableDebt","type":"uint256"},{"internalType":"uint256","name":"currentVariableDebt","type":"uint256"},{"internalType":"uint256","name":"principalStableDebt","type":"uint256"},{"internalType":"uint256","name":"scaledVariableDebt","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"uint256","name":"liquidityRate","type":"uint256"},{"internalType":"uint40","name":"stableRateLastUpdated","type":"uint40"},{"internalType":"bool","name":"usageAsCollateralEnabled","type":"bool"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"asset","type":"address"}],"name":"getReserveConfigurationData","outputs":[{"internalType":"uint256","name":"decimals","type":"uint256"},{"internalType":"uint256","name":"ltv","type":"uint256"},{"internalType":"uint256","name":"liquidationThreshold","type":"uint256"},{"internalType":"uint256","name":"liquidationBonus","type":"uint256"},{"internalType":"uint256","name":"reserveFactor","type":"uint256"},{"internalType":"bool","name":"usageAsCollateralEnabled","type":"bool"},{"internalType":"bool","name":"borrowingEnabled","type":"bool"},{"internalType":"bool","name":"stableBorrowRateEnabled","type":"bool"},{"internalType":"bool","name":"isActive","type":"bool"},{"internalType":"bool","name":"isFrozen","type":"bool"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"asset","type":"address"}],"name":"getReserveTokensAddresses","outputs":[{"internalType":"address","name":"aTokenAddress","type":"address"},{"internalType":"address","name":"stableDebtTokenAddress","type":"address"},{"internalType":"address","name":"variableDebtTokenAddress","type":"address"}],"stateMutability":"view","type":"function"}]'
 
@@ -91,7 +84,7 @@ ABI_CHAINLINK_ETH_USD = '[{"inputs":[],"name":"latestAnswer","outputs":[{"intern
 ABI_PRICE_ORACLE = '[{"inputs":[],"name":"BASE_CURRENCY_UNIT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"asset","type":"address"}],"name":"getAssetPrice","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]'
 
 # Staked Aave ABI - REWARD_TOKEN, getTotalRewardsBalance, assets, balanceOf
-ABI_STKAAVE = '[{"inputs":[],"name":"REWARD_TOKEN","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"staker","type":"address"}],"name":"getTotalRewardsBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"assets","outputs":[{"internalType":"uint128","name":"emissionPerSecond","type":"uint128"},{"internalType":"uint128","name":"lastUpdateTimestamp","type":"uint128"},{"internalType":"uint256","name":"index","type":"uint256"}],"stateMutability":"view","type":"function"},\
+ABI_STAKED_TOKEN = '[{"inputs":[],"name":"REWARD_TOKEN","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"staker","type":"address"}],"name":"getTotalRewardsBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"assets","outputs":[{"internalType":"uint128","name":"emissionPerSecond","type":"uint128"},{"internalType":"uint128","name":"lastUpdateTimestamp","type":"uint128"},{"internalType":"uint256","name":"index","type":"uint256"}],"stateMutability":"view","type":"function"},\
                 {"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},\
                 {"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"pure","type":"function"}]'
 
@@ -152,6 +145,7 @@ def underlying_all(wallet: str, block: int | str, blockchain: str, web3: Web3 = 
     if web3 is None:
         web3 = get_node(blockchain)
 
+    # Get the pool data provider contract to get info about the user reserves
     protocol_data_provider_contract = get_contract(
         PROTOCOL_DATA_PROVIDER[blockchain], blockchain, web3=web3, abi=ABI_PDP, block=block
     )
@@ -331,3 +325,26 @@ def get_data(wallet, block, blockchain, web3=None, decimals=True):
     aave_data["debts"] = debts
 
     return aave_data
+
+
+def get_staked(wallet: str, block: int | str, blockchain: str, web3=None, decimals: bool = True) -> Dict:
+    """Function to get the balance and rewards of staked tokens like stkGHO"""
+    # FIXME this is a temporary function to get the balance and rewards of the stkGHO token.
+    # Should be moved to a get_protocol_data function that is more general
+    if web3 is None:
+        web3 = get_node(blockchain)
+
+    # Get balance
+    staked_token_contract = get_contract(
+        STAKED_GHO[Chain.ETHEREUM], blockchain, web3=web3, abi=ABI_STAKED_TOKEN, block=block
+    )
+    staked_balance = staked_token_contract.functions.balanceOf(wallet).call(block_identifier=block)
+    staked_balance = to_token_amount(GHO, staked_balance, blockchain, web3, decimals)
+
+    # Get rewards
+    reward_token = staked_token_contract.functions.REWARD_TOKEN().call(block_identifier=block)
+    reward_balance = staked_token_contract.functions.getTotalRewardsBalance(wallet).call(block_identifier=block)
+    reward_balance = to_token_amount(reward_token, reward_balance, blockchain, web3, decimals)
+
+    result = {"balance": [GHO, staked_balance], "rewards": [reward_token, reward_balance]}
+    return result
