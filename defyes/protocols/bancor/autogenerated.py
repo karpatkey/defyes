@@ -61,6 +61,9 @@ class BancorNetworkInfo:
         self.contract = node.eth.contract(address=self.address, abi=load_abi(__file__, "network_info.json"))
 
     @property
+    def bnt(self) -> str:
+        return self.contract.functions.bnt().call(block_identifier=self.block)
+    
     def pool_token(self, pool_address: str) -> str:
         return self.contract.functions.poolToken(pool_address).call(block_identifier=self.block)
     
@@ -90,7 +93,7 @@ class BancorPool:
 
     def balance_of(self, owner: str) -> int:
         return self.contract.functions.balanceOf(owner).call(block_identifier=self.block)
-
+    
     @property
     def reserve_token(self) -> str:
         return self.contract.functions.reserveToken().call(block_identifier=self.block)

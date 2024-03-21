@@ -1,5 +1,18 @@
 [
     {
+        "inputs": [],
+        "name": "bnt",
+        "outputs": [
+            {
+                "internalType": "contract Token",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [
             {
                 "internalType": "contract Token",
