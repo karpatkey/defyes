@@ -1,6 +1,6 @@
 import logging
 from decimal import Decimal
-from typing import List, Union, Dict
+from typing import Dict, List, Union
 
 from defabipedia import Chain
 from karpatkit.cache import const_call
