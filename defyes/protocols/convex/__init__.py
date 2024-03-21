@@ -12,7 +12,7 @@ from web3 import Web3
 
 from defyes.functions import get_contract, last_block, to_token_amount
 
-from .. import curve
+from defyes.protocols import curve
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +39,7 @@ CVX_STAKER = "0xCF50b810E57Ac33B91dCF525C6ddd9881B139332"
 # CVX locker token address
 CVX_LOCKER = "0x72a19342e8F1838460eBFCCEf09F6585e32db86E"
 
+STACKED_CVX = "0xaa0C3f5F7DFD688C6E646F66CD2a6B66ACdbE434"
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ABIs
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -60,7 +61,7 @@ DB_FILE = Path(__file__).parent / "db.json"
 def get_pool_rewarders(lptoken_address, block):
     if isinstance(block, str):
         if block == "latest":
-            block = last_block(Chain)
+            block = last_block(Chain.ETHEREUM)
         else:
             raise ValueError("Incorrect block.")
 
