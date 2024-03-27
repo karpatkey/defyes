@@ -1,54 +1,74 @@
-# Bancor
+# Bancor Protocol Integration
 
-## Defined in Bancor.py
+This repository contains Python code for interacting with the Bancor Protocol, allowing users to fetch data related to liquidity pools and token balances. Below is a brief overview of the provided functionalities and how to use them.
 
-### 1: underlying(token_address, wallet, block, blockchain, web3=None, execution=1, index=0, decimals=True, reward=False)
+## Contents
 
-> Description: function returns the underlying token from bancor protocol for given wallet
+- [Bancor Protocol Integration](#bancor-protocol-integration)
+  - [Contents](#contents)
+  - [Overview](#overview)
+  - [Usage](#usage)
+    - [Fetching Balance of a Specific Token](#fetching-balance-of-a-specific-token)
+    - [Fetching Balances of All Liquidity Pools](#fetching-balances-of-all-liquidity-pools)
+  - [Contract Reference](#contract-reference)
+  - [Bancor Code Location](#bancor-code-location)
 
-- <details><summary><b>Example</b></summary>
+## Overview
 
-  ```
-  from defyes import *
+The provided Python modules offer functionality to interact with Bancor Protocol's contracts deployed on various blockchains. Key features include:
 
-  from defyes.functions import *
+- Fetching balance of a specific token in a liquidity pool.
+- Retrieving balances of all liquidity pools associated with a wallet.
 
-  from defyes import Bancor
+## Usage
 
-  f1 = Bancor.underlying('0x36FAbE4cAeF8c190550b6f93c306A5644E7dCef6', '0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', Chain.ETHEREUM)
+### Fetching Balance of a Specific Token
 
-  print(f1)
+To fetch the balance of a specific token in a liquidity pool, you can use the `get_protocol_data_for` function. Below is an example code snippet demonstrating its usage:
 
-  ```
+```python
+from defyes.protocols.bancor import get_protocol_data_for
 
-  ```
-  output: 
-  [['0x903bEF1736CDdf2A537176cf3C64579C3867A881', 41633.599736141], ['0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C', 0.0]]
-  ```
-  </details>
+# Parameters
+token = "<token_address>"
+wallet = "<wallet_address>"
+blockchain = "<blockchain_name>"
+block = "latest"  # or specify a block number or 'latest' for the latest block
+reward = True  # Set to True to include reward token balance, False otherwise
 
+# Fetch balance
+balances = get_protocol_data_for(token, wallet, blockchain, block, reward)
 
-### 2: underlying_all(wallet, block, blockchain, web3=None, execution=1, index=0, decimals=True, reward=False)
+# Display balances
+print("Balances:", balances)
+```
 
-> Description: function returns all underlying tokens for given wallet
+### Fetching Balances of All Liquidity Pools
 
-- <details><summary><b>Example</b></summary>
+To retrieve balances of all liquidity pools associated with a wallet, you can use the `get_protocol_data` function. Here's how to use it:
 
-  ```
-  from defyes import *
+```python
+from defyes.protocols.bancor import get_protocol_data
 
-  from defyes.functions import *
+# Parameters
+blockchain = "<blockchain_name>"
+wallet = "<wallet_address>"
+block = "latest"  # or specify a block number or 'latest' for the latest block
+reward = False  # Set to True to include reward token balance, False otherwise
 
-  from defyes import Bancor
+# Fetch balances
+protocol_data = get_protocol_data(blockchain, wallet, block, reward)
 
-  f2 = Bancor.underlying_all('0x849D52316331967b6fF1198e5E32A0eB168D039d', 'latest', Chain.ETHEREUM)
+# Display protocol data
+print("Protocol Data:", protocol_data)
+```
 
-  print(f2)
-  ```
+Make sure to replace placeholder values (`<token_address>`, `<wallet_address>`, `<blockchain_name>`) with actual values specific to your use case.
 
-  ```
-  output: None
-  ```
-  </details>
+## Contract Reference
 
+For detailed information about Bancor Protocol's contracts, refer to the [official developer guides](https://docs.bancor.network/developer-guides/contracts).
 
+## Bancor Code Location
+
+The Bancor Protocol code is located in the following directory within this repository: `defyes/defyes/protocols/bancor`.

@@ -1,0 +1,15 @@
+[
+    {
+        "inputs": [],
+        "name": "liquidityPools",
+        "outputs": [
+            {
+                "internalType": "contract Token[]",
+                "name": "",
+                "type": "address[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]
