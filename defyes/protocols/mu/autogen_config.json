@@ -1,0 +1,11 @@
+{
+    "trading_vault": {
+      "const_call": [
+          "decimals",
+          "symbol",
+          "name",
+          "standardToken"
+      ]
+    }
+  }
+  

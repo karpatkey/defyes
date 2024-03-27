@@ -11,3 +11,4 @@ config.json
 .tmp/
 .home/
 .vscode/
+.venv
