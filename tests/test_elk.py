@@ -91,7 +91,7 @@ def test_pool_balances():
     lptoken_address = "0xf99c496C4bc62D4ce47f79bc7D367Af4FFab105B"
     balances = Elk.pool_balances(lptoken_address, block, Chain.POLYGON, node)
     assert balances == [
-        [PolygonTokenAddr.USDC, Decimal("38375.067612")],
+        [PolygonTokenAddr.USDCe, Decimal("38375.067612")],
         [PolygonTokenAddr.ELK, Decimal("256891.096951031127088188")],
     ]
 
