@@ -21,7 +21,7 @@ def test_get_pool_address():
     assert addr == "0xF220eA963D27Ebe782f09403017B29692A4fC4aE"
 
     node = get_node(Chain.POLYGON)
-    addr = Elk.get_pool_address(node, PolygonTokenAddr.USDC, PolygonTokenAddr.ELK, block, Chain.POLYGON)
+    addr = Elk.get_pool_address(node, PolygonTokenAddr.USDCe, PolygonTokenAddr.ELK, block, Chain.POLYGON)
     assert addr == "0xd7D71e4BC981B50696fa536D330bf745aE563E25"
 
     node = get_node(Chain.GNOSIS)
@@ -36,7 +36,7 @@ def test_get_lptoken_data():
     data = Elk.get_lptoken_data(lptoken_address, block, Chain.POLYGON, node)
     assert data["decimals"] == 18
     assert data["totalSupply"] == 81447682420161883
-    assert data["token0"] == PolygonTokenAddr.USDC
+    assert data["token0"] == PolygonTokenAddr.USDCe
     assert data["token1"] == PolygonTokenAddr.ELK
     assert data["reserves"] == [98702122122, 68490727413069028375424, 1651228303]
     assert data["kLast"] == 0
@@ -78,7 +78,7 @@ def test_underlying():
     underlying = Elk.underlying(WALLET_N1, lptoken_address, block, Chain.POLYGON, node, reward=True)
     assert underlying == [
         [
-            [PolygonTokenAddr.USDC, Decimal("0"), Decimal("6842.636923250133597020104181")],
+            [PolygonTokenAddr.USDCe, Decimal("0"), Decimal("6842.636923250133597020104181")],
             [PolygonTokenAddr.ELK, Decimal("0"), Decimal("45806.10835723145688926330223")],
         ],
         [[PolygonTokenAddr.ELK, Decimal("132.497466741066924339")]],
@@ -103,8 +103,8 @@ def test_swap_fees():
     fees = Elk.swap_fees(lptoken_address, block_start, block_end, Chain.POLYGON)
     assert fees == {
         "swaps": [
-            {"block": 42102839, "token": PolygonTokenAddr.USDC, "amount": Decimal("0.1470259439999999885912984610")},
-            {"block": 42110314, "token": PolygonTokenAddr.USDC, "amount": Decimal("0.09")},
+            {"block": 42102839, "token": PolygonTokenAddr.USDCe, "amount": Decimal("0.1470259439999999885912984610")},
+            {"block": 42110314, "token": PolygonTokenAddr.USDCe, "amount": Decimal("0.09")},
             {"block": 42110997, "token": PolygonTokenAddr.ELK, "amount": Decimal("0.574093083498075328")},
             {"block": 42112549, "token": PolygonTokenAddr.ELK, "amount": Decimal("0.007968556424428902")},
             {"block": 42116600, "token": PolygonTokenAddr.ELK, "amount": Decimal("0.988986089582322688")},
