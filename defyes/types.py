@@ -7,7 +7,7 @@ from web3 import Web3
 
 from .contracts import Erc20
 
-simple_repr = True
+simple_repr = True  # TODO: from environ with default True
 
 
 class Addr(str):
@@ -55,7 +55,7 @@ class Token(Addr):
     @cached_property
     def symbol(self):
         if self == Address.ZERO or self == Address.E:
-            return "ETH"
+            return "ETH"  # TODO: Not true always (MATIC, etc.). It depends on the native coin
         return self.contract.symbol
 
     def __repr__(self):
@@ -64,13 +64,15 @@ class Token(Addr):
         return f"{self.__class__.__name__}({str(self)!r}, {self.chain!r}, symbol={self.symbol!r})"
 
     @cached_property
-    def contract(self):
+    def contract(self):  # TODO: could be called deployment, instance, because it's an instance of a contract
         """Get the token ERC20 contract."""
-        return Erc20(self.chain, self.block, self)
+        return Erc20(self.chain, self.block, address=self)
+        # TODO: discrimitate contract class as a function of chain (and address)
 
     @cached_property
     def decimals(self):
         """Get the token decimals."""
+        # TODO: It could be implemented in a native class
         if self == Address.ZERO or self == Address.E:
             return 18
         else:
@@ -78,11 +80,13 @@ class Token(Addr):
 
     @classmethod
     def get_instance(cls, addr: int | str, chain: Blockchain = Chain.ETHEREUM, block: int | str = "latest"):
+        # TODO: stop using "latest. "safe" is better.
         """
         Return the cached token, otherwise create a new instance and cache it.
         """
         try:
             return cls._cache[addr, chain]
+            # TODO: Issue: It's using the cache even whan changing for
         except KeyError:
             cls._cache[addr, chain] = (token := cls(addr, chain, block))
             return token
@@ -121,13 +125,16 @@ def format_amount(amount: Decimal) -> str:
     return formatted_value
 
 
-class TokenAmount:
+class TokenAmount:  # Could extend a Quantity class/iterface (value and unit)
     def __init__(self, amount: int | Decimal, token: Token):
-        # amount is expressed in the Token units
-        # 1 Token = 1e^(token.decimals) teuToken
+        """
+        amount is expressed in the Token units
+        1 Token = 1e^(token.decimals) teuToken
+        """
         self.amount = Decimal(amount)
         self.token = token
         self.teu = Decimal(10**self.token.decimals)
+        # TODO: use scaleb instead. TEU is even relative to Token, not to TokenAmount
 
     @classmethod
     def from_teu(cls, amount: int | Decimal, token: Token):
@@ -135,12 +142,14 @@ class TokenAmount:
         return cls(amount=amount, token=token)
 
     def as_dict(self, not_in_teu: bool = False) -> dict:
+        # TODO: This should be part of the serialization proces used by ETL to write tables.
+        # We don't need low levels here.
         return {
             "balance": self.balance(not_in_teu),
             "address": str(self.token),
         }
 
-    def balance(self, not_in_teu: bool = False) -> int | Decimal:
+    def balance(self, not_in_teu: bool = False) -> int | Decimal:  # TODO: negative arg is ugly `not_in_teu`
         """Return the balance multiplied by decimals(False) or as it is(True)."""
         return self.amount if not_in_teu else self.amount * self.teu
 
