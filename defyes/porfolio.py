@@ -1,13 +1,23 @@
 import logging
-from functools import cached_property as default
+import inspect
+from functools import cached_property
 
 from defabipedia import Blockchain, Chain
 from defabipedia.tokens import EthereumTokenAddr
+from defyes.prices import Chainlink as chainlink
 
 from .contracts import Erc20
 
 logger = logging.getLogger(__name__)
 
+def default(method):
+    if inspect.isgeneratorfunction(method):
+        def wrapper(self):
+            return list(method(self))
+    else:
+        def wrapper(self):
+            return method(self)
+    return cached_property(wrapper)
 
 class AssetManager(list):
     unique = dict()
@@ -90,23 +100,27 @@ class BaseAsset:
 class Asset(BaseAsset):
     symbol: str
     name: str
-    # price: "Fiat"
+    price_usd: float
 
     __repr__ = repr_for("symbol")
 
     def __hash__(self):
         return hash(self.symbol)
 
+class Price(Decimal):
+    symbol: str
+    name: str
+    source: str
+    blockchain: Blockchain
 
-class Fiat(Asset):
-    pass
+class Crypto(Asset):
+    def __getitem__(self, block):
+        new_instance = self.__class__()
+        new_instance.__dict__ = self.__dict__.copy()
 
 
-Fiat(symbol="USD", name="US dollar")
-Fiat(symbol="EUR", name="Euro")
 
-
-class Native(Asset):
+class Native(Crypto):
     chain: Blockchain
     decimals: int = 18
 
@@ -115,9 +129,17 @@ class Native(Asset):
     def __hash__(self):
         return self.chain.chain_id
 
+    def price(self) -> Price:
+        value = chainlink.get_native_token_price(self.node, block="latest", self.blockchain)
+        #, "chainlink", blockchain
 
-ETH = Native(chain=Chain.ETHEREUM, symbol="ETH", name="Ether")
+
+Native(chain=Chain.ETHEREUM, symbol="ETH", name="Ether")
 Native(chain=Chain.POLYGON, symbol="MATIC", name="Matic")
+Native(chain=Chain.GNOSIS, symbol="xDAI", name="Gnosis native DAI")
+
+
+
 
 
 class Deployment:
@@ -133,7 +155,7 @@ class Deployment:
         # TODO: discrimitate contract class as a function of chain (and address)
 
 
-class Token(Deployment, Asset):
+class Token(Deployment, Crypto):
     contract = Erc20
 
     @default
@@ -145,8 +167,9 @@ class Token(Deployment, Asset):
         return self.deployment.name
 
     @property
-    def price(self) -> Fiat:
-        raise NotImplementedError
+    def price(self) -> Price:
+        price, _, _ = get_price_in_usd(self.address, self.block, self.chain)
+        return price
 
     @default
     def decimals(self) -> int:
@@ -158,7 +181,6 @@ class Token(Deployment, Asset):
         return hash((self.chain.chain_id, self.address))
 
 
-DAI = Token(chain=Chain.ETHEREUM, address=EthereumTokenAddr.DAI)
 USDCe = Token(chain=Chain.POLYGON, address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", symbol="USDC.e")
 
 
@@ -192,3 +214,50 @@ Asset (like Unit) add
 |- DelegatedToken add Token real_address:str
 |- DelegatedAsset add Asset delegated:Asset
 """
+
+def public_attrs_dict(class_) -> dict[str, Module]:
+    return {name: attr for name, attr in vars(class_).items() if not name.startswith("_")}
+
+
+@public_attrs_dict
+class compatible_protocol:
+    from defyes.protocols import maker
+
+
+class Porfolio(Init, Frozen):
+    wallet: str
+    blockchain: Blockchain
+    block: int
+
+    @default
+    def crypto_set(self) -> set[Crypto]:
+        return {*Native.intances, *Token.instances}
+
+    @default
+    def elementary_crypto(self) -> set[Crypto]:
+        return {*Native.intances, *Token.instances}
+
+    def __iter__(self) -> Iterator[list[Crypto]]
+        porfolio: list[Crypto] = list(self.cryptos)
+        while True:
+            yield porfolio
+            porfolio = [
+                *crypto.underlyings for crypto in porfolio if crypto not in self.elementary_crypto
+            ]
+            if has_just(porfolio, self.elementary_crypto):
+                break
+
+    @default
+    def cryptos(self):
+        for protocol in compatible_protocols:
+
+            for token in protocol.tokens:
+                if token.chain == self.blockchain:
+                    yield token.amount(self.wallet, self.block)
+
+            for position in protocol.Positions(self.wallet, self.blockchain, self.block)
+                yield position.underlyings
+                yield position.unclaimed_rewards
+
+
+

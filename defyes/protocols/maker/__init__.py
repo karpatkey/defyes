@@ -83,6 +83,8 @@ class DsrManager(DsrManager):
     default_addresses: dict[str, str] = {
         Chain.ETHEREUM: "0x373238337Bfe1146fb49989fc222523f83081dDb",
     }
+    def decimal_pie_of(self, wallet: str) -> Decimal:
+        return Decimal(self._pie_of(wallet)).scaleb(-27)
 
 
 class Sdai(Sdai):
@@ -104,6 +106,15 @@ class Iou(Iou):
         Chain.ETHEREUM: "0xA618E54de493ec29432EbD2CA7f14eFbF6Ac17F7",
     }
 
+def token_gen():
+    yield Token(chain=Chain.ETHEREUM, address=EthereumTokenAddr.DAI)
+
+    for chain, address in Sdai.default_addresses.items():
+        yield Token(contract=Sdai, chain=chain, address=address)
+
+    yield Token(contract=Iou, chain=Chain.ETHEREUM, address=address, symbol="MKR")
+
+tokens = list(token_gen())
 
 # TODO: deprecate
 def get_vault_data(vault_id: int, block: int | str) -> list:
@@ -227,6 +238,72 @@ def get_protocol_data_for(
         return data
     return data
 
+
+class Position(Init, Frozen):
+    underlying: list[Token] = list()
+    unclaimed_rewards: list[Token] = list()
+    __repr__ = repr_for()
+
+
+class Positions(Init, Frozen):
+    wallet: str
+    blockchain: Blockchain
+    block: int
+    __repr__ = repr_for("wallet", "blockchain", "block")
+
+    def __iter__(self) -> Iterator[Position]:
+        yield from self.vaults
+        yield self.dsr
+        yield self.pot
+        yield self.iou
+
+    class Vault(Position):
+        id: int
+        __repr__ = repr_for("id")
+
+    @default
+    def vaults(self) -> list[Vault]:
+        cdp = CdpManager(self.blockchain, self.block)
+        ilk_registry = IlkRegistry(self.blockchain, self.block)
+        for vault_id in cdp.get_vault_ids(ProxyRegistry(self.blockchain, block).proxies(wallet)):
+            ilk = cdp.ilks(vault_id)
+            gem = ilk_registry.info(ilk)[4]
+            urn_handler_address = cdp.urns(vault_id)
+            ink, art = vat.urns(ilk, urn_handler_address)
+            rate = Decimal(vat.ilks(ilk)[1]).scaleb(27)
+
+            lend_token = Token.instances.get_or_create(blockchain=self.blockchain, address=gem)
+            yield self.Vault(
+                id=vault_id,
+                underlyings={
+                    TokenVirtualAmount(token=lend_token, amount_teu=ink),
+                    TokenVirtualAmount(token=DAI, amount=-1 * art * rate),
+                },
+            )
+
+    class DSR(Position):
+        pass
+
+    @default
+    def dsrs(self) -> DSR:
+        dsr = DsrManager(self.blockchain, self.block)
+        yield self.DSR(underlying={TokenVirtualAmount(token=DAI, amount=dsr.decimal_pie_of(self.wallet))})
+
+    class Pot(Position):
+        pass
+
+    @default
+    def pot(self) -> Pot:
+        pot = Pot(self.blockchain, self.block)
+        yield self.Pot(underlying={TokenVirtualAmount(token=DAI, amount=pot.decimal_pie_1(self.wallet) * pot.chi)})
+
+    class Iou(Position):
+        pass
+
+    @default
+    def iou(self) -> Iou:
+        iou = Iou(self.blockchain, self.block)
+        yield self.Iou(underlying={TokenVirtualAmount(token=MKR, amount_teu=iou.balance_of(self.wallet))})
 
 def get_protocol_data(blockchain: str, wallet: str, block: int | str = "latest", decimals: bool = True) -> dict:
     """
