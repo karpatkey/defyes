@@ -3,11 +3,9 @@ import inspect
 from functools import cached_property
 
 from defabipedia import Blockchain, Chain
-from defabipedia.tokens import EthereumTokenAddr
+from defabipedia.tokens import EthereumTokenAddr, erc20_contract
 from defyes.prices import Chainlink as chainlink
 from defyes.prices.prices import get_price as get_price_in_usd
-
-from .contracts import Erc20
 
 logger = logging.getLogger(__name__)
 
@@ -104,18 +102,24 @@ class Frozen:
         raise Exception("read-only")
 
 
-class Price(float):
+class Fiat(float):
     source: str
     symbol: str
 
     def __repr__(self) -> str:
-        return f"Price({super()}, symbol={self.symbol}, source={self.source}")
+        return f"Fiat({super()}, symbol={self.symbol}, source={self.source}")
 
     def __str__(self) -> str:
         return f"{super()} {self.symbol}"
 
+    def __mul__(self, other: float) -> Fiat:
+        return Fiat(float(other) * float(self), source=self.source, symbol=self.symbol)
 
-class Price(float):
+    __rmul__ = __mul__
+
+
+
+class USDPrice(float):
     symbol: str = "USD"
 
 
@@ -123,7 +127,7 @@ class Token(Frozen, Init, KeepInstances):
     chain: Blockchain
     symbol: str
     name: str
-    price: Price
+    price: Fiat
     decimals: int = 18
 
     __repr__ = repr_for("chain", "symbol")
@@ -149,7 +153,7 @@ class NativeToken(Token):
     def __hash__(self):
         return self.chain.chain_id
 
-    def price(self, block: int) -> Price:
+    def price(self, block: int) -> Fiat:
         value = chainlink.get_native_token_price(self.node, block=block, self.chain)
         return USDPrice(value, source="chainlink")
 
@@ -164,31 +168,28 @@ class Deployment:
     address: str
     deploy_block: int | None = None
 
-    @default
-    def deployment(self):
-        """Get the token ERC20 contract."""
-        return self.contract(self.chain, block="latest", address=self.address)
-        # TODO: Fix block using nodetime.
-
 
 class ERC20Token(Deployment, Token):
-    contract = Erc20
+    @default
+    def contract(self):
+        node = get_node(self.blockchain)
+        return erc20_contract(node, self.address)
 
     @default
     def symbol(self) -> str:
-        return self.deployment.symbol
+        return self.contract.functions.symbol()
 
     @default
     def name(self) -> str:
-        return self.deployment.name
+        return self.contract.functions.name()
 
-    def price(self, block: int) -> Price:
+    def price(self, block: int) -> Fiat:
         price, source, _ = get_price_in_usd(self.address, block, self.chain)
         return USDPrice(price, source=source)
 
     @default
     def decimals(self) -> int:
-        return self.deployment.decimals
+        return self.contract.functions.decimals()
 
     __repr__ = repr_for("chain", "symbol")
 
@@ -236,6 +237,7 @@ class TokenAmount(Token, Asset):
     __repr__ = repr_for("amount", "token")
     token: Token
     block: int
+    wallet: str
     amount: Decimal | None
     amount_teu: int | None
 
@@ -251,14 +253,14 @@ class TokenAmount(Token, Asset):
         """
         Amount in terms of the minimun fraction of the token.
         """
-        return self.token.deployment.contract.functions.balanceOf(wallet).call(block_identifier=self.block)
+        return self.token.contract.functions.balanceOf(self.wallet).call(block_identifier=self.block)
 
     @default
-    def amount_usd(self) -> Decimal:
+    def amount_usd(self) -> Fiat:
         """
         Amount in USD
         """
-        return self.amount * self.token.price(self.block)
+        return float(self.amount) * self.token.price(self.block)
 
     @default
     def underlyings(self) -> list[Asset]:
@@ -282,6 +284,7 @@ class VirtualTokenAmount(TokenAmount):
     A value but not a balance for a Token.
     """
     block: int | None = None
+    wallet: str | None = None
 
     @default
     def amount_teu(self) -> int:
