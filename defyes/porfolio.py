@@ -5,6 +5,7 @@ from functools import cached_property
 from defabipedia import Blockchain, Chain
 from defabipedia.tokens import EthereumTokenAddr
 from defyes.prices import Chainlink as chainlink
+from defyes.prices.prices import get_price as get_price_in_usd
 
 from .contracts import Erc20
 
@@ -19,7 +20,7 @@ def default(method):
             return method(self)
     return cached_property(wrapper)
 
-class AssetManager(list):
+class InstancesManager(list):
     unique = dict()
 
     def add(self, obj):
@@ -35,7 +36,7 @@ class AssetManager(list):
         if owner is BaseAsset:
             return self
         else:
-            return AssetManager(ins for ins in self if isinstance(ins, owner))
+            return InstancesManager(ins for ins in self if isinstance(ins, owner))
 
     def filter(self, **kwargs):
         for ins in self:
@@ -43,7 +44,7 @@ class AssetManager(list):
                 yield ins
 
     def __call__(self, **kwargs):
-        return AssetManager(self.filter(**kwargs))
+        return InstancesManager(self.filter(**kwargs))
 
     def get(self, **kwargs):
         return next(self.filter(**kwargs))
@@ -67,28 +68,34 @@ def repr_for(*attrs):
     return __repr__
 
 
-class BaseAsset:
+class Init:
     """
     No magical alternative to mitigate the extreme complexity of dataclasses when dealing with inheritance.
     """
-
     def __init__(self, /, **attrs):
         """
         Set all keyword arguments defined by `attrs` as instance attributes.
-        Add the instance to the asset instances list.
         Call __post_init__, like dataclass.
         """
         self.__dict__.update(attrs)
-        BaseAsset.instances.add(self)
         self.__post_init__()
-
-    instances = AssetManager()
 
     def __post_init__(self):
         """
         Override this method in subclasses instead of __init__.
         """
 
+class KeepInstances:
+    """
+    Add the instance to the asset instances list.
+    """
+    instances = InstancesManager()
+    def __post_init__(self):
+        super().__post_init__()
+        BaseAsset.instances.add(self)
+
+
+class Frozen:
     def __setattr__(self, name, value):
         """
         Make derivative clases with "fozen" instances to reduce incoherent states and all the good behaviours of
@@ -97,53 +104,63 @@ class BaseAsset:
         raise Exception("read-only")
 
 
-class Asset(BaseAsset):
-    symbol: str
-    name: str
-    price_usd: float
-
-    __repr__ = repr_for("symbol")
-
-    def __hash__(self):
-        return hash(self.symbol)
-
-class Price(Decimal):
-    symbol: str
-    name: str
+class Price(float):
     source: str
-    blockchain: Blockchain
+    symbol: str
 
-class Crypto(Asset):
-    def __getitem__(self, block):
-        new_instance = self.__class__()
-        new_instance.__dict__ = self.__dict__.copy()
+    def __repr__(self) -> str:
+        return f"Price({super()}, symbol={self.symbol}, source={self.source}")
+
+    def __str__(self) -> str:
+        return f"{super()} {self.symbol}"
 
 
+class Price(float):
+    symbol: str = "USD"
 
-class Native(Crypto):
+
+class Token(Frozen, Init, KeepInstances):
     chain: Blockchain
+    symbol: str
+    name: str
+    price: Price
     decimals: int = 18
 
     __repr__ = repr_for("chain", "symbol")
 
     def __hash__(self):
+        return hash(self.symbol)
+
+    def __set_name__(self, owner, symbol: str):
+        """
+        Allows to set the symbol from the class attribute name by default.
+            class X:
+                ETH = Token(chain=..., name=...)  # symbol -> "ETH"
+
+        Anyways, an override during initialization has priority.
+            class X:
+                USDCe = Token(chain=..., name=..., symbol="USDC.e")  # symbol -> "USDC.e"
+        """
+        self.symbol = symbol
+
+
+
+class NativeToken(Token):
+    def __hash__(self):
         return self.chain.chain_id
 
-    def price(self) -> Price:
-        value = chainlink.get_native_token_price(self.node, block="latest", self.blockchain)
-        #, "chainlink", blockchain
+    def price(self, block: int) -> Price:
+        value = chainlink.get_native_token_price(self.node, block=block, self.chain)
+        return USDPrice(value, source="chainlink")
 
 
-Native(chain=Chain.ETHEREUM, symbol="ETH", name="Ether")
-Native(chain=Chain.POLYGON, symbol="MATIC", name="Matic")
-Native(chain=Chain.GNOSIS, symbol="xDAI", name="Gnosis native DAI")
-
-
-
+NativeToken(chain=Chain.ETHEREUM, symbol="ETH", name="Ether")
+NativeToken(chain=Chain.POLYGON, symbol="MATIC", name="Matic")
+NativeToken(chain=Chain.GNOSIS, symbol="xDAI", name="Gnosis native DAI")
 
 
 class Deployment:
-    chain: Blockchain
+    contract: type
     address: str
     deploy_block: int | None = None
 
@@ -152,10 +169,9 @@ class Deployment:
         """Get the token ERC20 contract."""
         return self.contract(self.chain, block="latest", address=self.address)
         # TODO: Fix block using nodetime.
-        # TODO: discrimitate contract class as a function of chain (and address)
 
 
-class Token(Deployment, Crypto):
+class ERC20Token(Deployment, Token):
     contract = Erc20
 
     @default
@@ -166,10 +182,9 @@ class Token(Deployment, Crypto):
     def name(self) -> str:
         return self.deployment.name
 
-    @property
-    def price(self) -> Price:
-        price, _, _ = get_price_in_usd(self.address, self.block, self.chain)
-        return price
+    def price(self, block: int) -> Price:
+        price, source, _ = get_price_in_usd(self.address, block, self.chain)
+        return USDPrice(price, source=source)
 
     @default
     def decimals(self) -> int:
@@ -180,8 +195,109 @@ class Token(Deployment, Crypto):
     def __hash__(self):
         return hash((self.chain.chain_id, self.address))
 
+    def amount_of(self, wallet: str) -> TokenAmount:
+        return TokenAmount(token=self,
 
-USDCe = Token(chain=Chain.POLYGON, address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", symbol="USDC.e")
+
+class Unwrappable:
+    unwrapped_token: Token
+
+    def unwrapping_rate(self, block: int) -> float:
+        raise NotImplementedError
+
+
+USDCe = ERC20Token(chain=Chain.POLYGON, address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", symbol="USDC.e")
+
+class USDCe(ERC20Token):
+    chain=Chain.POLYGON
+    address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+    symbol="USDC.e"
+
+
+class Asset(Frozen, Init):
+    """
+    Something with value. Not a type of value.
+    """
+    underlyings: list[Asset] = list()
+    unclaimed_rewards: list[Asset] = list()
+    __repr__ = repr_for()
+
+
+class Position(Asset):
+    """
+    A unit of finantial value.
+    """
+
+
+class TokenAmount(Token, Asset):
+    """
+    A value/balance for a Token.
+    """
+    __repr__ = repr_for("amount", "token")
+    token: Token
+    block: int
+    amount: Decimal | None
+    amount_teu: int | None
+
+    @default
+    def amount(self) -> Decimal:
+        """
+        Amount in terms of units of the token.
+        """
+        return Decimal(self.amount_teu).scaleb(-self.token.decimals)
+
+    @default
+    def amount_teu(self) -> int:
+        """
+        Amount in terms of the minimun fraction of the token.
+        """
+        return self.token.deployment.contract.functions.balanceOf(wallet).call(block_identifier=self.block)
+
+    @default
+    def amount_usd(self) -> Decimal:
+        """
+        Amount in USD
+        """
+        return self.amount * self.token.price(self.block)
+
+    @default
+    def underlyings(self) -> list[Asset]:
+        """
+        Returns just one TokenAmount in the list, which is the unwrapped token with its converted value.
+        """
+        if isinstance(self.token, Unwrappable):
+            yield TokenAmount(token=self.token.unwrapped_token, self.amount*self.token.unwrapping_rate(self.block))
+
+    @property
+    def time(self) -> Time:
+        if isinstance(self.block, int):
+            return Time(self.token.deployment.w3.eth.get_block(self.block)["timestamp"])
+        else:
+            raise ValueError("Undefined time, because `block` isn't defined as an integer.")
+
+
+
+class VirtualTokenAmount(TokenAmount):
+    """
+    A value but not a balance for a Token.
+    """
+    block: int | None = None
+
+    @default
+    def amount_teu(self) -> int:
+        """
+        Amount in terms of the minimun fraction of the token.
+        """
+        return int(self.amount.scaleb(self.token.decimals))
+
+    def __post_init__(self):
+        """
+        Check that at least `amount` or `amout_teu` is defined, to avoid circular recursion.
+        """
+        super().__post_init__()
+        if self.__dict__["amount"] is None and self.__dict__["amount_teu"] is None:
+            raise ValueError("At least one of either `amount` or `amount_teu` must be defined.")
+
 
 
 def discover_defabipedia_tokens():
@@ -191,7 +307,7 @@ def discover_defabipedia_tokens():
         for attr_name, attr_value in vars(container_class).items():
             if not attr_name.startswith("_") and isinstance(attr_value, str):
                 try:
-                    Token(chain=chain, symbol=attr_name, address=attr_value)
+                    ERC20Token(chain=chain, symbol=attr_name, address=attr_value)
                 except ValueError as e:
                     logger.error(f"{e!s}")
                     print(e)
@@ -199,20 +315,35 @@ def discover_defabipedia_tokens():
 
 discover_defabipedia_tokens()
 
+
+
+
+class Crypto(Asset):
+    def __getitem__(self, block):
+        new_instance = self.__class__()
+        new_instance.__dict__ = self.__dict__.copy()
+
+USDC = Crpto(......)
+USDC[1883747463]
+USDC.__getitem__(1888...)
+
 """
     amount: Amount
     @property
     def amount(self) -> Amount:
         raise NotImplemented
 Asset (like Unit) add
-|- Token (ERC20) add Deploy
+|- ERC20Token (ERC20) add Deploy
 |- PositionClass add Deploy underlying:set[AssetAmount] unclaimed_rewards:set[AssetAmount]
 |- ...
-|- Native add FakeDeploy
+|- NativeToken add FakeDeploy
 |- Fiat
-|- DelegatedNative add Native real_address:str
-|- DelegatedToken add Token real_address:str
+|- DelegatedNativeToken add NativeToken real_address:str
+|- DelegatedERC20Token add ERC20Token real_address:str
 |- DelegatedAsset add Asset delegated:Asset
+
+TODO:
+
 """
 
 def public_attrs_dict(class_) -> dict[str, Module]:
@@ -220,44 +351,61 @@ def public_attrs_dict(class_) -> dict[str, Module]:
 
 
 @public_attrs_dict
-class compatible_protocol:
-    from defyes.protocols import maker
+class compatible_protocols:
+    from .protocols import maker
 
 
 class Porfolio(Init, Frozen):
     wallet: str
-    blockchain: Blockchain
+    chain: Blockchain
     block: int
+    included_protocols_name: set[str] = set(compatible_protocols.keys())
 
     @default
-    def crypto_set(self) -> set[Crypto]:
-        return {*Native.intances, *Token.instances}
+    def included_tokens(self) -> set[Token]:
+        """
+        All tokens by default.
+        """
+        return set(Token.instances)
 
     @default
-    def elementary_crypto(self) -> set[Crypto]:
-        return {*Native.intances, *Token.instances}
+    def target_tokens(self) -> set[Token]:
+        """
+        Not unwrappable tokens by default.
+        """
+        return set(token for Token.intances if not isinstance(token, Unwrappable))
 
-    def __iter__(self) -> Iterator[list[Crypto]]
-        porfolio: list[Crypto] = list(self.cryptos)
+    def __iter__(self) -> Iterator[list[Token]]
+        porfolio: list[Asset] = list(self.assets)
         while True:
             yield porfolio
             porfolio = [
-                *crypto.underlyings for crypto in porfolio if crypto not in self.elementary_crypto
+                *asset.underlyings for asset in porfolio
             ]
-            if has_just(porfolio, self.elementary_crypto):
+            if has_just(porfolio, self.target_tokens):
                 break
 
     @default
-    def cryptos(self):
-        for protocol in compatible_protocols:
+    def protocols(self):
+        for name, module in compatible_protocols.items():
+            if name in self.included_protocols_name:
+                yield module
+
+    @default
+    def assets(self):
+        for protocol in self.protocols:
 
             for token in protocol.tokens:
-                if token.chain == self.blockchain:
+                if token.chain == self.chain and token in self.included_tokens:
                     yield token.amount(self.wallet, self.block)
 
-            for position in protocol.Positions(self.wallet, self.blockchain, self.block)
-                yield position.underlyings
-                yield position.unclaimed_rewards
+            for position in protocol.Positions(self.wallet, self.chain, self.block)
+                yield from position.underlyings
+                yield from position.unclaimed_rewards
 
+p = Porfolio(..,..,..)
+for estado_porfolio in p:
 
+    class SuperPorfolio(Porfolio):
+        time: float =
 

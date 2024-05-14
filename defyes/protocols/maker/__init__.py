@@ -107,12 +107,14 @@ class Iou(Iou):
     }
 
 def token_gen():
-    yield Token(chain=Chain.ETHEREUM, address=EthereumTokenAddr.DAI)
+    yield DAI := Token.instances.get_or_create(chain=Chain.ETHEREUM, address=EthereumTokenAddr.DAI, symbol="DAI")
+    xDAI := Native.instances.get(chain=Chain.GNOSIS)
 
-    for chain, address in Sdai.default_addresses.items():
-        yield Token(contract=Sdai, chain=chain, address=address)
+    yield MKR := Token.instances.get_or_create(chain=Chain.ETHEREUM, address=EthereumTokenAddr.MKR, symbol="MKR")
 
-    yield Token(contract=Iou, chain=Chain.ETHEREUM, address=address, symbol="MKR")
+    yield Token(contract=Sdai, chain=Chain.ETHEREUM, address="0x83F20F44975D03b1b09e64809B757c47f942BEeA", unwrapped=DAI)
+    yield Token(contract=Sdai, chain=Chain.GNOSIS, address="0xaf204776c7245bF4147c2612BF6e5972Ee483701", unwrapped=xDAI)
+
 
 tokens = list(token_gen())
 
@@ -239,11 +241,6 @@ def get_protocol_data_for(
     return data
 
 
-class Position(Init, Frozen):
-    underlying: list[Token] = list()
-    unclaimed_rewards: list[Token] = list()
-    __repr__ = repr_for()
-
 
 class Positions(Init, Frozen):
     wallet: str
@@ -276,7 +273,7 @@ class Positions(Init, Frozen):
             yield self.Vault(
                 id=vault_id,
                 underlyings={
-                    TokenVirtualAmount(token=lend_token, amount_teu=ink),
+                    TokenVirtualAmount(token=lend_token, amount_teu=ink, block=),
                     TokenVirtualAmount(token=DAI, amount=-1 * art * rate),
                 },
             )
@@ -285,9 +282,9 @@ class Positions(Init, Frozen):
         pass
 
     @default
-    def dsrs(self) -> DSR:
+    def dsr(self) -> DSR:
         dsr = DsrManager(self.blockchain, self.block)
-        yield self.DSR(underlying={TokenVirtualAmount(token=DAI, amount=dsr.decimal_pie_of(self.wallet))})
+        yield self.DSR(underlyings={TokenVirtualAmount(token=DAI, amount=dsr.decimal_pie_of(self.wallet))})
 
     class Pot(Position):
         pass
@@ -303,6 +300,7 @@ class Positions(Init, Frozen):
     @default
     def iou(self) -> Iou:
         iou = Iou(self.blockchain, self.block)
+        MKR = Token.instances.get(blockchain=Chain.ETHEREUM, address=EthereumTokenAddr.MKR)
         yield self.Iou(underlying={TokenVirtualAmount(token=MKR, amount_teu=iou.balance_of(self.wallet))})
 
 def get_protocol_data(blockchain: str, wallet: str, block: int | str = "latest", decimals: bool = True) -> dict:
@@ -404,3 +402,12 @@ def reduce_sdai(
     unwrapped_token_address = sdai_contract.dai
 
     return unwrapped_token_address, dai_balance
+
+SDAIToken.unwrap(amount)
+
+TokenAmount(SDAIToken, amount=5)
+
+TokenAmount.underlyings():
+    return [self.token.unwarp(self.amount)]
+
+
