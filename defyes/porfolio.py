@@ -1,51 +1,34 @@
-import logging
 import inspect
+import logging
+from decimal import Decimal
 from functools import cached_property
+from typing import Iterator
 
 from defabipedia import Blockchain, Chain
 from defabipedia.tokens import EthereumTokenAddr, erc20_contract
+from karpatkit.node import get_node
+
+from defyes.lazytime import Time
 from defyes.prices import Chainlink as chainlink
 from defyes.prices.prices import get_price as get_price_in_usd
 
+Module = type(logging)
+
 logger = logging.getLogger(__name__)
+
 
 def default(method):
     if inspect.isgeneratorfunction(method):
+
         def wrapper(self):
             return list(method(self))
+
     else:
+
         def wrapper(self):
             return method(self)
+
     return cached_property(wrapper)
-
-class InstancesManager(list):
-    unique = dict()
-
-    def add(self, obj):
-        h = hash(obj)
-        new_i = len(self)
-        i = self.unique.setdefault(h, new_i)
-        if i != new_i:
-            raise ValueError(f"Already defined instance (current:{self[i]}, new:{obj}")
-        else:
-            self.append(obj)
-
-    def __get__(self, instance, owner=None):
-        if owner is BaseAsset:
-            return self
-        else:
-            return InstancesManager(ins for ins in self if isinstance(ins, owner))
-
-    def filter(self, **kwargs):
-        for ins in self:
-            if all(getattr(ins, attr, None) == value for attr, value in kwargs.items()):
-                yield ins
-
-    def __call__(self, **kwargs):
-        return InstancesManager(self.filter(**kwargs))
-
-    def get(self, **kwargs):
-        return next(self.filter(**kwargs))
 
 
 def repr_for(*attrs):
@@ -66,10 +49,11 @@ def repr_for(*attrs):
     return __repr__
 
 
-class Init:
+class KwInit:
     """
     No magical alternative to mitigate the extreme complexity of dataclasses when dealing with inheritance.
     """
+
     def __init__(self, /, **attrs):
         """
         Set all keyword arguments defined by `attrs` as instance attributes.
@@ -82,15 +66,6 @@ class Init:
         """
         Override this method in subclasses instead of __init__.
         """
-
-class KeepInstances:
-    """
-    Add the instance to the asset instances list.
-    """
-    instances = InstancesManager()
-    def __post_init__(self):
-        super().__post_init__()
-        BaseAsset.instances.add(self)
 
 
 class Frozen:
@@ -107,30 +82,71 @@ class Fiat(float):
     symbol: str
 
     def __repr__(self) -> str:
-        return f"Fiat({super()}, symbol={self.symbol}, source={self.source}")
+        return f"Fiat({super()}, symbol={self.symbol}, source={self.source})"
 
     def __str__(self) -> str:
         return f"{super()} {self.symbol}"
 
-    def __mul__(self, other: float) -> Fiat:
+    def __mul__(self, other: float) -> "Fiat":
         return Fiat(float(other) * float(self), source=self.source, symbol=self.symbol)
 
     __rmul__ = __mul__
 
 
-
-class USDPrice(float):
+class USDPrice(Fiat):
     symbol: str = "USD"
 
 
-class Token(Frozen, Init, KeepInstances):
+class InstancesManager(list):
+    unique = dict()
+
+    def __set_name__(self, owner, name):
+        self.initial_class_owner = owner
+
+    def __get__(self, instance, owner=None):
+        if owner is self.initial_class_owner:
+            return self
+        else:
+            return InstancesManager(ins for ins in self if isinstance(ins, owner))
+
+    def add(self, obj):
+        h = hash(obj)
+        new_i = len(self)
+        i = self.unique.setdefault(h, new_i)
+        if i != new_i:
+            raise ValueError(f"Already defined instance (current:{self[i]}, new:{obj}")
+        else:
+            self.append(obj)
+
+    def filter(self, **kwargs):
+        for ins in self:
+            if all(getattr(ins, attr, None) == value for attr, value in kwargs.items()):
+                yield ins
+
+    def __call__(self, **kwargs):
+        return InstancesManager(self.filter(**kwargs))
+
+    def get(self, **kwargs):
+        return next(self.filter(**kwargs))
+
+    def get_or_create(self, *a, **b):
+        print("Not implemented", self, a, b)
+
+
+class Token(Frozen, KwInit):
     chain: Blockchain
     symbol: str
     name: str
-    price: Fiat
+    # price: Fiat
     decimals: int = 18
 
     __repr__ = repr_for("chain", "symbol")
+
+    instances = InstancesManager()
+
+    def __post_init__(self):
+        super().__post_init__()
+        Token.instances.add(self)
 
     def __hash__(self):
         return hash(self.symbol)
@@ -145,8 +161,7 @@ class Token(Frozen, Init, KeepInstances):
             class X:
                 USDCe = Token(chain=..., name=..., symbol="USDC.e")  # symbol -> "USDC.e"
         """
-        self.symbol = symbol
-
+        self.__dict__["symbol"] = symbol
 
 
 class NativeToken(Token):
@@ -154,7 +169,7 @@ class NativeToken(Token):
         return self.chain.chain_id
 
     def price(self, block: int) -> Fiat:
-        value = chainlink.get_native_token_price(self.node, block=block, self.chain)
+        value = chainlink.get_native_token_price(self.node, block, self.chain)
         return USDPrice(value, source="chainlink")
 
 
@@ -172,7 +187,7 @@ class Deployment:
 class ERC20Token(Deployment, Token):
     @default
     def contract(self):
-        node = get_node(self.blockchain)
+        node = get_node(self.chain)
         return erc20_contract(node, self.address)
 
     @default
@@ -196,8 +211,8 @@ class ERC20Token(Deployment, Token):
     def __hash__(self):
         return hash((self.chain.chain_id, self.address))
 
-    def amount_of(self, wallet: str) -> TokenAmount:
-        return TokenAmount(token=self,
+    def amount_of(self, wallet: str, block: int) -> "TokenAmount":
+        return TokenAmount(token=self, wallet=wallet, block=block)
 
 
 class Unwrappable:
@@ -209,18 +224,20 @@ class Unwrappable:
 
 USDCe = ERC20Token(chain=Chain.POLYGON, address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", symbol="USDC.e")
 
+
 class USDCe(ERC20Token):
-    chain=Chain.POLYGON
-    address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
-    symbol="USDC.e"
+    chain = Chain.POLYGON
+    address = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+    symbol = "USDC.e"
 
 
-class Asset(Frozen, Init):
+class Asset(Frozen, KwInit):
     """
     Something with value. Not a type of value.
     """
-    underlyings: list[Asset] = list()
-    unclaimed_rewards: list[Asset] = list()
+
+    underlyings: list["Asset"] = list()
+    unclaimed_rewards: list["Asset"] = list()
     __repr__ = repr_for()
 
 
@@ -234,6 +251,7 @@ class TokenAmount(Token, Asset):
     """
     A value/balance for a Token.
     """
+
     __repr__ = repr_for("amount", "token")
     token: Token
     block: int
@@ -268,7 +286,9 @@ class TokenAmount(Token, Asset):
         Returns just one TokenAmount in the list, which is the unwrapped token with its converted value.
         """
         if isinstance(self.token, Unwrappable):
-            yield TokenAmount(token=self.token.unwrapped_token, self.amount*self.token.unwrapping_rate(self.block))
+            yield TokenAmount(
+                token=self.token.unwrapped_token, amount=self.amount * self.token.unwrapping_rate(self.block)
+            )
 
     @property
     def time(self) -> Time:
@@ -278,11 +298,11 @@ class TokenAmount(Token, Asset):
             raise ValueError("Undefined time, because `block` isn't defined as an integer.")
 
 
-
-class VirtualTokenAmount(TokenAmount):
+class UnderlyingTokenAmount(TokenAmount):
     """
     A value but not a balance for a Token.
     """
+
     block: int | None = None
     wallet: str | None = None
 
@@ -302,7 +322,6 @@ class VirtualTokenAmount(TokenAmount):
             raise ValueError("At least one of either `amount` or `amount_teu` must be defined.")
 
 
-
 def discover_defabipedia_tokens():
     from defabipedia import tokens
 
@@ -319,16 +338,14 @@ def discover_defabipedia_tokens():
 discover_defabipedia_tokens()
 
 
-
-
-class Crypto(Asset):
-    def __getitem__(self, block):
-        new_instance = self.__class__()
-        new_instance.__dict__ = self.__dict__.copy()
-
-USDC = Crpto(......)
-USDC[1883747463]
-USDC.__getitem__(1888...)
+# class Crypto(Asset):
+#    def __getitem__(self, block):
+#        new_instance = self.__class__()
+#        new_instance.__dict__ = self.__dict__.copy()
+#
+# USDC = Crpto(......)
+# USDC[1883747463]
+# USDC.__getitem__(1888...)
 
 """
     amount: Amount
@@ -349,16 +366,17 @@ TODO:
 
 """
 
+
 def public_attrs_dict(class_) -> dict[str, Module]:
     return {name: attr for name, attr in vars(class_).items() if not name.startswith("_")}
 
 
 @public_attrs_dict
 class compatible_protocols:
-    from .protocols import maker
+    pass  # from .protocols import maker
 
 
-class Porfolio(Init, Frozen):
+class Porfolio(Frozen, KwInit):
     wallet: str
     chain: Blockchain
     block: int
@@ -376,15 +394,13 @@ class Porfolio(Init, Frozen):
         """
         Not unwrappable tokens by default.
         """
-        return set(token for Token.intances if not isinstance(token, Unwrappable))
+        return set(token for token in Token.intances if not isinstance(token, Unwrappable))
 
-    def __iter__(self) -> Iterator[list[Token]]
+    def __iter__(self) -> Iterator[list[Token]]:
         porfolio: list[Asset] = list(self.assets)
         while True:
             yield porfolio
-            porfolio = [
-                *asset.underlyings for asset in porfolio
-            ]
+            porfolio = [sub_asset for sub_asset in asset.underlyings for asset in porfolio]
             if has_just(porfolio, self.target_tokens):
                 break
 
@@ -397,18 +413,10 @@ class Porfolio(Init, Frozen):
     @default
     def assets(self):
         for protocol in self.protocols:
-
             for token in protocol.tokens:
                 if token.chain == self.chain and token in self.included_tokens:
                     yield token.amount(self.wallet, self.block)
 
-            for position in protocol.Positions(self.wallet, self.chain, self.block)
+            for position in protocol.Positions(self.wallet, self.chain, self.block):
                 yield from position.underlyings
                 yield from position.unclaimed_rewards
-
-p = Porfolio(..,..,..)
-for estado_porfolio in p:
-
-    class SuperPorfolio(Porfolio):
-        time: float =
-
