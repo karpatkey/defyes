@@ -18,7 +18,28 @@ from web3 import Web3
 from defyes.generator import load_abi
 
 
-class Erc20:
+class Erc20Mixin:
+    @property
+    def name(self) -> str:
+        return const_call(self._deployment.functions.name())
+
+    @property
+    def symbol(self) -> str:
+        return const_call(self._deployment.functions.symbol())
+
+    @property
+    def decimals(self) -> int:
+        return const_call(self._deployment.functions.decimals())
+
+    def balance_of(self, arg0: str) -> int:
+        return self._deployment.functions.balanceOf(arg0).call(block_identifier=self._block)
+
+    @property
+    def total_supply(self) -> int:
+        return self._deployment.functions.totalSupply().call(block_identifier=self._block)
+
+
+class Erc20(Erc20Mixin):
     default_addresses: dict[str, str]
 
     def __init__(self, blockchain: str, block: int, address: str | None = None) -> None:
@@ -39,20 +60,28 @@ class Erc20:
         self.contract = node.eth.contract(address=self.address, abi=load_abi(__file__, "erc20.json"))
 
     @property
-    def name(self) -> str:
-        return const_call(self.contract.functions.name())
+    def _block(self):
+        return self.block
 
     @property
-    def symbol(self) -> str:
-        return const_call(self.contract.functions.symbol())
+    def _deployment(self):
+        return self.contract
 
-    @property
-    def decimals(self) -> int:
-        return const_call(self.contract.functions.decimals())
 
-    def balance_of(self, arg0: str) -> int:
-        return self.contract.functions.balanceOf(arg0).call(block_identifier=self.block)
+class Erc20Wrapper(Erc20Mixin):
+    def __init__(self, deployment, block: str | None = None) -> None:
+        self._deployment = deployment
+        self._block = block
 
-    @property
-    def total_supply(self) -> int:
-        return self.contract.functions.totalSupply().call(block_identifier=self.block)
+    @classmethod
+    def from_chain_address(cls, chain: str, address: str | None = None, block: int | None = None) -> None:
+        node = get_node(chain)
+        return cls.from_node_address(node, address)
+
+    @classmethod
+    def from_node_address(cls, node, address):
+        deployment = node.eth.contract(address=address, abi=load_abi(__file__, "erc20.json"))
+        return cls(deployment)
+
+    def __getitem__(self, block: int) -> Erc20:
+        return self.__class__(self.contract, block)

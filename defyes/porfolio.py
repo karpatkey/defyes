@@ -7,7 +7,9 @@ from typing import Iterator
 from defabipedia import Blockchain, Chain
 from defabipedia.tokens import EthereumTokenAddr, erc20_contract
 from karpatkit.node import get_node
+from web3 import Web3
 
+from defyes.contracts import Erc20
 from defyes.lazytime import Time
 from defyes.prices import Chainlink as chainlink
 from defyes.prices.prices import get_price as get_price_in_usd
@@ -78,22 +80,26 @@ class Frozen:
 
 
 class Fiat(float):
-    source: str
-    symbol: str
+    source: str | None = None
+    symbol: str | None = None
+
+    def __init__(self, value, *, source=None):
+        super().__init__()
+        self.source = source
 
     def __repr__(self) -> str:
-        return f"Fiat({super()}, symbol={self.symbol}, source={self.source})"
+        return f"{self.__class__.__name__}({float(self)}, source={self.source!r})"
 
     def __str__(self) -> str:
-        return f"{super()} {self.symbol}"
+        return f"{float(self)} {self.symbol}"
 
     def __mul__(self, other: float) -> "Fiat":
-        return Fiat(float(other) * float(self), source=self.source, symbol=self.symbol)
+        return self.__class__(float(other) * float(self), source=self.source)
 
     __rmul__ = __mul__
 
 
-class USDPrice(Fiat):
+class USD(Fiat):
     symbol: str = "USD"
 
 
@@ -103,6 +109,10 @@ class InstancesManager(list):
     def __set_name__(self, owner, name):
         self.initial_class_owner = owner
 
+    @property
+    def current_class_owner(self):
+        raise NotImplementedError("Pending")
+
     def __get__(self, instance, owner=None):
         if owner is self.initial_class_owner:
             return self
@@ -110,6 +120,8 @@ class InstancesManager(list):
             return InstancesManager(ins for ins in self if isinstance(ins, owner))
 
     def add(self, obj):
+        self.append(obj)
+        return
         h = hash(obj)
         new_i = len(self)
         i = self.unique.setdefault(h, new_i)
@@ -127,22 +139,34 @@ class InstancesManager(list):
         return InstancesManager(self.filter(**kwargs))
 
     def get(self, **kwargs):
-        return next(self.filter(**kwargs))
+        try:
+            return next(self.filter(**kwargs))
+        except StopIteration:
+            raise LookupError(f"No instance found in {self.__class__} for {kwargs!r}.")
 
-    def get_or_create(self, *a, **b):
-        print("Not implemented", self, a, b)
+    def get_or_create(self, **kwargs):
+        try:
+            return self.get(**kwargs)
+        except LookupError:
+            return self.current_class_owner(**kwargs)
 
 
-class Token(Frozen, KwInit):
+class Crypto(Frozen, KwInit):
     chain: Blockchain
+    node: Web3
+
+
+class Token(Crypto):
     symbol: str
     name: str
-    # price: Fiat
-    decimals: int = 18
+    price: Fiat
+    decimals: int
+    protocol: str | None = None
 
-    __repr__ = repr_for("chain", "symbol")
+    __repr__ = repr_for("chain", "symbol", "protocol")
 
     instances = InstancesManager()
+    objs = instances
 
     def __post_init__(self):
         super().__post_init__()
@@ -162,15 +186,33 @@ class Token(Frozen, KwInit):
                 USDCe = Token(chain=..., name=..., symbol="USDC.e")  # symbol -> "USDC.e"
         """
         self.__dict__["symbol"] = symbol
+        self.__dict__["protocol"] = _get_protocol_from_module(owner.__module__)
+
+
+def _get_protocol_from_module(module: str) -> str | None:
+    prev_part = None
+    for part in reversed(module.split(".")):
+        if part == "protocols":
+            return prev_part
+        prev_part = part
 
 
 class NativeToken(Token):
+    decimals: int = 18
+
+    @default
+    def node(self) -> Web3:
+        return get_node(self.chain)
+
     def __hash__(self):
         return self.chain.chain_id
 
     def price(self, block: int) -> Fiat:
         value = chainlink.get_native_token_price(self.node, block, self.chain)
-        return USDPrice(value, source="chainlink")
+        return USD(value, source="chainlink")
+
+    def balance_of(self, wallet: str, block: int) -> int:
+        return self.node.eth.get_balance(wallet, block)
 
 
 NativeToken(chain=Chain.ETHEREUM, symbol="ETH", name="Ether")
@@ -179,37 +221,48 @@ NativeToken(chain=Chain.GNOSIS, symbol="xDAI", name="Gnosis native DAI")
 
 
 class Deployment:
-    contract: type
-    address: str
-    deploy_block: int | None = None
+    abi_class: type
+    address: str | None = None
+    # deploy_block: int | None = None
+
+    @default
+    def abi(self):
+        return self.abi_class(self.chain, "latest", self.address)
+
+    @default
+    def node(self) -> Web3:
+        return self.abi.contract.w3
+
+
+class DeploymentCrypto(Deployment, Crypto):
+    pass
 
 
 class ERC20Token(Deployment, Token):
-    @default
-    def contract(self):
-        node = get_node(self.chain)
-        return erc20_contract(node, self.address)
+    abi_class: type = Erc20
 
     @default
     def symbol(self) -> str:
-        return self.contract.functions.symbol()
+        return self.abi.symbol
 
     @default
     def name(self) -> str:
-        return self.contract.functions.name()
-
-    def price(self, block: int) -> Fiat:
-        price, source, _ = get_price_in_usd(self.address, block, self.chain)
-        return USDPrice(price, source=source)
+        return self.abi.name
 
     @default
     def decimals(self) -> int:
-        return self.contract.functions.decimals()
+        return self.abi.decimals
 
-    __repr__ = repr_for("chain", "symbol")
+    def price(self, block: int) -> Fiat:
+        price, source, _ = get_price_in_usd(self.address, block, self.chain)
+        return USD(price, source=source)
 
     def __hash__(self):
         return hash((self.chain.chain_id, self.address))
+
+    def balance_of(self, wallet: str, block: int) -> int:
+        self.abi.block = block  # TODO: improve this workarround
+        return self.abi.balance_of(wallet)
 
     def amount_of(self, wallet: str, block: int) -> "TokenAmount":
         return TokenAmount(token=self, wallet=wallet, block=block)
@@ -218,11 +271,15 @@ class ERC20Token(Deployment, Token):
 class Unwrappable:
     unwrapped_token: Token
 
-    def unwrapping_rate(self, block: int) -> float:
+    def unwrap(self, tokenamount: "TokenAmount") -> "UnderlyingTokenAmount":
         raise NotImplementedError
 
 
-USDCe = ERC20Token(chain=Chain.POLYGON, address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", symbol="USDC.e")
+USDCe = ERC20Token(
+    chain=Chain.POLYGON,
+    address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+    symbol="USDC.e",
+)
 
 
 class USDCe(ERC20Token):
@@ -245,9 +302,13 @@ class Position(Asset):
     """
     A unit of finantial value.
     """
+    __repr__ = repr_for("underlyings", "unclaimed_rewards")
+
+    def __bool__(self):
+        return bool(self.underlyings) or bool(self.unclaimed_rewards)
 
 
-class TokenAmount(Token, Asset):
+class TokenAmount(Asset):
     """
     A value/balance for a Token.
     """
@@ -262,49 +323,51 @@ class TokenAmount(Token, Asset):
     @default
     def amount(self) -> Decimal:
         """
-        Amount in terms of units of the token.
+        Amount in terms of units of the token. Calculated from TEU and decimals.
         """
         return Decimal(self.amount_teu).scaleb(-self.token.decimals)
 
     @default
     def amount_teu(self) -> int:
         """
-        Amount in terms of the minimun fraction of the token.
+        Amount in terms of TEU (the minimun fraction of the token). Got from the token balance_of.
         """
-        return self.token.contract.functions.balanceOf(self.wallet).call(block_identifier=self.block)
+        return self.token.balance_of(self.wallet, self.block)
 
     @default
-    def amount_usd(self) -> Fiat:
+    def amount_fiat(self) -> Fiat:
         """
-        Amount in USD
+        Amount in Fiat (mainly USD). Converted to Fiat using the token price.
         """
         return float(self.amount) * self.token.price(self.block)
 
     @default
-    def underlyings(self) -> list[Asset]:
+    def underlyings(self) -> list["UnderlyingTokenAmount"]:
         """
-        Returns just one TokenAmount in the list, which is the unwrapped token with its converted value.
+        Returns one UnderlyingTokenAmount or zero in the list, which is the unwrapped token with its converted value.
         """
         if isinstance(self.token, Unwrappable):
-            yield TokenAmount(
-                token=self.token.unwrapped_token, amount=self.amount * self.token.unwrapping_rate(self.block)
-            )
+            yield self.token.unwrap(self)
 
-    @property
+    @default
     def time(self) -> Time:
         if isinstance(self.block, int):
-            return Time(self.token.deployment.w3.eth.get_block(self.block)["timestamp"])
+            return Time(self.token.node.eth.get_block(self.block).timestamp)
         else:
             raise ValueError("Undefined time, because `block` isn't defined as an integer.")
+
+    def __bool__(self):
+        return self.amount_teu != 0
 
 
 class UnderlyingTokenAmount(TokenAmount):
     """
-    A value but not a balance for a Token.
+    An underlying value/balance for a Token.
     """
 
     block: int | None = None
     wallet: str | None = None
+    parent: Asset | None = None
 
     @default
     def amount_teu(self) -> int:
@@ -317,8 +380,7 @@ class UnderlyingTokenAmount(TokenAmount):
         """
         Check that at least `amount` or `amout_teu` is defined, to avoid circular recursion.
         """
-        super().__post_init__()
-        if self.__dict__["amount"] is None and self.__dict__["amount_teu"] is None:
+        if not {"amount", "amount_teu"}.intersection(self.__dict__):
             raise ValueError("At least one of either `amount` or `amount_teu` must be defined.")
 
 
@@ -335,7 +397,6 @@ def discover_defabipedia_tokens():
                     print(e)
 
 
-discover_defabipedia_tokens()
 
 
 # class Crypto(Asset):
@@ -373,17 +434,18 @@ def public_attrs_dict(class_) -> dict[str, Module]:
 
 @public_attrs_dict
 class compatible_protocols:
-    pass  # from .protocols import maker
+    from .protocols.maker import newarch as maker
 
+discover_defabipedia_tokens()
 
 class Porfolio(Frozen, KwInit):
-    wallet: str
     chain: Blockchain
     block: int
+    wallet: str
     included_protocols_name: set[str] = set(compatible_protocols.keys())
 
     @default
-    def included_tokens(self) -> set[Token]:
+    def included_tokens(self) -> set[Token]: # TODO: no conviene tirar aunque no se conozcan. solamente filtrar para tokenamount, no para underlyings
         """
         All tokens by default.
         """
@@ -394,29 +456,66 @@ class Porfolio(Frozen, KwInit):
         """
         Not unwrappable tokens by default.
         """
-        return set(token for token in Token.intances if not isinstance(token, Unwrappable))
+        return set(token for token in Token.instances if not isinstance(token, Unwrappable))
 
     def __iter__(self) -> Iterator[list[Token]]:
         porfolio: list[Asset] = list(self.assets)
         while True:
             yield porfolio
-            porfolio = [sub_asset for sub_asset in asset.underlyings for asset in porfolio]
-            if has_just(porfolio, self.target_tokens):
+            if self.has_just_target_tokens(porfolio):
                 break
+            porfolio = list(self.deeper(porfolio))
 
+    def has_just_target_tokens(self, porfolio):
+        return False
+        #if target_tokens.intersection({ta.token for ta in porfolio if ta)
+
+    def deeper(self, porfolio):
+        for position in porfolio:
+            # Stop underlying/unwrapping on target tokens
+            if hasattr(position, "token") and position.token in self.target_tokens:
+                yield position
+                continue
+
+            for underlying in position.underlyings:
+                underlying.__dict__["parent"] = position
+                yield underlying
+
+            for unclaimed_reward in position.unclaimed_rewards:
+                unclaimed_reward.__dict__["parent"] = position
+                yield unclaimed_reward
     @default
-    def protocols(self):
-        for name, module in compatible_protocols.items():
-            if name in self.included_protocols_name:
-                yield module
+    def protocols(self) -> dict[str, Module]:
+        return {
+            name: module
+            for name, module in compatible_protocols.items()
+            if name in self.included_protocols_name
+        }
 
     @default
     def assets(self):
-        for protocol in self.protocols:
-            for token in protocol.tokens:
+        for protocol_name, protocol in self.protocols.items():
+            for token in Token.instances.filter(chain=self.chain, protocol=protocol_name):
                 if token.chain == self.chain and token in self.included_tokens:
-                    yield token.amount(self.wallet, self.block)
+                    tokenamount = token.amount_of(self.wallet, self.block)
+                    yield tokenamount
 
-            for position in protocol.Positions(self.wallet, self.chain, self.block):
-                yield from position.underlyings
-                yield from position.unclaimed_rewards
+            yield from protocol.Positions(wallet=self.wallet, chain=self.chain, block=self.block)
+
+    @default
+    def token_positions(self):
+        for token in self.included_tokens:
+            if token.chain == self.chain:
+                yield token.amount_of(self.wallet, self.block)
+
+
+def initial_protocol(position):
+    while hasattr(position, "parent"):
+        position = position.parent
+    try:
+        return position.protocol
+    except AttributeError:
+        try:
+            return position.token.protocol
+        except AttributeError:
+            return None
