@@ -1,14 +1,22 @@
 import logging
-from contextlib import suppress
-from decimal import Decimal
-from typing import Iterator, Tuple, Union
+from typing import Iterator
 
 from defabipedia import Blockchain, Chain
-from defabipedia.tokens import EthereumTokenAddr, GnosisTokenAddr
-from web3 import Web3
+from defabipedia.tokens import EthereumTokenAddr
 
-from defyes.functions import balance_of, ensure_a_block_number
-from defyes.porfolio import DeploymentCrypto, ERC20Token, Frozen, KwInit, NativeToken, Position, default, repr_for, Unwrappable, TokenAmount, UnderlyingTokenAmount, Token
+from defyes.porfolio import (
+    ERC20Token,
+    Frozen,
+    KwInit,
+    NativeToken,
+    Position,
+    Token,
+    TokenAmount,
+    UnderlyingTokenAmount,
+    Unwrappable,
+    default,
+    repr_for,
+)
 
 from . import contracts
 
@@ -72,8 +80,28 @@ class tokens:
 ############################################################
 ############################################################
 
+
 class Position(Position):
     protocol: str = "maker"
+    context: "Positions"
+    address: str
+
+
+class Vault(Position):
+    id: int
+    __repr__ = repr_for("address", "id", "underlyings", "unclaimed_rewards")
+
+
+class DSR(Position):
+    pass
+
+
+class Pot(Position):
+    pass
+
+
+class Iou(Position):
+    pass
 
 
 class Positions(Frozen, KwInit):
@@ -92,10 +120,6 @@ class Positions(Frozen, KwInit):
         if self.iou:
             yield self.iou
 
-    class Vault(Position):
-        id: int
-        __repr__ = repr_for("id", "underlyings", "unclaimed_rewards")
-
     @default
     def DAI(self):
         return Token.instances.get(chain=self.chain, symbol="DAI")
@@ -112,14 +136,16 @@ class Positions(Frozen, KwInit):
             ink, art = vat.urns(ilk, urn_handler_address)
             rate = vat.ilks(ilk)[1]
 
-            #lend_token = ERC20Token.instances.get_or_create(chain=self.chain, address=gem)
+            # lend_token = ERC20Token.instances.get_or_create(chain=self.chain, address=gem)
             try:
                 lend_token = Token.instances.get(chain=self.chain, address=gem)
             except LookupError:
                 lend_token = ERC20Token(chain=self.chain, address=gem)
                 Token.instances.add(lend_token)
             yield self.Vault(
+                address=cdp.contract.address,
                 id=vault_id,
+                context=self,
                 underlyings=[
                     UnderlyingTokenAmount(token=lend_token, amount_teu=ink, block=self.block),
                     UnderlyingTokenAmount(token=self.DAI, amount_teu=-1 * art * rate, block=self.block),
@@ -127,41 +153,30 @@ class Positions(Frozen, KwInit):
                 rate=rate,
             )
 
-    # class DsrManager(PositionType):
-    #    abi_class = abis.DsrManager
-    #    def pie_of(self, wallet: str) -> Decimal:
-    #        return Decimal(self.abi.pie_of(wallet)).scaleb(-27)
-
-    class Manager(Position):
-        pass
-        #@default
-        #def underlyings(self):
-        #    yield UnderlyingTokenAmount(token=self.DAI, amount=self.pie_of(self.wallet))
-
     @default
-    def dsr(self) -> Manager:
-        #dsr = contracts.DsrManagerDeployment()
+    def dsr(self) -> DSR:
         dsr = contracts.DsrManager(self.chain, self.block)
-        return self.Manager(underlyings=[UnderlyingTokenAmount(token=self.DAI, amount=dsr.decimal_pie_of(self.wallet))])
-
-    # @default
-    # def dsr(self) -> Manager:
-    #    dsr = DsrManager(chain=self.chain, block=self.block)
-    #    yield self.Manager(underlyings=[UnderlyingTokenAmount(token=self.DAI, amount=dsr.decimal_pie_of(self.wallet))])
-
-    class Pot(Position):
-        pass
+        return DSR(
+            context=self,
+            address=dsr.contract.address,
+            underlyings=[UnderlyingTokenAmount(token=self.DAI, amount_teu=dsr.dai_balance(self.wallet))],
+        )
 
     @default
     def pot(self) -> Pot:
         pot = contracts.Pot(self.chain, self.block)
-        return self.Pot(underlying=[UnderlyingTokenAmount(token=self.DAI, amount=pot.decimal_pie_1(self.wallet) * pot.chi)])
-
-    class Iou(Position):
-        pass
+        return Pot(
+            context=self,
+            address=pot.contract.address,
+            underlyings=[UnderlyingTokenAmount(token=self.DAI, amount_teu=pot.pie_1(self.wallet) * pot.chi_decimal)],
+        )
 
     @default
     def iou(self) -> Iou:
         iou = contracts.Iou(self.chain, self.block)
         MKR = Token.instances.get(chain=self.chain, symbol="MKR")
-        return self.Iou(underlying=[UnderlyingTokenAmount(token=MKR, amount_teu=iou.balance_of(self.wallet))])
+        return Iou(
+            context=self,
+            address=iou.contract.address,
+            underlyings=[UnderlyingTokenAmount(token=MKR, amount_teu=iou.balance_of(self.wallet))],
+        )
