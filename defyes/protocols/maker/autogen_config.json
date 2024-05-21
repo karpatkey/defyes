@@ -15,6 +15,9 @@
     ]
   },
   "dsr_manager": {
+    "always_include": [
+      "daiBalance"
+    ]
   },
   "sdai": {
   },
