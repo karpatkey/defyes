@@ -22,7 +22,7 @@ class tokens:
             chain = Chain.ETHEREUM
             address = "0x93d199263632a4EF4Bb438F1feB99e57b4b5f0BD"
 
-            def unwrap(self, tokenamount: TokenAmount) -> UnderlyingTokenAmount:
+            def unwrap(self, tokenamount: TokenAmount) -> list[UnderlyingTokenAmount]:
                 ta = tokenamount
                 lp = LiquidityPool(ta.token.chain, ta.block, ta.token.address)
                 pool_tokens = Vault(self.chain, ta.block).get_pool_data(lp.poolid)
@@ -30,11 +30,13 @@ class tokens:
                 for n, (addr, balance) in enumerate(pool_tokens):
                     if n == lp.bpt_index:
                         continue
-
                     token = PoolToken(self.chain, ta.block, addr)
                     token_addr, token_balance = lp.calc_amount(token, ta.amount, balance, decimals=True)
                     balances[token_addr] = balances.get(token_addr, 0) + token_balance
-                return balances
+                return [
+                    UnderlyingTokenAmount(token=self.objs.get_or_create(address=addr), amount=amount)
+                    for addr, amount in balances.items()
+                ]
 
         wstETH_WETH_BPT = _wstETH_WETH_BPT()
 

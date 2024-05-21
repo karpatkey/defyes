@@ -115,18 +115,31 @@ class USD(Fiat):
 class InstancesManager(list):
     unique = dict()
 
+    def __init__(self, seq, current_class_owner=None):
+        self[:] = seq  # TODO: improve it to avoid premature list convertion
+        if current_class_owner:
+            self.current_class_owner = current_class_owner
+
     def __set_name__(self, owner, name):
         self.initial_class_owner = owner
 
-    @property
+    @default
     def current_class_owner(self):
-        raise NotImplementedError("Pending")
+        return self.initial_class_owner
 
     def __get__(self, instance, owner=None):
         if owner is self.initial_class_owner:
             return self
         else:
-            return InstancesManager(ins for ins in self if isinstance(ins, owner))
+            if instance:
+                gen = (obj for obj in self if self._alike(instance, obj))
+            else:
+                gen = (obj for obj in self if isinstance(obj, owner))
+            return InstancesManager(gen, current_class_owner=owner)
+
+    @staticmethod
+    def _alike(instance, obj):
+        return all(getattr(obj, attr) == getattr(instance, attr) for attr in instance.filter_attrs)
 
     def add(self, obj):
         # self.append(obj)
@@ -140,18 +153,25 @@ class InstancesManager(list):
             self.append(obj)
 
     def filter(self, **kwargs):
-        for ins in self:
-            if all(getattr(ins, attr, None) == value for attr, value in kwargs.items()):
-                yield ins
+        for obj in self:
+            if all(getattr(obj, attr, None) == value for attr, value in kwargs.items()):
+                yield obj
 
     def __call__(self, **kwargs):
         return InstancesManager(self.filter(**kwargs))
 
     def get(self, **kwargs):
+        iteration = self.filter(**kwargs)
         try:
-            return next(self.filter(**kwargs))
+            obj = next(iteration)
         except StopIteration:
             raise LookupError(f"No instance found in {self.__class__} for {kwargs!r}.")
+        try:
+            next(iteration)
+        except StopIteration:
+            return obj  # OK. Just one object.
+        else:
+            raise ValueError(f"Just one object expected. There are multiple objects for the filter {kwargs!r}")
 
     def get_or_create(self, **kwargs):
         try:
@@ -171,10 +191,11 @@ class Token(Crypto):
     price: Fiat
     decimals: int
     protocol: str | None = None
+    filter_attrs: set[str] = {"chain"}
 
     __repr__ = repr_for("chain", "symbol", "protocol")
 
-    instances = InstancesManager()
+    instances = InstancesManager([])  # TODO: Fix it by defining __new__ instead of __init__
     objs = instances
 
     def __post_init__(self):
@@ -375,7 +396,7 @@ class TokenAmount(Asset):
         Returns one UnderlyingTokenAmount or zero in the list, which is the unwrapped token with its converted value.
         """
         if isinstance(self.token, Unwrappable):
-            yield self.token.unwrap(self)
+            yield from self.token.unwrap(self)
 
     @default
     def time(self) -> Time:

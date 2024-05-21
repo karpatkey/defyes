@@ -28,10 +28,10 @@ xDAI = NativeToken.instances.get(chain=Chain.GNOSIS)
 class SdaiToken(Unwrappable, ERC20Token):
     abi_class = contracts.Sdai
 
-    def unwrap(self, tokenamount: TokenAmount) -> UnderlyingTokenAmount:
+    def unwrap(self, tokenamount: TokenAmount) -> list[UnderlyingTokenAmount]:
         self.abi.block = tokenamount.block  # TODO: improve this workarround
         amount_teu = self.abi.convert_to_assets(tokenamount.amount_teu)
-        return UnderlyingTokenAmount(token=self.unwrapped_token, amount_teu=amount_teu)
+        return [UnderlyingTokenAmount(token=self.unwrapped_token, amount_teu=amount_teu)]
 
 
 class tokens:
