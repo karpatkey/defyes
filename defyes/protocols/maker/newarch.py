@@ -22,7 +22,15 @@ from . import contracts
 
 logger = logging.getLogger(__name__)
 
-xDAI = NativeToken.instances.get(chain=Chain.GNOSIS)
+xDAI = NativeToken.objs.get(chain=Chain.GNOSIS)
+
+
+class ERC20Token(ERC20Token):
+    protocol = "maker"
+
+
+ERC20Token(symbol="MKR", chain=Chain.ETHEREUM, address=EthereumTokenAddr.MKR)
+eth_DAI = ERC20Token(symbol="DAI", chain=Chain.ETHEREUM, address=EthereumTokenAddr.DAI)
 
 
 class SdaiToken(Unwrappable, ERC20Token):
@@ -34,17 +42,10 @@ class SdaiToken(Unwrappable, ERC20Token):
         return [UnderlyingTokenAmount(token=self.unwrapped_token, amount_teu=amount_teu)]
 
 
-class tokens:
-    class ethereum:
-        MKR = ERC20Token(chain=Chain.ETHEREUM, address=EthereumTokenAddr.MKR)
-        DAI = ERC20Token(chain=Chain.ETHEREUM, address=EthereumTokenAddr.DAI)
-        sDAI = SdaiToken(
-            chain=Chain.ETHEREUM, address="0x83F20F44975D03b1b09e64809B757c47f942BEeA", unwrapped_token=DAI
-        )
-
-    class gnosis:
-        sDAI = SdaiToken(chain=Chain.GNOSIS, address="0xaf204776c7245bF4147c2612BF6e5972Ee483701", unwrapped_token=xDAI)
-
+SdaiToken(
+    symbol="sDAI", chain=Chain.ETHEREUM, address="0x83F20F44975D03b1b09e64809B757c47f942BEeA", unwrapped_token=eth_DAI
+)
+SdaiToken(symbol="sDAI", chain=Chain.GNOSIS, address="0xaf204776c7245bF4147c2612BF6e5972Ee483701", unwrapped_token=xDAI)
 
 ############################################################
 ############################################################
@@ -122,7 +123,7 @@ class Positions(Frozen, KwInit):
 
     @default
     def DAI(self):
-        return Token.instances.get(chain=self.chain, symbol="DAI")
+        return ERC20Token.objs.get(chain=self.chain, symbol="DAI")
 
     @default
     def vaults(self) -> list[Vault]:
@@ -136,12 +137,7 @@ class Positions(Frozen, KwInit):
             ink, art = vat.urns(ilk, urn_handler_address)
             rate = vat.ilks(ilk)[1]
 
-            # lend_token = ERC20Token.instances.get_or_create(chain=self.chain, address=gem)
-            try:
-                lend_token = Token.instances.get(chain=self.chain, address=gem)
-            except LookupError:
-                lend_token = ERC20Token(chain=self.chain, address=gem)
-                Token.instances.add(lend_token)
+            lend_token = ERC20Token.objs.get_or_create(chain=self.chain, address=gem)
             yield self.Vault(
                 address=cdp.contract.address,
                 id=vault_id,
@@ -174,7 +170,7 @@ class Positions(Frozen, KwInit):
     @default
     def iou(self) -> Iou:
         iou = contracts.Iou(self.chain, self.block)
-        MKR = Token.instances.get(chain=self.chain, symbol="MKR")
+        MKR = ERC20Token.objs.get(chain=self.chain, symbol="MKR")
         return Iou(
             context=self,
             address=iou.contract.address,

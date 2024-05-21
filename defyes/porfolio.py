@@ -115,10 +115,11 @@ class USD(Fiat):
 class InstancesManager(list):
     unique = dict()
 
-    def __init__(self, seq, current_class_owner=None):
-        self[:] = seq  # TODO: improve it to avoid premature list convertion
+    def __new__(cls, seq: Iterator = None, *, current_class_owner=None, **kwargs):
+        self = super().__new__(cls, seq)
         if current_class_owner:
             self.current_class_owner = current_class_owner
+        return self
 
     def __set_name__(self, owner, name):
         self.initial_class_owner = owner
@@ -195,12 +196,11 @@ class Token(Crypto):
 
     __repr__ = repr_for("chain", "symbol", "protocol")
 
-    instances = InstancesManager([])  # TODO: Fix it by defining __new__ instead of __init__
-    objs = instances
+    objs = InstancesManager()
 
     def __post_init__(self):
         super().__post_init__()
-        Token.instances.add(self)
+        Token.objs.add(self)
 
     def __hash__(self):
         return hash(self.symbol)
@@ -466,6 +466,8 @@ def public_attrs_dict(class_) -> dict[str, Module]:
 
 @public_attrs_dict
 class compatible_protocols:
+    from .protocols.aura import newarch as aura
+    from .protocols.balancer import newarch as balancer
     from .protocols.maker import newarch as maker
 
 
@@ -478,23 +480,20 @@ class Porfolio(Frozen, KwInit):
     wallet: str
     included_protocols_name: set[str] = set(compatible_protocols.keys())
 
+    # TODO: no conviene tirar aunque no se conozcan. solamente filtrar para tokenamount, no para underlyings
     @default
-    def included_tokens(
-        self,
-    ) -> set[
-        Token
-    ]:  # TODO: no conviene tirar aunque no se conozcan. solamente filtrar para tokenamount, no para underlyings
+    def included_tokens(self) -> set[Token]:
         """
         All tokens for this chain by default.
         """
-        return set(Token.instances.filter(chain=self.chain))
+        return set(Token.objs.filter(chain=self.chain))
 
     @default
     def target_tokens(self) -> set[Token]:
         """
         Not unwrappable tokens by default.
         """
-        return set(token for token in Token.instances if not isinstance(token, Unwrappable))
+        return set(token for token in Token.objs if not isinstance(token, Unwrappable))
 
     def __iter__(self) -> Iterator[list[Token]]:
         porfolio: list[Asset] = [*self.token_positions, *self.positions]
@@ -574,7 +573,7 @@ def like_debank(portfolio: Porfolio):
     for ta in inwallet:
         print_amounts(ta, "  ")
         if ta:
-            print(f"    {ta.amount_fiat!r}")
+            pass  # print(f"    {ta.amount_fiat!r}")
         print()
     print()
 
@@ -602,7 +601,7 @@ def print_pos(positions, level=1):
             ta = p
             print_amounts(ta, "  " * level)
             if ta and not ta.underlyings:
-                print(f"{'  '*(level+1)}{ta.amount_fiat!r}")
+                pass  # print(f"{'  '*(level+1)}{ta.amount_fiat!r}")
         else:
             print(f"  {p.__class__.__name__}")
         if p.underlyings:
