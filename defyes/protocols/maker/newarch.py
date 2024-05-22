@@ -25,15 +25,15 @@ logger = logging.getLogger(__name__)
 xDAI = NativeToken.objs.get(chain=Chain.GNOSIS)
 
 
-class ERC20Token(ERC20Token):
+class MakerToken(ERC20Token):
     protocol = "maker"
 
 
-ERC20Token(symbol="MKR", chain=Chain.ETHEREUM, address=EthereumTokenAddr.MKR)
-eth_DAI = ERC20Token(symbol="DAI", chain=Chain.ETHEREUM, address=EthereumTokenAddr.DAI)
+MakerToken(symbol="MKR", chain=Chain.ETHEREUM, address=EthereumTokenAddr.MKR)
+eth_DAI = MakerToken(symbol="DAI", chain=Chain.ETHEREUM, address=EthereumTokenAddr.DAI)
 
 
-class SdaiToken(Unwrappable, ERC20Token):
+class SdaiToken(Unwrappable, MakerToken):
     abi_class = contracts.Sdai
 
     def unwrap(self, tokenamount: TokenAmount) -> list[UnderlyingTokenAmount]:
@@ -46,40 +46,6 @@ SdaiToken(
     symbol="sDAI", chain=Chain.ETHEREUM, address="0x83F20F44975D03b1b09e64809B757c47f942BEeA", unwrapped_token=eth_DAI
 )
 SdaiToken(symbol="sDAI", chain=Chain.GNOSIS, address="0xaf204776c7245bF4147c2612BF6e5972Ee483701", unwrapped_token=xDAI)
-
-############################################################
-############################################################
-# def instanceof(class_):
-#    return class_()
-#
-# class tokens:
-#    class ethereum:
-#        _ = partial(ERC20Token, chain=Chain.ETHEREUM)
-#        MKR = _(address=EthereumTokenAddr.MKR)
-#        DAI = _(address=EthereumTokenAddr.DAI)
-#
-#        @instanceof
-#        class sDAI(ERC20Token):
-#            chain = Chain.ETHEREUM
-#            address = "0x83F20F44975D03b1b09e64809B757c47f942BEeA"
-#            abi_class = abis.Sdai
-#            unwrapped = DAI
-#
-#    class gnosis:
-#        xDAI = NativeToken(chain=Chain.GNOSIS, symbol="xDAI")
-#
-#        @instanceof
-#        class sDAI(ERC20Token):
-#            chain = Chain.GNOSIS
-#            address = "0xaf204776c7245bF4147c2612BF6e5972Ee483701"
-#            unwrapped = xDAI
-#
-#            class abi_class(abis.Sdai):
-#                dai = Address.ZERO
-
-
-############################################################
-############################################################
 
 
 class Position(Position):
@@ -138,7 +104,7 @@ class Positions(Frozen, KwInit):
             rate = vat.ilks(ilk)[1]
 
             lend_token = ERC20Token.objs.get_or_create(chain=self.chain, address=gem)
-            yield self.Vault(
+            yield Vault(
                 address=cdp.contract.address,
                 id=vault_id,
                 context=self,

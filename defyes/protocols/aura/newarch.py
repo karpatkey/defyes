@@ -14,7 +14,7 @@ from defyes.porfolio import (
 )
 
 
-class VaultToken(Unwrappable, ERC20Token):
+class AuraToken(Unwrappable, ERC20Token):
     protocol = "aura"
 
     def unwrap(self, tokenamount: TokenAmount) -> list[UnderlyingTokenAmount]:
@@ -23,7 +23,7 @@ class VaultToken(Unwrappable, ERC20Token):
         return [UnderlyingTokenAmount(token=underlying_token, amount_teu=tokenamount.amount_teu)]
 
 
-VaultToken(chain=Chain.ETHEREUM, address="0x2a14dB8D09dB0542f6A371c0cB308A768227D67D")
+AuraToken(chain=Chain.ETHEREUM, address="0x2a14dB8D09dB0542f6A371c0cB308A768227D67D")
 
 
 class Position(Position):
