@@ -7,7 +7,6 @@ from functools import cached_property
 from typing import Iterator
 
 from defabipedia import Blockchain, Chain
-from defabipedia.tokens import EthereumTokenAddr, GnosisTokenAddr
 from karpatkit.node import get_node
 from web3 import Web3
 
@@ -300,8 +299,6 @@ ERC20Token(
     address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
     symbol="USDC.e",
 )
-ERC20Token(chain=Chain.ETHEREUM, address=EthereumTokenAddr.WETH, symbol="wETH")
-ERC20Token(chain=Chain.GNOSIS, address=GnosisTokenAddr.WETH, symbol="wETH")
 
 
 class Asset(Frozen, KwInit):
@@ -421,6 +418,8 @@ class Porfolio(Frozen, KwInit):
     wallet: str
     included_protocols_name: set[str] = set(compatible_protocols.keys())
 
+    __repr__ = repr_for("chain", "block", "wallet")
+
     # TODO: no conviene tirar aunque no se conozcan. solamente filtrar para tokenamount, no para underlyings
     @default
     def included_tokens(self) -> set[Token]:
@@ -434,7 +433,7 @@ class Porfolio(Frozen, KwInit):
         """
         Not unwrappable tokens by default.
         """
-        return set(token for token in Token.objs if not isinstance(token, Unwrappable))
+        return set(token for token in Token.objs.filter(chain=self.chain) if not isinstance(token, Unwrappable))
 
     def __iter__(self) -> Iterator[list[Token]]:
         portfolio: list[Asset] = [*self.token_positions, *self.positions]
