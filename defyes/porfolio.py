@@ -1,3 +1,4 @@
+import importlib
 import inspect
 import logging
 from collections import defaultdict
@@ -142,17 +143,6 @@ class InstancesManager(list):
     def _alike(instance, obj):
         return all(getattr(obj, attr) == getattr(instance, attr) for attr in instance.filter_attrs)
 
-    def add(self, obj):
-        # self.append(obj)
-        # return
-        h = hash(obj)
-        new_i = len(self)
-        i = self.unique.setdefault(h, new_i)
-        if i != new_i:
-            raise ValueError(f"Already defined instance (current:{self[i]}, new:{obj}")
-        else:
-            self.append(obj)
-
     def filter(self, **kwargs):
         for obj in self:
             if all(getattr(obj, attr, None) == value for attr, value in kwargs.items()):
@@ -174,6 +164,23 @@ class InstancesManager(list):
         else:
             raise ValueError(f"Just one object expected. There are multiple objects for the filter {kwargs!r}")
 
+    def create(self, **kwargs):
+        obj = self.current_class_owner(**kwargs)
+        return obj
+
+    def add(self, obj):
+        """
+        Add a new obj. Replace if it already exists.
+        """
+        obj_hash = hash(obj)
+        try:
+            i = self.unique[obj_hash]
+        except KeyError:
+            self.unique[obj_hash] = len(self)
+            self.append(obj)
+        else:
+            self[i] = obj
+
     def get_or_create(self, **kwargs):
         try:
             return self.get(**kwargs)
@@ -181,12 +188,9 @@ class InstancesManager(list):
             return self.current_class_owner(**kwargs)
 
 
-class Crypto(Frozen, KwInit):
-    chain: Blockchain
+class Token(Frozen, KwInit):
     node: Web3
-
-
-class Token(Crypto):
+    chain: Blockchain
     symbol: str
     name: str
     price: Fiat
@@ -204,19 +208,6 @@ class Token(Crypto):
 
     def __hash__(self):
         return hash(self.symbol)
-
-    def __set_name__(self, owner, symbol: str):
-        """
-        Allows to set the symbol from the class attribute name by default.
-            class X:
-                ETH = Token(chain=..., name=...)  # symbol -> "ETH"
-
-        Anyways, an override during initialization has priority.
-            class X:
-                USDCe = Token(chain=..., name=..., symbol="USDC.e")  # symbol -> "USDC.e"
-        """
-        self.__dict__["symbol"] = symbol
-        self.__dict__["protocol"] = _get_protocol_from_module(owner.__module__)
 
 
 def _get_protocol_from_module(module: str) -> str | None:
@@ -267,10 +258,6 @@ class Deployment:
         return self.abi.contract.w3
 
 
-class DeploymentCrypto(Deployment, Crypto):
-    pass
-
-
 class ERC20Token(Deployment, Token):
     abi_class: type = Erc20
 
@@ -308,27 +295,18 @@ class Unwrappable:
         raise NotImplementedError
 
 
-USDCe = ERC20Token(
+NativeToken.objs.get_or_create(chain=Chain.ETHEREUM, symbol="ETH", name="Ether")
+NativeToken.objs.get_or_create(chain=Chain.POLYGON, symbol="MATIC", name="Matic")
+NativeToken.objs.get_or_create(chain=Chain.GNOSIS, symbol="xDAI", name="Gnosis native DAI")
+
+# patch decimals, because the unstETH contract has not decimals funcion.
+ERC20Token.objs.get_or_create(chain=Chain.ETHEREUM, address=EthereumTokenAddr.unstETH, decimals=0)
+
+ERC20Token.objs.get_or_create(
     chain=Chain.POLYGON,
     address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
     symbol="USDC.e",
 )
-
-
-class USDCe(ERC20Token):
-    chain = Chain.POLYGON
-    address = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
-    symbol = "USDC.e"
-
-
-class tokens:
-    class ethereum:
-        class unstETHToken(ERC20Token):
-            chain = Chain.ETHEREUM
-            address = EthereumTokenAddr.unstETH
-            decimals = 0  # patch, because the unstETH contract has not decimals funcion.
-
-        unstETH = unstETHToken()
 
 
 class Asset(Frozen, KwInit):
@@ -437,41 +415,9 @@ class UnderlyingTokenAmount(TokenAmount):
             raise ValueError("At least one of either `amount` or `amount_teu` must be defined.")
 
 
-def discover_defabipedia_tokens():
-    from defabipedia import tokens
-
-    for chain, container_class in tokens.Addresses.items():
-        for attr_name, attr_value in vars(container_class).items():
-            if not attr_name.startswith("_") and attr_name not in {"ZERO", "E"} and isinstance(attr_value, str):
-                try:
-                    ERC20Token(chain=chain, symbol=attr_name, address=attr_value)
-                except ValueError as e:
-                    logger.error(f"{e!s}")
-                    print(e)
-
-
-# class Crypto(Asset):
-#    def __getitem__(self, block):
-#        new_instance = self.__class__()
-#        new_instance.__dict__ = self.__dict__.copy()
-#
-# USDC = Crpto(......)
-# USDC[1883747463]
-# USDC.__getitem__(1888...)
-
-
-def public_attrs_dict(class_) -> dict[str, Module]:
-    return {name: attr for name, attr in vars(class_).items() if not name.startswith("_")}
-
-
-@public_attrs_dict
-class compatible_protocols:
-    from .protocols.aura import newarch as aura
-    from .protocols.balancer import newarch as balancer
-    from .protocols.maker import newarch as maker
-
-
-discover_defabipedia_tokens()
+compatible_protocols = {
+    name: importlib.import_module(f"defyes.protocols.{name}.newarch") for name in {"aura", "balancer", "maker"}
+}
 
 
 class Porfolio(Frozen, KwInit):
@@ -524,7 +470,7 @@ class Porfolio(Frozen, KwInit):
 
     @default
     def protocols(self) -> dict[str, Module]:
-        return {name: module for name, module in compatible_protocols.items() if name in self.included_protocols_name}
+        return {name: compatible_protocols[name] for name in self.included_protocols_name}
 
     @default
     def positions(self):
@@ -567,19 +513,19 @@ def groupby(seq, key):
     return dict(d)
 
 
-def like_debank(portfolio: Porfolio):
+def like_debank(portfolio: Porfolio, show_fiat=False):
     inprotocol, inwallet = boolsplit(portfolio.token_positions, lambda ta: ta.underlyings)
     print("Wallet")
     for ta in inwallet:
         print_amounts(ta, "  ")
-        if ta:
-            pass  # print(f"    {ta.amount_fiat!r}")
+        if ta and show_fiat:
+            print(f"    {ta.amount_fiat!r}")
         print()
     print()
 
     for protocol, positions in groupby(inprotocol + portfolio.positions, lambda p: p.protocol).items():
         print(protocol)
-        print_pos(positions)
+        print_pos(positions, show_fiat=show_fiat)
 
 
 def decimal_format(dec):
@@ -595,15 +541,31 @@ def print_amounts(ta, prefix=""):
     print(f"{prefix}{ta.token.symbol} {decimal_format(ta.amount)}")
 
 
-def print_pos(positions, level=1):
+def print_pos(positions, level=1, show_fiat=False):
     for p in positions:
         if isinstance(p, TokenAmount):
             ta = p
             print_amounts(ta, "  " * level)
-            if ta and not ta.underlyings:
-                pass  # print(f"{'  '*(level+1)}{ta.amount_fiat!r}")
+            if ta and show_fiat and not ta.underlyings:
+                print(f"{'  '*(level+1)}{ta.amount_fiat!r}")
         else:
             print(f"  {p.__class__.__name__}")
         if p.underlyings:
             print_pos(p.underlyings, level + 1)
     print()
+
+
+def discover_defabipedia_tokens():
+    from defabipedia import tokens
+
+    for chain, container_class in tokens.Addresses.items():
+        for attr, obj in vars(container_class).items():
+            if not attr.startswith("_") and attr not in {"ZERO", "E"} and isinstance(obj, str):
+                try:
+                    ERC20Token.objs.get_or_create(chain=chain, symbol=attr, address=obj)
+                except ValueError as e:
+                    logger.error(f"{e!s}")
+                    print(e)
+
+
+discover_defabipedia_tokens()
