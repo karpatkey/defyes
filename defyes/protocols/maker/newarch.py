@@ -10,7 +10,6 @@ from defyes.portfolio import (
     KwInit,
     NativeToken,
     Position,
-    Token,
     TokenAmount,
     UnderlyingTokenAmount,
     Unwrappable,
