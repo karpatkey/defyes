@@ -1,17 +1,19 @@
 import importlib
 import inspect
 import logging
+import time
 from collections import defaultdict
 from decimal import Decimal
-from functools import cached_property
+from functools import cached_property, wraps
 from typing import Iterator
 
 from defabipedia import Blockchain, Chain
+from defabipedia.tokens import EthereumTokenAddr
 from karpatkit.node import get_node
 from web3 import Web3
 
 from defyes.contracts import Erc20
-from defyes.lazytime import Time
+from defyes.lazytime import Duration, Time
 from defyes.prices import Chainlink as chainlink
 from defyes.prices.prices import get_price as get_price_in_usd
 
@@ -217,6 +219,32 @@ def _get_protocol_from_module(module: str) -> str | None:
         prev_part = part
 
 
+def timeit(method):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        t0 = time.monotonic()
+        result = method(self, *args, **kwargs)
+        t1 = time.monotonic()
+        attr = f"{method.__name__}_timeit"
+        try:
+            ti = self.__dict__[attr]
+        except KeyError:
+            ti = {}
+        cumsum = ti.get("cumsum", 0)
+        n_calls = ti.get("n_calls", 0)
+        duration = Duration.seconds(t1 - t0)
+        cumsum += duration
+        n_calls += 1
+        self.__dict__[attr] = {
+            "last_call": {"duration": duration, "args": args, "kwargs": kwargs},
+            "cumsum": cumsum,
+            "n_calls": n_calls,
+        }
+        return result
+
+    return wrapper
+
+
 class NativeToken(Token):
     decimals: int = 18
 
@@ -227,6 +255,7 @@ class NativeToken(Token):
     def __hash__(self):
         return self.chain.chain_id
 
+    @timeit
     def price(self, block: int) -> Fiat:
         value = chainlink.get_native_token_price(self.node, block, self.chain)
         return USD(value, source="chainlink")
@@ -236,11 +265,6 @@ class NativeToken(Token):
 
     def amount_of(self, wallet: str, block: int) -> "TokenAmount":
         return TokenAmount(token=self, wallet=wallet, block=block)
-
-
-NativeToken(chain=Chain.ETHEREUM, symbol="ETH", name="Ether")
-NativeToken(chain=Chain.POLYGON, symbol="MATIC", name="Matic")
-NativeToken(chain=Chain.GNOSIS, symbol="xDAI", name="Gnosis native DAI")
 
 
 class Deployment:
@@ -272,6 +296,7 @@ class ERC20Token(Deployment, Token):
     def decimals(self) -> int:
         return self.abi.decimals
 
+    @timeit
     def price(self, block: int) -> Fiat:
         price, source, _ = get_price_in_usd(self.address, block, self.chain)
         return USD(price if price else float("nan"), source=source)
@@ -288,17 +313,10 @@ class ERC20Token(Deployment, Token):
 
 
 class Unwrappable:
-    unwrapped_token: Token
+    unwrapped_token: Token  # Optional attribute in case a token has just one unwrapped token
 
-    def unwrap(self, tokenamount: "TokenAmount") -> "UnderlyingTokenAmount":
+    def unwrap(self, tokenamount: "TokenAmount") -> list["UnderlyingTokenAmount"]:
         raise NotImplementedError
-
-
-ERC20Token(
-    chain=Chain.POLYGON,
-    address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
-    symbol="USDC.e",
-)
 
 
 class Asset(Frozen, KwInit):
@@ -405,6 +423,33 @@ class UnderlyingTokenAmount(TokenAmount):
         """
         if not {"amount", "amount_teu"}.intersection(self.__dict__):
             raise ValueError("At least one of either `amount` or `amount_teu` must be defined.")
+
+
+#### Some token definitions
+
+ETH = NativeToken(chain=Chain.ETHEREUM, symbol="ETH", name="Ether")
+NativeToken(chain=Chain.POLYGON, symbol="MATIC", name="Matic")
+NativeToken(chain=Chain.GNOSIS, symbol="xDAI", name="Gnosis native DAI")
+
+
+ERC20Token(
+    chain=Chain.POLYGON,
+    address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+    symbol="USDC.e",
+)
+
+
+class WETHToken(Unwrappable, ERC20Token):
+    chain = Chain.ETHEREUM
+    address = EthereumTokenAddr.WETH
+
+    def unwrap(self, tokenamount: "TokenAmount") -> list["UnderlyingTokenAmount"]:
+        return [UnderlyingTokenAmount(token=ETH, amount=tokenamount.amount)]
+
+
+WETHToken()
+
+###
 
 
 compatible_protocols = {
@@ -514,12 +559,12 @@ def like_debank(portfolio: Porfolio, show_fiat=False):
         print_amounts(ta, "  ")
         if ta and show_fiat:
             print(f"    {ta.amount_fiat!r}")
-        print()
     print()
 
     for protocol, positions in groupby(inprotocol + portfolio.positions, lambda p: p.protocol).items():
         print(protocol)
         print_pos(positions, show_fiat=show_fiat)
+        print()
 
 
 def decimal_format(dec):
@@ -545,8 +590,7 @@ def print_pos(positions, level=1, show_fiat=False):
         else:
             print(f"  {p.__class__.__name__}")
         if p.underlyings:
-            print_pos(p.underlyings, level + 1)
-    print()
+            print_pos(p.underlyings, level + 1, show_fiat)
 
 
 def discover_defabipedia_tokens():
