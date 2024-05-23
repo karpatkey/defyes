@@ -7,7 +7,7 @@ from functools import cached_property
 from typing import Iterator
 
 from defabipedia import Blockchain, Chain
-from defabipedia.tokens import EthereumTokenAddr
+from defabipedia.tokens import EthereumTokenAddr, GnosisTokenAddr
 from karpatkit.node import get_node
 from web3 import Web3
 
@@ -295,18 +295,13 @@ class Unwrappable:
         raise NotImplementedError
 
 
-NativeToken.objs.get_or_create(chain=Chain.ETHEREUM, symbol="ETH", name="Ether")
-NativeToken.objs.get_or_create(chain=Chain.POLYGON, symbol="MATIC", name="Matic")
-NativeToken.objs.get_or_create(chain=Chain.GNOSIS, symbol="xDAI", name="Gnosis native DAI")
-
-# patch decimals, because the unstETH contract has not decimals funcion.
-ERC20Token.objs.get_or_create(chain=Chain.ETHEREUM, address=EthereumTokenAddr.unstETH, decimals=0)
-
-ERC20Token.objs.get_or_create(
+ERC20Token(
     chain=Chain.POLYGON,
     address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
     symbol="USDC.e",
 )
+ERC20Token(chain=Chain.ETHEREUM, address=EthereumTokenAddr.WETH, symbol="wETH")
+ERC20Token(chain=Chain.GNOSIS, address=GnosisTokenAddr.WETH, symbol="wETH")
 
 
 class Asset(Frozen, KwInit):
@@ -416,7 +411,7 @@ class UnderlyingTokenAmount(TokenAmount):
 
 
 compatible_protocols = {
-    name: importlib.import_module(f"defyes.protocols.{name}.newarch") for name in {"aura", "balancer", "maker"}
+    name: importlib.import_module(f"defyes.protocols.{name}.newarch") for name in {"aura", "balancer", "maker", "lido"}
 }
 
 
