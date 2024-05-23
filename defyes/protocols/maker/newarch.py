@@ -4,7 +4,7 @@ from typing import Iterator
 from defabipedia import Blockchain, Chain
 from defabipedia.tokens import EthereumTokenAddr
 
-from defyes.porfolio import (
+from defyes.portfolio import (
     ERC20Token,
     Frozen,
     KwInit,

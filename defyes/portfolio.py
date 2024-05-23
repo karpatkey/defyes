@@ -442,19 +442,19 @@ class Porfolio(Frozen, KwInit):
         return set(token for token in Token.objs if not isinstance(token, Unwrappable))
 
     def __iter__(self) -> Iterator[list[Token]]:
-        porfolio: list[Asset] = [*self.token_positions, *self.positions]
+        portfolio: list[Asset] = [*self.token_positions, *self.positions]
         while True:
-            yield porfolio
-            if self.has_just_target_tokens(porfolio):
+            yield portfolio
+            if self.has_just_target_tokens(portfolio):
                 break
-            porfolio = list(self.deeper(porfolio))
+            portfolio = list(self.deeper(portfolio))
 
-    def has_just_target_tokens(self, porfolio):
+    def has_just_target_tokens(self, portfolio):
         return False
-        # if target_tokens.intersection({ta.token for ta in porfolio if ta)
+        # if target_tokens.intersection({ta.token for ta in portfolio if ta)
 
-    def deeper(self, porfolio):
-        for position in porfolio:
+    def deeper(self, portfolio):
+        for position in portfolio:
             # Stop underlying/unwrapping on target tokens
             if hasattr(position, "token") and position.token in self.target_tokens:
                 yield position

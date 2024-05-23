@@ -8,7 +8,7 @@ from karpatkit.helpers import suppress_error_codes
 from web3 import Web3
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 
-from defyes.porfolio import (
+from defyes.portfolio import (
     ERC20Token,
     Frozen,
     KwInit,
