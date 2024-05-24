@@ -83,7 +83,7 @@ class DsrManager(DsrManager):
 
 
 # class DsrManagerDeployment(DeploymentCrypto):
-#    abi_class = abis.DsrManager
+#    contract_class = abis.DsrManager
 #    chain = Chain.ETHEREUM
 #    address = "0x373238337Bfe1146fb49989fc222523f83081dDb"
 #
@@ -109,7 +109,7 @@ class Sdai(Sdai):
 #
 #        MKR = ERC20Token(address=EthereumTokenAddr.MKR)
 #        DAI = ERC20Token(address=EthereumTokenAddr.DAI)
-#        sDAI = ERC20Token(abi_class=Sdai, unwrapped=DAI)
+#        sDAI = ERC20Token(contract_class=Sdai, unwrapped=DAI)
 #
 #    class gnosis:
 #        #xDAI = NativeToken(chain=Chain.GNOSIS, symbol="xDAI")

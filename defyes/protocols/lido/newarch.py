@@ -18,7 +18,7 @@ ETH = NativeToken.objs.get(chain=Chain.ETHEREUM)
 
 
 class StEthToken(LidoToken):
-    abi_class = contracts.Steth
+    contract_class = contracts.Steth
     symbol = "stETH"
 
 
@@ -35,7 +35,7 @@ gnosis_stETH = StEthToken(chain=Chain.GNOSIS, address="0xae7ab96520DE3A18E5e111B
 
 
 class WrappedStEthToken(Unwrappable, LidoToken):
-    abi_class = contracts.Wsteth
+    contract_class = contracts.Wsteth
     symbol = "wstETH"
 
     def unwrap(self, tokenamount: TokenAmount) -> list[UnderlyingTokenAmount]:

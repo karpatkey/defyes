@@ -10,6 +10,7 @@ from defyes.portfolio import (
     KwInit,
     NativeToken,
     Position,
+    Token,
     TokenAmount,
     UnderlyingTokenAmount,
     Unwrappable,
@@ -33,7 +34,8 @@ eth_DAI = MakerToken(symbol="DAI", chain=Chain.ETHEREUM, address=EthereumTokenAd
 
 
 class SdaiToken(Unwrappable, MakerToken):
-    abi_class = contracts.Sdai
+    contract_class = contracts.Sdai
+    unwrapped_token: Token
 
     def unwrap(self, tokenamount: TokenAmount) -> list[UnderlyingTokenAmount]:
         self.abi.block = tokenamount.block  # TODO: improve this workarround
@@ -47,26 +49,36 @@ SdaiToken(
 SdaiToken(symbol="sDAI", chain=Chain.GNOSIS, address="0xaf204776c7245bF4147c2612BF6e5972Ee483701", unwrapped_token=xDAI)
 
 
-class Position(Position):
+class MakerPosition(Position):
     protocol: str = "maker"
     context: "Positions"
     address: str
 
 
-class Vault(Position):
+class Vault(MakerPosition):
     id: int
     __repr__ = repr_for("address", "id", "underlyings", "unclaimed_rewards")
 
 
-class DSR(Position):
+# WIP
+class CDPManagerPosition(MakerPosition):
+    def vault_ids(self, proxy_addr: str) -> list[int]:
+        # next_id = self.contract.functions.first(proxy_addr).call(block_identifier=self.block)
+        next_id = self.first(proxy_addr)
+        for _ in range(self.count(proxy_addr)):
+            yield next_id
+            prev_id, next_id = self._list(next_id)
+
+
+class DSR(MakerPosition):
     pass
 
 
-class Pot(Position):
+class Pot(MakerPosition):
     pass
 
 
-class Iou(Position):
+class Iou(MakerPosition):
     pass
 
 
@@ -92,6 +104,9 @@ class Positions(Frozen, KwInit):
 
     @default
     def vaults(self) -> list[Vault]:
+        # contracts = defabipedia.maker.ContractSpecs[self.chain]
+        # node = get_node(self.chain)
+        # cdp = contracts.CdpManager.contract(node)
         cdp = contracts.CdpManager(self.chain, self.block)
         ilk_registry = contracts.IlkRegistry(self.chain, self.block)
         vat = contracts.Vat(self.chain, self.block)
