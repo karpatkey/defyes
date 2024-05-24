@@ -5,7 +5,7 @@ from defabipedia import Blockchain, Chain
 from defabipedia.tokens import EthereumTokenAddr
 
 from defyes.portfolio import (
-    ERC20Token,
+    DeployedToken,
     Frozen,
     KwInit,
     NativeToken,
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 xDAI = NativeToken.objs.get(chain=Chain.GNOSIS)
 
 
-class MakerToken(ERC20Token):
+class MakerToken(DeployedToken):
     protocol = "maker"
 
 
@@ -100,7 +100,7 @@ class Positions(Frozen, KwInit):
 
     @default
     def DAI(self):
-        return ERC20Token.objs.get(chain=self.chain, symbol="DAI")
+        return DeployedToken.objs.get(chain=self.chain, symbol="DAI")
 
     @default
     def vaults(self) -> list[Vault]:
@@ -117,7 +117,7 @@ class Positions(Frozen, KwInit):
             ink, art = vat.urns(ilk, urn_handler_address)
             rate = vat.ilks(ilk)[1]
 
-            lend_token = ERC20Token.objs.get_or_create(chain=self.chain, address=gem)
+            lend_token = DeployedToken.objs.get_or_create(chain=self.chain, address=gem)
             yield Vault(
                 address=cdp.contract.address,
                 id=vault_id,
@@ -150,7 +150,7 @@ class Positions(Frozen, KwInit):
     @default
     def iou(self) -> Iou:
         iou = contracts.Iou(self.chain, self.block)
-        MKR = ERC20Token.objs.get(chain=self.chain, symbol="MKR")
+        MKR = DeployedToken.objs.get(chain=self.chain, symbol="MKR")
         return Iou(
             context=self,
             address=iou.contract.address,

@@ -5,12 +5,12 @@ Gnosis: wstETH -> stETH
 from defabipedia import Chain
 from defabipedia.tokens import EthereumTokenAddr, GnosisTokenAddr
 
-from defyes.portfolio import ERC20Token, Frozen, KwInit, NativeToken, TokenAmount, UnderlyingTokenAmount, Unwrappable
+from defyes.portfolio import DeployedToken, Frozen, KwInit, NativeToken, TokenAmount, UnderlyingTokenAmount, Unwrappable
 
 from . import contracts
 
 
-class LidoToken(ERC20Token):
+class LidoToken(DeployedToken):
     protocol = "lido"
 
 

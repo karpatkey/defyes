@@ -3,7 +3,7 @@ from typing import Iterator
 from defabipedia import Blockchain, Chain
 
 from defyes.portfolio import (
-    ERC20Token,
+    DeployedToken,
     Frozen,
     KwInit,
     Position,
@@ -14,7 +14,7 @@ from defyes.portfolio import (
 )
 
 
-class AuraToken(Unwrappable, ERC20Token):
+class AuraToken(Unwrappable, DeployedToken):
     protocol = "aura"
 
     def unwrap(self, tokenamount: TokenAmount) -> list[UnderlyingTokenAmount]:

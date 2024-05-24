@@ -281,7 +281,7 @@ class Deployment:
         return self.abi.contract.w3
 
 
-class ERC20Token(Deployment, Token):
+class DeployedToken(Deployment, Token):
     contract_class: type = Erc20
 
     @default
@@ -436,14 +436,14 @@ NativeToken(chain=Chain.POLYGON, symbol="MATIC", name="Matic")
 NativeToken(chain=Chain.GNOSIS, symbol="xDAI", name="Gnosis native DAI")
 
 
-ERC20Token(
+DeployedToken(
     chain=Chain.POLYGON,
     address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
     symbol="USDC.e",
 )
 
 
-class WETHToken(Unwrappable, ERC20Token):
+class WETHToken(Unwrappable, DeployedToken):
     chain = Chain.ETHEREUM
     address = EthereumTokenAddr.WETH
 
@@ -604,7 +604,7 @@ def discover_defabipedia_tokens():
         for attr, obj in vars(container_class).items():
             if not attr.startswith("_") and attr not in {"ZERO", "E"} and isinstance(obj, str):
                 try:
-                    ERC20Token.objs.get_or_create(chain=chain, symbol=attr, address=obj)
+                    DeployedToken.objs.get_or_create(chain=chain, symbol=attr, address=obj)
                 except ValueError as e:
                     logger.error(f"{e!s}")
                     print(e)

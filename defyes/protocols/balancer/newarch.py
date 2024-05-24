@@ -3,7 +3,7 @@ from typing import Iterator
 from defabipedia import Blockchain, Chain
 
 from defyes.portfolio import (
-    ERC20Token,
+    DeployedToken,
     Frozen,
     KwInit,
     Position,
@@ -16,7 +16,7 @@ from defyes.portfolio import (
 from . import contracts
 
 
-class BalancerToken(Unwrappable, ERC20Token):
+class BalancerToken(Unwrappable, DeployedToken):
     protocol = "balancer"
 
     def unwrap(self, tokenamount: TokenAmount) -> list[UnderlyingTokenAmount]:

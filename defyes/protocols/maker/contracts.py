@@ -72,27 +72,10 @@ class Pot(Pot):
         return Decimal(self.pie_1(wallet)).scaleb(-27)
 
 
-############################################################
 class DsrManager(DsrManager):
     default_addresses: dict[str, str] = {
         Chain.ETHEREUM: "0x373238337Bfe1146fb49989fc222523f83081dDb",
     }
-
-    # def dai_balance(self, arg0: str) -> int:
-    #    return self.contract.functions.daiBalance(arg0).call(block_identifier=self.block)
-
-
-# class DsrManagerDeployment(DeploymentCrypto):
-#    contract_class = abis.DsrManager
-#    chain = Chain.ETHEREUM
-#    address = "0x373238337Bfe1146fb49989fc222523f83081dDb"
-#
-#    def pie_of(self, wallet: str, block: int) -> Decimal:
-#        self.abi.block = block  # TODO: improve this workarround
-#        return Decimal(self.abi.pie_of(wallet)).scaleb(-27)
-
-
-############################################################
 
 
 class Sdai(Sdai):
@@ -102,22 +85,6 @@ class Sdai(Sdai):
     }
 
 
-# class tokens:
-#    class ethereum:
-#        class ERC20Token(ERC20Token):
-#            chain = Chain.ETHEREUM
-#
-#        MKR = ERC20Token(address=EthereumTokenAddr.MKR)
-#        DAI = ERC20Token(address=EthereumTokenAddr.DAI)
-#        sDAI = ERC20Token(contract_class=Sdai, unwrapped=DAI)
-#
-#    class gnosis:
-#        #xDAI = NativeToken(chain=Chain.GNOSIS, symbol="xDAI")
-#        xDAI = NativeToken.instances.get(chain=Chain.GNOSIS)
-#        sDAI = ERC20Token(chain=Chain.GNOSIS, unwrapped=xDAI)
-
-
-############################################################
 class Iou(Iou):
     default_addresses: dict[str, str] = {
         Chain.ETHEREUM: "0xA618E54de493ec29432EbD2CA7f14eFbF6Ac17F7",
