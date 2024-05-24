@@ -7,8 +7,8 @@ from defyes.portfolio import (
     Frozen,
     KwInit,
     Position,
-    TokenAmount,
-    UnderlyingTokenAmount,
+    TokenPosition,
+    UnderlyingTokenPosition,
     Unwrappable,
     repr_for,
 )
@@ -19,8 +19,8 @@ from . import contracts
 class BalancerToken(Unwrappable, DeployedToken):
     protocol = "balancer"
 
-    def unwrap(self, tokenamount: TokenAmount) -> list[UnderlyingTokenAmount]:
-        ta = tokenamount
+    def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
+        ta = token_position
         lp = contracts.LiquidityPool(ta.token.chain, ta.block, ta.token.address)
         pool_tokens = contracts.Vault(self.chain, ta.block).get_pool_data(lp.poolid)
         balances = {}
@@ -31,7 +31,7 @@ class BalancerToken(Unwrappable, DeployedToken):
             token_addr, token_balance = lp.calc_amount(token, ta.amount, balance, decimals=True)
             balances[token_addr] = balances.get(token_addr, 0) + token_balance
         return [
-            UnderlyingTokenAmount(token=self.objs.get_or_create(address=addr), amount=amount)
+            UnderlyingTokenPosition(token=self.objs.get_or_create(address=addr), amount=amount)
             for addr, amount in balances.items()
         ]
 

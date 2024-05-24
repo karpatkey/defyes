@@ -11,8 +11,8 @@ from defyes.portfolio import (
     NativeToken,
     Position,
     Token,
-    TokenAmount,
-    UnderlyingTokenAmount,
+    TokenPosition,
+    UnderlyingTokenPosition,
     Unwrappable,
     default,
     repr_for,
@@ -37,10 +37,10 @@ class SdaiToken(Unwrappable, MakerToken):
     contract_class = contracts.Sdai
     unwrapped_token: Token
 
-    def unwrap(self, tokenamount: TokenAmount) -> list[UnderlyingTokenAmount]:
-        self.abi.block = tokenamount.block  # TODO: improve this workarround
-        amount_teu = self.abi.convert_to_assets(tokenamount.amount_teu)
-        return [UnderlyingTokenAmount(token=self.unwrapped_token, amount_teu=amount_teu)]
+    def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
+        self.abi.block = token_position.block  # TODO: improve this workarround
+        amount_teu = self.abi.convert_to_assets(token_position.amount_teu)
+        return [UnderlyingTokenPosition(token=self.unwrapped_token, amount_teu=amount_teu)]
 
 
 SdaiToken(
@@ -123,8 +123,8 @@ class Positions(Frozen, KwInit):
                 id=vault_id,
                 context=self,
                 underlyings=[
-                    UnderlyingTokenAmount(token=lend_token, amount_teu=ink, block=self.block),
-                    UnderlyingTokenAmount(token=self.DAI, amount_teu=-1 * art * rate, block=self.block),
+                    UnderlyingTokenPosition(token=lend_token, amount_teu=ink, block=self.block),
+                    UnderlyingTokenPosition(token=self.DAI, amount_teu=-1 * art * rate, block=self.block),
                 ],
                 rate=rate,
             )
@@ -135,7 +135,7 @@ class Positions(Frozen, KwInit):
         return DSR(
             context=self,
             address=dsr.contract.address,
-            underlyings=[UnderlyingTokenAmount(token=self.DAI, amount_teu=dsr.dai_balance(self.wallet))],
+            underlyings=[UnderlyingTokenPosition(token=self.DAI, amount_teu=dsr.dai_balance(self.wallet))],
         )
 
     @default
@@ -144,7 +144,7 @@ class Positions(Frozen, KwInit):
         return Pot(
             context=self,
             address=pot.contract.address,
-            underlyings=[UnderlyingTokenAmount(token=self.DAI, amount_teu=pot.pie_1(self.wallet) * pot.chi_decimal)],
+            underlyings=[UnderlyingTokenPosition(token=self.DAI, amount_teu=pot.pie_1(self.wallet) * pot.chi_decimal)],
         )
 
     @default
@@ -154,5 +154,5 @@ class Positions(Frozen, KwInit):
         return Iou(
             context=self,
             address=iou.contract.address,
-            underlyings=[UnderlyingTokenAmount(token=MKR, amount_teu=iou.balance_of(self.wallet))],
+            underlyings=[UnderlyingTokenPosition(token=MKR, amount_teu=iou.balance_of(self.wallet))],
         )

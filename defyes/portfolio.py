@@ -263,8 +263,8 @@ class NativeToken(Token):
     def balance_of(self, wallet: str, block: int) -> int:
         return self.node.eth.get_balance(wallet, block)
 
-    def amount_of(self, wallet: str, block: int) -> "TokenAmount":
-        return TokenAmount(token=self, wallet=wallet, block=block)
+    def position_of(self, wallet: str, block: int) -> "TokenPosition":
+        return TokenPosition(token=self, wallet=wallet, block=block)
 
 
 class Deployment:
@@ -308,12 +308,12 @@ class DeployedToken(Deployment, Token):
         self.abi.block = block  # TODO: improve this workarround
         return self.abi.balance_of(wallet)
 
-    def amount_of(self, wallet: str, block: int) -> "TokenAmount":
-        return TokenAmount(token=self, wallet=wallet, block=block)
+    def position_of(self, wallet: str, block: int) -> "TokenPosition":
+        return TokenPosition(token=self, wallet=wallet, block=block)
 
 
 class Unwrappable:
-    def unwrap(self, tokenamount: "TokenAmount") -> list["UnderlyingTokenAmount"]:
+    def unwrap(self, token_position: "TokenPosition") -> list["UnderlyingTokenPosition"]:
         raise NotImplementedError
 
 
@@ -349,7 +349,7 @@ class ContractPosition(Position):
         return self.contract_class(self.chain, self.block, self.address)
 
 
-class TokenAmount(Position):
+class TokenPosition(Position):
     """
     A value/balance for a Token.
     """
@@ -383,9 +383,9 @@ class TokenAmount(Position):
         return float(self.amount) * self.token.price(self.block)
 
     @default
-    def underlyings(self) -> list["UnderlyingTokenAmount"]:
+    def underlyings(self) -> list["UnderlyingTokenPosition"]:
         """
-        Returns one UnderlyingTokenAmount or zero in the list, which is the unwrapped token with its converted value.
+        Returns one UnderlyingTokenPosition or zero in the list, which is the unwrapped token with its converted value.
         """
         if isinstance(self.token, Unwrappable):
             yield from self.token.unwrap(self)
@@ -405,7 +405,7 @@ class TokenAmount(Position):
         return self.amount_teu != 0
 
 
-class UnderlyingTokenAmount(TokenAmount):
+class UnderlyingTokenPosition(TokenPosition):
     """
     An underlying value/balance for a Token.
     """
@@ -447,8 +447,8 @@ class WETHToken(Unwrappable, DeployedToken):
     chain = Chain.ETHEREUM
     address = EthereumTokenAddr.WETH
 
-    def unwrap(self, tokenamount: "TokenAmount") -> list["UnderlyingTokenAmount"]:
-        return [UnderlyingTokenAmount(token=ETH, amount=tokenamount.amount)]
+    def unwrap(self, token_position: "TokenPosition") -> list["UnderlyingTokenPosition"]:
+        return [UnderlyingTokenPosition(token=ETH, amount=token_position.amount)]
 
 
 WETHToken()
@@ -469,7 +469,7 @@ class Porfolio(Frozen, KwInit):
 
     __repr__ = repr_for("chain", "block", "wallet")
 
-    # TODO: no conviene tirar aunque no se conozcan. solamente filtrar para tokenamount, no para underlyings
+    # TODO: no conviene tirar aunque no se conozcan. solamente filtrar para token_position, no para underlyings
     @default
     def included_tokens(self) -> set[Token]:
         """
@@ -525,12 +525,12 @@ class Porfolio(Frozen, KwInit):
         for token in self.included_tokens:
             if token.chain == self.chain:
                 try:
-                    tokenamount = token.amount_of(self.wallet, self.block)
+                    token_position = token.position_of(self.wallet, self.block)
                 except Exception as e:
                     logger.error(f"Token {token.symbol}: {e!r}")
                 else:
-                    if tokenamount:
-                        yield tokenamount
+                    if token_position:
+                        yield token_position
 
 
 def origin_protocol(position):
@@ -586,7 +586,7 @@ def print_amounts(ta, prefix=""):
 
 def print_pos(positions, level=1, show_fiat=False):
     for p in positions:
-        if isinstance(p, TokenAmount):
+        if isinstance(p, TokenPosition):
             ta = p
             print_amounts(ta, "  " * level)
             if ta and show_fiat and not ta.underlyings:
