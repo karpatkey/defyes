@@ -6,8 +6,7 @@ from defabipedia.tokens import EthereumTokenAddr
 
 from defyes.portfolio import (
     DeployedToken,
-    Frozen,
-    KwInit,
+    FrozenKwInit,
     NativeToken,
     Position,
     Token,
@@ -82,7 +81,7 @@ class Iou(MakerPosition):
     pass
 
 
-class Positions(Frozen, KwInit):
+class Positions(FrozenKwInit):
     wallet: str
     chain: Blockchain
     block: int

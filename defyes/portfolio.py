@@ -62,7 +62,7 @@ def repr_dict():
     return __repr__
 
 
-class KwInit:
+class FrozenKwInit:
     """
     No magical alternative to mitigate the extreme complexity of dataclasses when dealing with inheritance.
     """
@@ -80,8 +80,6 @@ class KwInit:
         Override this method in subclasses instead of __init__.
         """
 
-
-class Frozen:
     def __setattr__(self, name, value):
         """
         Make derivative clases with "fozen" instances to reduce incoherent states and all the good behaviours of
@@ -189,7 +187,7 @@ class InstancesManager(list):
             return self.current_class_owner(**kwargs)
 
 
-class Token(Frozen, KwInit):
+class Token(FrozenKwInit):
     node: Web3
     chain: Blockchain
     symbol: str
@@ -317,7 +315,7 @@ class Unwrappable:
         raise NotImplementedError
 
 
-class Position(Frozen, KwInit):
+class Position(FrozenKwInit):
     """
     A finantial value.
     """
@@ -461,7 +459,7 @@ compatible_protocols = {
 }
 
 
-class Porfolio(Frozen, KwInit):
+class Porfolio(FrozenKwInit):
     chain: Blockchain
     block: int
     wallet: str

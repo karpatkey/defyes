@@ -7,8 +7,7 @@ from defabipedia.tokens import EthereumTokenAddr, GnosisTokenAddr
 
 from defyes.portfolio import (
     DeployedToken,
-    Frozen,
-    KwInit,
+    FrozenKwInit,
     NativeToken,
     TokenPosition,
     UnderlyingTokenPosition,
@@ -56,7 +55,7 @@ WrappedStEthToken(chain=Chain.ETHEREUM, address=EthereumTokenAddr.wstETH, unwrap
 WrappedStEthToken(chain=Chain.GNOSIS, address=GnosisTokenAddr.wstETH, unwrapped_token=gnosis_stETH)
 
 
-class Positions(Frozen, KwInit, list):
+class Positions(FrozenKwInit, list):
     pass
 
 

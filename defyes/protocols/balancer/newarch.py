@@ -4,8 +4,7 @@ from defabipedia import Blockchain, Chain
 
 from defyes.portfolio import (
     DeployedToken,
-    Frozen,
-    KwInit,
+    FrozenKwInit,
     Position,
     TokenPosition,
     UnderlyingTokenPosition,
@@ -45,7 +44,7 @@ class Position(Position):
     address: str
 
 
-class Positions(Frozen, KwInit):
+class Positions(FrozenKwInit):
     wallet: str
     chain: Blockchain
     block: int
