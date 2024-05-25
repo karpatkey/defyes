@@ -293,7 +293,7 @@ class DeployedToken(Deployment, Token):
     @timeit
     def price(self, block: int) -> Fiat:
         price, source, _ = get_price_in_usd(self.address, block, self.chain)
-        return USD(price if price else float("nan"), source=source)
+        return USD(price if price else float("nan"), source=source, block=block, chain=self.chain)
 
     def __hash__(self):
         return hash((self.chain.chain_id, self.address))
@@ -374,11 +374,11 @@ class TokenPosition(Position):
         else:
             raise ValueError("Undefined time, because `block` isn't defined as an integer.")
 
-    @default
+    @property
     def protocol(self) -> str:
         return self.token.protocol
 
-    @default
+    @property
     def chain(self) -> str:
         return self.token.chain
 
