@@ -37,8 +37,8 @@ class SdaiToken(Unwrappable, MakerToken):
     unwrapped_token: Token
 
     def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
-        self.abi.block = token_position.block  # TODO: improve this workarround
-        amount_teu = self.abi.convert_to_assets(token_position.amount_teu)
+        self.contract.block = token_position.block  # TODO: improve this workarround
+        amount_teu = self.contract.convert_to_assets(token_position.amount_teu)
         return [UnderlyingTokenPosition(token=self.unwrapped_token, amount_teu=amount_teu)]
 
 

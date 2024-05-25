@@ -33,7 +33,7 @@ class EthereumStEthToken(Unwrappable, StEthToken):
     chain = Chain.ETHEREUM
 
     def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
-        self.abi.block = token_position.block  # TODO: improve this workarround
+        self.contract.block = token_position.block  # TODO: improve this workarround
         return [UnderlyingTokenPosition(token=ETH, amount_teu=token_position.amount_teu)]
 
 
@@ -46,8 +46,8 @@ class WrappedStEthToken(Unwrappable, LidoToken):
     symbol = "wstETH"
 
     def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
-        self.abi.block = token_position.block  # TODO: improve this workarround
-        amount_teu = token_position.amount * self.abi.st_eth_per_token
+        self.contract.block = token_position.block  # TODO: improve this workarround
+        amount_teu = token_position.amount * self.contract.st_eth_per_token
         return [UnderlyingTokenPosition(token=self.unwrapped_token, amount_teu=amount_teu)]
 
 

@@ -268,15 +268,15 @@ class NativeToken(Token):
 class Deployment:
     contract_class: type
     address: str | None = None
-    # deploy_block: int | None = None
+    deploy_block: int | str = "latest"
 
     @default
-    def abi(self):
-        return self.contract_class(self.chain, "latest", self.address)
+    def contract(self):
+        return self.contract_class(self.chain, self.deploy_block, self.address)
 
     @default
     def node(self) -> Web3:
-        return self.abi.contract.w3
+        return self.contract.contract.w3
 
 
 class DeployedToken(Deployment, Token):
@@ -284,15 +284,15 @@ class DeployedToken(Deployment, Token):
 
     @default
     def symbol(self) -> str:
-        return self.abi.symbol
+        return self.contract.symbol
 
     @default
     def name(self) -> str:
-        return self.abi.name
+        return self.contract.name
 
     @default
     def decimals(self) -> int:
-        return self.abi.decimals
+        return self.contract.decimals
 
     @timeit
     def price(self, block: int) -> Fiat:
@@ -303,8 +303,8 @@ class DeployedToken(Deployment, Token):
         return hash((self.chain.chain_id, self.address))
 
     def balance_of(self, wallet: str, block: int) -> int:
-        self.abi.block = block  # TODO: improve this workarround
-        return self.abi.balance_of(wallet)
+        self.contract.block = block  # TODO: improve this workarround
+        return self.contract.balance_of(wallet)
 
     def position_of(self, wallet: str, block: int) -> "TokenPosition":
         return TokenPosition(token=self, wallet=wallet, block=block)
