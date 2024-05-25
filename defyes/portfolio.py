@@ -268,11 +268,11 @@ class NativeToken(Token):
 class Deployment:
     contract_class: type
     address: str | None = None
-    deploy_block: int | str = "latest"
+    deployed_block: int | str = "latest"
 
     @default
     def contract(self):
-        return self.contract_class(self.chain, self.deploy_block, self.address)
+        return self.contract_class(self.chain, self.deployed_block, self.address)
 
     @default
     def node(self) -> Web3:
