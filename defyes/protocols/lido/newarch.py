@@ -33,7 +33,6 @@ class EthereumStEthToken(Unwrappable, StEthToken):
     chain = Chain.ETHEREUM
 
     def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
-        self.contract.block = token_position.block  # TODO: improve this workarround
         return [UnderlyingTokenPosition(token=ETH, amount_teu=token_position.amount_teu)]
 
 
