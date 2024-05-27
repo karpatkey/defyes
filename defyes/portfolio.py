@@ -118,9 +118,10 @@ class Fiat(float):
     source: str | None = None
     symbol: str | None = None
 
-    def __init__(self, value, *, source=None):
+    def __init__(self, value, *, source=None, chain=None, block=None):
         super().__init__()
         self.source = source
+        self.block = block
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({format(float(self), '_')}, source={self.source!r})"
@@ -304,6 +305,10 @@ class DeployedToken(Deployment, Token):
     def position_of(self, wallet: str, block: int) -> "TokenPosition":
         return TokenPosition(token=self, wallet=wallet, block=block)
 
+    @default
+    def block(self):
+        return self.contract.block
+
 
 class Unwrappable:
     def unwrap(self, token_position: "TokenPosition") -> list["UnderlyingTokenPosition"]:
@@ -406,6 +411,10 @@ class UnderlyingTokenPosition(TokenPosition):
         """
         if not {"amount", "amount_teu"}.intersection(self.__dict__):
             raise ValueError("At least one of either `amount` or `amount_teu` must be defined.")
+
+    @default
+    def block(self):
+        return self.token.block
 
 
 #### Some token definitions
