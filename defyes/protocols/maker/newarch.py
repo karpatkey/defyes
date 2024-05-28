@@ -56,7 +56,7 @@ class MakerPosition(Position):
 
 class Vault(MakerPosition):
     id: int
-    __repr__ = repr_for("address", "id", "underlyings", "unclaimed_rewards")
+    __repr__ = repr_for("address", "id", "underlying", "unclaimed_rewards")
 
 
 # WIP
@@ -121,7 +121,7 @@ class Positions(FrozenKwInit):
                 address=cdp.contract.address,
                 id=vault_id,
                 context=self,
-                underlyings=[
+                underlying=[
                     UnderlyingTokenPosition(token=lend_token, amount_teu=ink, block=self.block),
                     UnderlyingTokenPosition(token=self.DAI, amount_teu=-1 * art * rate, block=self.block),
                 ],
@@ -134,7 +134,7 @@ class Positions(FrozenKwInit):
         return DSR(
             context=self,
             address=dsr.contract.address,
-            underlyings=[UnderlyingTokenPosition(token=self.DAI, amount_teu=dsr.dai_balance(self.wallet))],
+            underlying=[UnderlyingTokenPosition(token=self.DAI, amount_teu=dsr.dai_balance(self.wallet))],
         )
 
     @default
@@ -143,7 +143,7 @@ class Positions(FrozenKwInit):
         return DSRPot(
             context=self,
             address=pot.contract.address,
-            underlyings=[UnderlyingTokenPosition(token=self.DAI, amount_teu=pot.pie_1(self.wallet) * pot.chi_decimal)],
+            underlying=[UnderlyingTokenPosition(token=self.DAI, amount_teu=pot.pie_1(self.wallet) * pot.chi_decimal)],
         )
 
     @default
@@ -153,5 +153,5 @@ class Positions(FrozenKwInit):
         return Iou(
             context=self,
             address=iou.contract.address,
-            underlyings=[UnderlyingTokenPosition(token=MKR, amount_teu=iou.balance_of(self.wallet))],
+            underlying=[UnderlyingTokenPosition(token=MKR, amount_teu=iou.balance_of(self.wallet))],
         )

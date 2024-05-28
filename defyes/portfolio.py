@@ -324,13 +324,13 @@ class Position(FrozenKwInit):
     chain: Blockchain
     block: int
     protocol: str | None = None
-    underlyings: list["Position"] = list()
+    underlying: list["Position"] = list()
     unlaimed_rewards: list["Position"] = list()
 
     __repr__ = repr_dict()
 
     def __bool__(self):
-        return bool(self.underlyings) or bool(self.unclaimed_rewards)
+        return bool(self.underlying) or bool(self.unclaimed_rewards)
 
 
 class TokenPosition(Position):
@@ -365,7 +365,7 @@ class TokenPosition(Position):
         return float(self.amount) * self.token.price(self.block)
 
     @default
-    def underlyings(self) -> list["UnderlyingTokenPosition"]:
+    def underlying(self) -> list["UnderlyingTokenPosition"]:
         """
         Returns one UnderlyingTokenPosition or zero in the list, which is the unwrapped token with its converted value.
         """
@@ -457,7 +457,7 @@ class Porfolio(FrozenKwInit):
 
     __repr__ = repr_for("chain", "block", "wallet")
 
-    # TODO: no conviene tirar aunque no se conozcan. solamente filtrar para token_position, no para underlyings
+    # TODO: no conviene tirar aunque no se conozcan. solamente filtrar para token_position, no para underlying
     @default
     def included_tokens(self) -> set[Token]:
         """
@@ -491,7 +491,7 @@ class Porfolio(FrozenKwInit):
                 yield position
                 continue
 
-            for underlying in position.underlyings:
+            for underlying in position.underlying:
                 underlying.__dict__["parent"] = position
                 yield underlying
 
@@ -545,7 +545,7 @@ def groupby(seq, key):
 
 
 def like_debank(portfolio: Porfolio, show_fiat=False):
-    inprotocol, inwallet = boolsplit(portfolio.token_positions, lambda ta: ta.underlyings)
+    inprotocol, inwallet = boolsplit(portfolio.token_positions, lambda ta: ta.underlying)
     print("Wallet")
     for ta in inwallet:
         print_amounts(ta, "  ")
@@ -577,12 +577,12 @@ def print_pos(positions, level=1, show_fiat=False):
         if isinstance(p, TokenPosition):
             ta = p
             print_amounts(ta, "  " * level)
-            if ta and show_fiat and not ta.underlyings:
+            if ta and show_fiat and not ta.underlying:
                 print(f"{'  '*(level+1)}{ta.amount_fiat!r}")
         else:
             print(f"  {p.__class__.__name__}")
-        if p.underlyings:
-            print_pos(p.underlyings, level + 1, show_fiat)
+        if p.underlying:
+            print_pos(p.underlying, level + 1, show_fiat)
 
 
 def discover_defabipedia_tokens():
