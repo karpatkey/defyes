@@ -28,11 +28,11 @@ class MakerToken(DeployedToken):
     protocol = "maker"
 
 
-MakerToken(symbol="MKR", chain=Chain.ETHEREUM, address=EthereumTokenAddr.MKR)
-eth_DAI = MakerToken(symbol="DAI", chain=Chain.ETHEREUM, address=EthereumTokenAddr.DAI)
+MakerToken.objs.create(symbol="MKR", chain=Chain.ETHEREUM, address=EthereumTokenAddr.MKR)
+eth_DAI = MakerToken.objs.create(symbol="DAI", chain=Chain.ETHEREUM, address=EthereumTokenAddr.DAI)
 
 
-class SdaiToken(Unwrappable, MakerToken):
+class SdaiToken(Unwrappable, Token):
     contract_class = contracts.Sdai
     unwrapped_token: Token
 
@@ -42,10 +42,12 @@ class SdaiToken(Unwrappable, MakerToken):
         return [UnderlyingTokenPosition(token=self.unwrapped_token, amount_teu=amount_teu)]
 
 
-SdaiToken(
+SdaiToken.objs.create(
     symbol="sDAI", chain=Chain.ETHEREUM, address="0x83F20F44975D03b1b09e64809B757c47f942BEeA", unwrapped_token=eth_DAI
 )
-SdaiToken(symbol="sDAI", chain=Chain.GNOSIS, address="0xaf204776c7245bF4147c2612BF6e5972Ee483701", unwrapped_token=xDAI)
+SdaiToken.objs.create(
+    symbol="sDAI", chain=Chain.GNOSIS, address="0xaf204776c7245bF4147c2612BF6e5972Ee483701", unwrapped_token=xDAI
+)
 
 
 class MakerPosition(Position):

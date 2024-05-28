@@ -6,6 +6,7 @@ from defyes.portfolio import (
     DeployedToken,
     FrozenKwInit,
     Position,
+    Token,
     TokenPosition,
     UnderlyingTokenPosition,
     Unwrappable,
@@ -30,12 +31,12 @@ class BalancerToken(Unwrappable, DeployedToken):
             token_addr, token_balance = lp.calc_amount(token, ta.amount, balance, decimals=True)
             balances[token_addr] = balances.get(token_addr, 0) + token_balance
         return [
-            UnderlyingTokenPosition(token=self.objs.get_or_create(address=addr), amount=amount)
+            UnderlyingTokenPosition(token=Token.objs.get_or_create(chain=self.chain, address=addr), amount=amount)
             for addr, amount in balances.items()
         ]
 
 
-BalancerToken(chain=Chain.ETHEREUM, address="0x93d199263632a4EF4Bb438F1feB99e57b4b5f0BD")
+BalancerToken.objs.create(chain=Chain.ETHEREUM, address="0x93d199263632a4EF4Bb438F1feB99e57b4b5f0BD")
 
 
 class Position(Position):

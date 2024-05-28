@@ -145,43 +145,27 @@ class USD(Fiat):
     symbol: str = "USD"
 
 
-class InstancesManager(list):
-    unique = dict()
-
-    def __new__(cls, seq: Iterator = None, *, current_class_owner=None, **kwargs):
-        self = super().__new__(cls, seq)
-        if current_class_owner:
-            self.current_class_owner = current_class_owner
-        return self
-
-    def __set_name__(self, owner, name):
-        self.initial_class_owner = owner
-
-    @default
-    def current_class_owner(self):
-        return self.initial_class_owner
+class InstancesManager:
+    def __init__(self, manager=None, owner: type = None):
+        if manager:
+            self._objs = manager._objs
+            self._index = manager._index
+        else:
+            self._objs = list()
+            self._index = dict()
+        self.owner = owner
 
     def __get__(self, instance, owner=None):
-        if owner is self.initial_class_owner:
-            return self
-        else:
-            if instance:
-                gen = (obj for obj in self if self._alike(instance, obj))
-            else:
-                gen = (obj for obj in self if isinstance(obj, owner))
-            return InstancesManager(gen, current_class_owner=owner)
+        return InstancesManager(self, owner)
 
-    @staticmethod
-    def _alike(instance, obj):
-        return all(getattr(obj, attr) == getattr(instance, attr) for attr in instance.filter_attrs)
-
-    def filter(self, **kwargs):
-        for obj in self:
-            if all(getattr(obj, attr, None) == value for attr, value in kwargs.items()):
+    def filter(self, **kwargs) -> Iterator:
+        for obj in self._objs:
+            if isinstance(obj, self.owner) and all(getattr(obj, attr, None) == value for attr, value in kwargs.items()):
                 yield obj
 
-    def __call__(self, **kwargs):
-        return InstancesManager(self.filter(**kwargs))
+    @property
+    def all(self) -> list:
+        return list(self.filter())
 
     def get(self, **kwargs):
         iteration = self.filter(**kwargs)
@@ -197,27 +181,28 @@ class InstancesManager(list):
             raise ValueError(f"Just one object expected. There are multiple objects for the filter {kwargs!r}")
 
     def create(self, **kwargs):
-        obj = self.current_class_owner(**kwargs)
+        obj = self.owner(**kwargs)
+        self.add_or_replace(obj)
         return obj
 
-    def add(self, obj):
+    def add_or_replace(self, obj):
         """
         Add a new obj. Replace if it already exists.
         """
         obj_hash = hash(obj)
         try:
-            i = self.unique[obj_hash]
+            i = self._index[obj_hash]
         except KeyError:
-            self.unique[obj_hash] = len(self)
-            self.append(obj)
+            self._index[obj_hash] = len(self._objs)
+            self._objs.append(obj)
         else:
-            self[i] = obj
+            self._objs[i] = obj
 
     def get_or_create(self, **kwargs):
         try:
             return self.get(**kwargs)
         except LookupError:
-            return self.current_class_owner(**kwargs)
+            return self.create(**kwargs)
 
 
 class Token(FrozenKwInit):
@@ -228,15 +213,10 @@ class Token(FrozenKwInit):
     price: Fiat
     decimals: int
     protocol: str | None = None
-    filter_attrs: set[str] = {"chain"}
 
     __repr__ = repr_for("chain", "symbol", "protocol")
 
     objs = InstancesManager()
-
-    def __post_init__(self):
-        super().__post_init__()
-        Token.objs.add(self)
 
     def __hash__(self):
         return hash(self.symbol)
@@ -429,12 +409,12 @@ class UnderlyingTokenPosition(TokenPosition):
 
 #### Some token definitions
 
-ETH = NativeToken(chain=Chain.ETHEREUM, symbol="ETH", name="Ether")
-NativeToken(chain=Chain.POLYGON, symbol="MATIC", name="Matic")
-NativeToken(chain=Chain.GNOSIS, symbol="xDAI", name="Gnosis native DAI")
+ETH = NativeToken.objs.create(chain=Chain.ETHEREUM, symbol="ETH", name="Ether")
+NativeToken.objs.create(chain=Chain.POLYGON, symbol="MATIC", name="Matic")
+NativeToken.objs.create(chain=Chain.GNOSIS, symbol="xDAI", name="Gnosis native DAI")
 
 
-DeployedToken(
+DeployedToken.objs.create(
     chain=Chain.POLYGON,
     address="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
     symbol="USDC.e",
@@ -449,7 +429,7 @@ class WETHToken(Unwrappable, DeployedToken):
         return [UnderlyingTokenPosition(token=ETH, amount=token_position.amount, parent=token_position)]
 
 
-WETHToken()
+WETHToken.objs.create()
 
 ###
 

@@ -50,8 +50,8 @@ class WrappedStEthToken(Unwrappable, LidoToken):
         return [UnderlyingTokenPosition(token=self.unwrapped_token, amount_teu=amount_teu)]
 
 
-WrappedStEthToken(chain=Chain.ETHEREUM, address=EthereumTokenAddr.wstETH, unwrapped_token=eth_stETH)
-WrappedStEthToken(chain=Chain.GNOSIS, address=GnosisTokenAddr.wstETH, unwrapped_token=gnosis_stETH)
+WrappedStEthToken.objs.create(chain=Chain.ETHEREUM, address=EthereumTokenAddr.wstETH, unwrapped_token=eth_stETH)
+WrappedStEthToken.objs.create(chain=Chain.GNOSIS, address=GnosisTokenAddr.wstETH, unwrapped_token=gnosis_stETH)
 
 
 class Positions(FrozenKwInit, list):
