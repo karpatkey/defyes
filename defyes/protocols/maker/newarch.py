@@ -70,11 +70,11 @@ class CDPManagerPosition(MakerPosition):
 
 
 class DSR(MakerPosition):
-    pass
+    name = "manager"
 
 
-class Pot(MakerPosition):
-    pass
+class DSRPot(MakerPosition):
+    name = "dsr_pot"
 
 
 class Iou(MakerPosition):
@@ -92,8 +92,8 @@ class Positions(FrozenKwInit):
         yield from self.vaults
         if self.dsr:
             yield self.dsr
-        if self.pot:
-            yield self.pot
+        if self.dsr_pot:
+            yield self.dsr_pot
         if self.iou:
             yield self.iou
 
@@ -138,9 +138,9 @@ class Positions(FrozenKwInit):
         )
 
     @default
-    def pot(self) -> Pot:
+    def dsr_pot(self) -> DSRPot:
         pot = contracts.Pot(self.chain, self.block)
-        return Pot(
+        return DSRPot(
             context=self,
             address=pot.contract.address,
             underlyings=[UnderlyingTokenPosition(token=self.DAI, amount_teu=pot.pie_1(self.wallet) * pot.chi_decimal)],
