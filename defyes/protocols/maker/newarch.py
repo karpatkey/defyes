@@ -74,7 +74,7 @@ class DSR(MakerPosition):
 
 
 class DSRPot(MakerPosition):
-    name = "dsr_pot"
+    pass
 
 
 class Iou(MakerPosition):

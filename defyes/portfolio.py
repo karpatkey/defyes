@@ -13,6 +13,7 @@ from karpatkit.node import get_node
 from web3 import Web3
 
 from defyes.contracts import Erc20
+from defyes.generator import camel_to_snake
 from defyes.lazytime import Duration, Time
 from defyes.prices import Chainlink as chainlink
 from defyes.prices.prices import get_price as get_price_in_usd
@@ -86,6 +87,11 @@ def repr_dict():
         return f"{self.__class__.__name__}({pairs})"
 
     return __repr__
+
+
+class DefaultNameFromClass:
+    def __get__(self, instance, owner=None) -> str | None:
+        return camel_to_snake(owner.__name__) if owner else None
 
 
 class FrozenKwInit:
@@ -315,6 +321,9 @@ class Unwrappable:
         raise NotImplementedError
 
 
+frozenlist = tuple
+
+
 class Position(FrozenKwInit):
     """
     A finantial value.
@@ -324,8 +333,9 @@ class Position(FrozenKwInit):
     chain: Blockchain
     block: int
     protocol: str | None = None
-    underlying: list["Position"] = list()
-    unlaimed_rewards: list["Position"] = list()
+    underlying: list["Position"] = frozenlist()  # Frozen just to make the default inmutable
+    unlaimed_rewards: list["Position"] = frozenlist()
+    name: str = DefaultNameFromClass()
 
     __repr__ = repr_dict()
 
