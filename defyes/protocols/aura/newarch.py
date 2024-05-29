@@ -6,7 +6,6 @@ from defyes.portfolio import (
     DeployedToken,
     FrozenKwInit,
     Position,
-    Token,
     TokenPosition,
     UnderlyingTokenPosition,
     Unwrappable,
@@ -19,7 +18,7 @@ class AuraToken(Unwrappable, DeployedToken):
 
     def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
         balancer_symbol = self.symbol[4:-6]
-        underlying_token = Token.objs.get(chain=self.chain, symbol=balancer_symbol, protocol="balancer")
+        underlying_token = DeployedToken.objs.get(chain=self.chain, symbol=balancer_symbol, protocol="balancer")
         return [UnderlyingTokenPosition(token=underlying_token, amount_teu=token_position.amount_teu)]
 
 

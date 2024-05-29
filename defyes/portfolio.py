@@ -148,10 +148,8 @@ class USD(Fiat):
 class InstancesManager:
     def __init__(self, manager=None, owner: type = None):
         if manager:
-            self._objs = manager._objs
             self._index = manager._index
         else:
-            self._objs = list()
             self._index = dict()
         self.owner = owner
 
@@ -159,7 +157,7 @@ class InstancesManager:
         return InstancesManager(self, owner)
 
     def filter(self, **kwargs) -> Iterator:
-        for obj in self._objs:
+        for obj in set(self._index.values()):
             if isinstance(obj, self.owner) and all(getattr(obj, attr, None) == value for attr, value in kwargs.items()):
                 yield obj
 
@@ -168,17 +166,13 @@ class InstancesManager:
         return list(self.filter())
 
     def get(self, **kwargs):
-        iteration = self.filter(**kwargs)
-        try:
-            obj = next(iteration)
-        except StopIteration:
-            raise LookupError(f"No instance found in {self.__class__} for {kwargs!r}.")
-        try:
-            next(iteration)
-        except StopIteration:
-            return obj  # OK. Just one object.
-        else:
-            raise ValueError(f"Just one object expected. There are multiple objects for the filter {kwargs!r}")
+        for index_attrs in self.owner.indexes:
+            try:
+                index = tuple(kwargs[attr] for attr in index_attrs)
+            except KeyError:
+                continue
+            return self._index[index]
+        raise LookupError(f"Not found for {self.owner} and {kwargs!r}")
 
     def create(self, **kwargs):
         obj = self.owner(**kwargs)
@@ -189,14 +183,9 @@ class InstancesManager:
         """
         Add a new obj. Replace if it already exists.
         """
-        obj_hash = hash(obj)
-        try:
-            i = self._index[obj_hash]
-        except KeyError:
-            self._index[obj_hash] = len(self._objs)
-            self._objs.append(obj)
-        else:
-            self._objs[i] = obj
+        for index_attrs in self.owner.indexes:
+            index = tuple(getattr(obj, attr) for attr in index_attrs)
+            self._index[index] = obj
 
     def get_or_create(self, **kwargs):
         try:
@@ -218,8 +207,9 @@ class Token(FrozenKwInit):
 
     objs = InstancesManager()
 
-    def __hash__(self):
-        return hash(self.symbol)
+    indexes = [
+        ["chain", "symbol"],
+    ]
 
 
 class NativeToken(Token):
@@ -229,8 +219,11 @@ class NativeToken(Token):
     def node(self) -> Web3:
         return get_node(self.chain)
 
-    def __hash__(self):
-        return self.chain.chain_id
+    indexes = [
+        ["chain"],
+        ["symbol"],
+        ["chain", "symbol"],
+    ]
 
     @timeit
     def price(self, block: int) -> Fiat:
@@ -277,13 +270,15 @@ class DeployedToken(Deployment, Token):
     def decimals(self) -> int:
         return self.contract.decimals
 
+    indexes = [
+        ["chain", "address"],
+        ["chain", "symbol"],
+    ]
+
     @timeit
     def price(self, block: int) -> Fiat:
         price, source, _ = get_price_in_usd(self.address, block, self.chain)
         return USD(price if price else float("nan"), source=source, block=block, chain=self.chain)
-
-    def __hash__(self):
-        return hash((self.chain.chain_id, self.address))
 
     def balance_of(self, wallet: str, block: int) -> int:
         return self.contract.contract.functions.balanceOf(wallet).call(block_identifier=block)
