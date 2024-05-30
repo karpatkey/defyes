@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Iterator
 
 from defabipedia import Blockchain, Chain
@@ -9,20 +10,50 @@ from defyes.portfolio import (
     TokenPosition,
     UnderlyingTokenPosition,
     Unwrappable,
+    default,
     repr_for,
 )
+from defyes.serializers import DeployedTokenSerializer
+
+protocol_path = Path(__file__).parent
 
 
 class AuraToken(Unwrappable, DeployedToken):
     protocol = "aura"
+    unwrapped_address: str
+
+    @default
+    def unwrapped_token(self) -> DeployedToken:
+        return DeployedToken.objs.get_or_create(chain=self.chain, address=self.unwrapped_address)
 
     def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
-        balancer_symbol = self.symbol[4:-6]
-        underlying_token = DeployedToken.objs.get(chain=self.chain, symbol=balancer_symbol, protocol="balancer")
-        return [UnderlyingTokenPosition(token=underlying_token, amount_teu=token_position.amount_teu)]
+        return [UnderlyingTokenPosition(token=self.unwrapped_token, amount_teu=token_position.amount_teu)]
 
 
-AuraToken.objs.create(chain=Chain.ETHEREUM, address="0x2a14dB8D09dB0542f6A371c0cB308A768227D67D")
+class AuraTokenSerializer(DeployedTokenSerializer):
+    model = AuraToken
+    filename = protocol_path / "tokens.json"
+
+    @staticmethod
+    def asdict(token) -> dict:
+        return {
+            "chain": str(token.chain),
+            "symbol": token.symbol,
+            "address": token.address,
+            "unwrapped_address": token.unwrapped_token.address,
+        }
+
+    @classmethod
+    def fromdict(cls, d: dict):
+        return cls.model(
+            chain=Chain.get_blockchain_by_name(d["chain"]),
+            symbol=d["symbol"],
+            address=d["address"],
+            unwrapped_address=d["unwrapped_address"],
+        )
+
+
+AuraTokenSerializer.load_replacing()
 
 
 class Position(Position):

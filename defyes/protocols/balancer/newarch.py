@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Iterator
 
 from defabipedia import Blockchain, Chain
@@ -11,8 +12,11 @@ from defyes.portfolio import (
     Unwrappable,
     repr_for,
 )
+from defyes.serializers import DeployedTokenSerializer
 
 from . import contracts
+
+protocol_path = Path(__file__).parent
 
 
 class BalancerToken(Unwrappable, DeployedToken):
@@ -35,6 +39,14 @@ class BalancerToken(Unwrappable, DeployedToken):
             )
             for addr, amount in balances.items()
         ]
+
+
+class BalancerTokenSerializer(DeployedTokenSerializer):
+    model = BalancerToken
+    filename = protocol_path / "tokens.json"
+
+
+BalancerTokenSerializer.load_replacing()
 
 
 BalancerToken.objs.create(chain=Chain.ETHEREUM, address="0x93d199263632a4EF4Bb438F1feB99e57b4b5f0BD")
