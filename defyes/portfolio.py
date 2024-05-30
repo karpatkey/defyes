@@ -290,9 +290,6 @@ class DeployedToken(Deployment, Token):
     def block(self):
         return self.contract.block
 
-    def asdict(self):
-        return {"chain": str(self.chain), "symbol": self.symbol, "address": self.address}
-
     @classmethod
     def fromdict(cls, d: dict):
         chain = Chain.get_blockchain_by_name(d["chain"])

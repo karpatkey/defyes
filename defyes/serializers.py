@@ -9,7 +9,6 @@ from . import portfolio as models
 
 class JSONSerializer:
     filename: str | Path
-    model: type  # Class to create each instance
 
     @staticmethod
     def asdict(obj) -> dict:
@@ -26,11 +25,6 @@ class JSONSerializer:
         raise NotImplementedError
 
     @classmethod
-    def save(cls):
-        with open(cls.filename, "w") as f:
-            json.dump([obj.asdict for obj in cls.model.objs.all], f, indent=2)
-
-    @classmethod
     def generate_objs(cls) -> Iterator:
         with open(cls.filename) as f:
             dicts_list = json.load(f)
@@ -39,7 +33,7 @@ class JSONSerializer:
 
 
 class TokenSerializer(JSONSerializer):
-    model = models.Token
+    token_class = models.Token
 
     @staticmethod
     def asdict(token) -> dict:
@@ -50,7 +44,7 @@ class TokenSerializer(JSONSerializer):
 
     @classmethod
     def fromdict(cls, d: dict):
-        return cls.model(
+        return cls.token_class(
             chain=Chain.get_blockchain_by_name(d["chain"]),
             symbol=d["symbol"],
         )
@@ -58,11 +52,20 @@ class TokenSerializer(JSONSerializer):
     @classmethod
     def load_replacing(cls):
         for token in cls.generate_objs():
-            cls.model.objs.add_or_replace(token)
+            cls.token_class.objs.add_or_replace(token)
+
+    @classmethod
+    def save(cls):
+        token_list = sorted(cls.token_class.objs.all, key=lambda token: (token.chain, token.symbol))
+        token_dict_list = [cls.asdict(token) for token in token_list]
+        json_str = json.dumps(token_dict_list, indent=2)
+        with open(cls.filename, "w") as f:
+            f.write(json_str)
+            f.write("\n")
 
 
 class DeployedTokenSerializer(TokenSerializer):
-    model = models.DeployedToken
+    token_class = models.DeployedToken
 
     @staticmethod
     def asdict(token) -> dict:
@@ -74,7 +77,7 @@ class DeployedTokenSerializer(TokenSerializer):
 
     @classmethod
     def fromdict(cls, d: dict):
-        return cls.model(
+        return cls.token_class(
             chain=Chain.get_blockchain_by_name(d["chain"]),
             symbol=d["symbol"],
             address=d["address"],

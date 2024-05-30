@@ -31,7 +31,7 @@ class AuraToken(Unwrappable, DeployedToken):
 
 
 class AuraTokenSerializer(DeployedTokenSerializer):
-    model = AuraToken
+    token_class = AuraToken
     filename = protocol_path / "tokens.json"
 
     @staticmethod
@@ -45,7 +45,7 @@ class AuraTokenSerializer(DeployedTokenSerializer):
 
     @classmethod
     def fromdict(cls, d: dict):
-        return cls.model(
+        return cls.token_class(
             chain=Chain.get_blockchain_by_name(d["chain"]),
             symbol=d["symbol"],
             address=d["address"],

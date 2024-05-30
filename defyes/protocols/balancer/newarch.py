@@ -42,7 +42,7 @@ class BalancerToken(Unwrappable, DeployedToken):
 
 
 class BalancerTokenSerializer(DeployedTokenSerializer):
-    model = BalancerToken
+    token_class = BalancerToken
     filename = protocol_path / "tokens.json"
 
 
