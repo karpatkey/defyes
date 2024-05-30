@@ -54,12 +54,16 @@ class TokenSerializer(JSONSerializer):
         for token in cls.generate_objs():
             cls.token_class.objs.add_or_replace(token)
 
+    @staticmethod
+    def orderby(token):
+        return token.chain, token.symbol
+
     @classmethod
     def save(cls):
-        token_list = sorted(cls.token_class.objs.all, key=lambda token: (token.chain, token.symbol))
+        token_list = sorted(cls.token_class.objs.all, key=cls.orderby)
         token_dict_list = [cls.asdict(token) for token in token_list]
         json_str = json.dumps(token_dict_list, indent=2)
-        with open(cls.filename, "w") as f:
+        with open(f"{cls.filename}", "w") as f:
             f.write(json_str)
             f.write("\n")
 
@@ -82,3 +86,7 @@ class DeployedTokenSerializer(TokenSerializer):
             symbol=d["symbol"],
             address=d["address"],
         )
+
+    @staticmethod
+    def orderby(token):
+        return token.chain, token.address
