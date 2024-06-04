@@ -1,10 +1,13 @@
 import json
+import logging
 from pathlib import Path
 from typing import Iterator
 
 from defabipedia import Chain
 
 from . import portfolio as models
+
+logger = logging.getLogger(__name__)
 
 
 class JSONSerializer:
@@ -51,6 +54,9 @@ class TokenSerializer(JSONSerializer):
 
     @classmethod
     def load_replacing(cls):
+        """
+        Replace if chain and address is the same.
+        """
         for token in cls.generate_objs():
             cls.token_class.objs.add_or_replace(token)
 
@@ -90,3 +96,28 @@ class DeployedTokenSerializer(TokenSerializer):
     @staticmethod
     def orderby(token):
         return token.chain, token.address
+
+    @classmethod
+    def load_replacing_but_distinguishing_symbols(cls):
+        """
+        Replace if chain and address is the same, but change symbol name, by adding part of the address as a suffix, if
+        the chain and symbol is the same to an existing token.
+        """
+        for token in cls.generate_objs():
+            try:
+                current_token = cls.token_class.objs.get(chain=token.chain, symbol=token.symbol)
+            except LookupError:
+                pass
+            else:
+                if token.address != current_token.address:
+                    token.__dict__["symbol"] += f"_{short_addr(token.address)}"
+                    logger.warning(
+                        f"Changing symbol name {current_token.symbol!r} to {token.symbol!r} ({token.address}) "
+                        f"because the token {current_token.address} is aready defined in {current_token.chain} "
+                        "with the same symbol name."
+                    )
+            cls.token_class.objs.add_or_replace(token)
+
+
+def short_addr(addr: str):
+    return f"{addr[2:5]}..{addr[-3:]}"

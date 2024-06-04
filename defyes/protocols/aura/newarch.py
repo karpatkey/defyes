@@ -3,6 +3,7 @@ from typing import Iterator
 
 from defabipedia import Blockchain, Chain
 
+from defyes import management
 from defyes.portfolio import (
     DeployedToken,
     FrozenKwInit,
@@ -53,7 +54,15 @@ class AuraTokenSerializer(DeployedTokenSerializer):
         )
 
 
-AuraTokenSerializer.load_replacing()
+AuraTokenSerializer.load_replacing_but_distinguishing_symbols()
+
+
+@management.updater.register
+def update_jsons():
+    # oldarch.update_db()
+    # Load tokens from db.json
+    # AuraTokenSerializer.load_replacing_but_distinguishing_symbols()
+    AuraTokenSerializer.save()
 
 
 class Position(Position):

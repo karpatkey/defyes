@@ -3,6 +3,7 @@ from typing import Iterator
 
 from defabipedia import Blockchain, Chain
 
+from defyes import management
 from defyes.portfolio import (
     DeployedToken,
     FrozenKwInit,
@@ -46,8 +47,9 @@ class BalancerTokenSerializer(DeployedTokenSerializer):
     filename = protocol_path / "tokens.json"
 
 
-BalancerTokenSerializer.load_replacing()
+BalancerTokenSerializer.load_replacing_but_distinguishing_symbols()
 
+management.updater.register(BalancerTokenSerializer.save)
 
 BalancerToken.objs.create(chain=Chain.ETHEREUM, address="0x93d199263632a4EF4Bb438F1feB99e57b4b5f0BD")
 

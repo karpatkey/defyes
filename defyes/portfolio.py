@@ -434,18 +434,16 @@ WETHToken.objs.create()
 ###
 
 
-compatible_protocols = {
-    name: importlib.import_module(f"defyes.protocols.{name}.newarch") for name in {"aura", "balancer", "maker", "lido"}
-}
-
-
 class Porfolio(FrozenKwInit):
     chain: Blockchain
     block: int
     wallet: str
-    included_protocols_name: set[str] = set(compatible_protocols.keys())
 
     __repr__ = repr_for("chain", "block", "wallet")
+
+    @default
+    def included_protocols_name(self) -> set[str]:
+        return set(compatible_protocols.keys())
 
     # TODO: no conviene tirar aunque no se conozcan. solamente filtrar para token_position, no para underlying
     @default
@@ -587,5 +585,11 @@ def discover_defabipedia_tokens():
                     logger.error(f"{e!s}")
                     print(e)
 
+
+## Loading protocols and tokens
+
+compatible_protocols = {
+    name: importlib.import_module(f"defyes.protocols.{name}.newarch") for name in ["aura", "balancer", "maker", "lido"]
+}
 
 discover_defabipedia_tokens()
