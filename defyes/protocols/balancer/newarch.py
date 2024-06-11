@@ -46,12 +46,32 @@ class BalancerTokenSerializer(DeployedTokenSerializer):
     token_class = BalancerToken
     filename = protocol_path / "tokens.json"
 
+    @staticmethod
+    def asdict(token) -> dict:
+        return {
+            "chain": str(token.chain),
+            "symbol": token.symbol,
+            "address": token.address,
+            "id": token.id,
+        }
+
+    @classmethod
+    def fromdict(cls, d: dict):
+        return cls.token_class(
+            chain=Chain.get_blockchain_by_name(d["chain"]),
+            symbol=d["symbol"],
+            address=d["address"],
+            id=d["id"],
+        )
+
+    @staticmethod
+    def orderby(token):
+        return token.chain, token.id
+
 
 BalancerTokenSerializer.load_replacing_but_distinguishing_symbols()
 
 management.updater.register(BalancerTokenSerializer.save)
-
-BalancerToken.objs.create(chain=Chain.ETHEREUM, address="0x93d199263632a4EF4Bb438F1feB99e57b4b5f0BD")
 
 
 class Position(Position):
