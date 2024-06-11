@@ -26,7 +26,7 @@ class AuraToken(Unwrappable, DeployedToken):
 
     @default
     def unwrapped_token(self) -> DeployedToken:
-        return DeployedToken.objs.get_or_create(chain=self.chain, address=self.unwrapped_address, id=self.id)
+        return DeployedToken.objs.get_or_create(chain=self.chain, address=self.unwrapped_address)
 
     def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
         return [UnderlyingTokenPosition(token=self.unwrapped_token, amount_teu=token_position.amount_teu)]

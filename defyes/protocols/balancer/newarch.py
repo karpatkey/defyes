@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Iterator
 
-from defabipedia import Blockchain, Chain
+from defabipedia import Blockchain
 
 from defyes import management
 from defyes.portfolio import (
@@ -22,7 +22,6 @@ protocol_path = Path(__file__).parent
 
 class BalancerToken(Unwrappable, DeployedToken):
     protocol = "balancer"
-    id: int
 
     def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
         ta = token_position
@@ -46,28 +45,6 @@ class BalancerToken(Unwrappable, DeployedToken):
 class BalancerTokenSerializer(DeployedTokenSerializer):
     token_class = BalancerToken
     filename = protocol_path / "tokens.json"
-
-    @staticmethod
-    def asdict(token) -> dict:
-        return {
-            "chain": str(token.chain),
-            "symbol": token.symbol,
-            "address": token.address,
-            "id": token.id,
-        }
-
-    @classmethod
-    def fromdict(cls, d: dict):
-        return cls.token_class(
-            chain=Chain.get_blockchain_by_name(d["chain"]),
-            symbol=d["symbol"],
-            address=d["address"],
-            id=d["id"],
-        )
-
-    @staticmethod
-    def orderby(token):
-        return token.chain, token.id
 
 
 BalancerTokenSerializer.load_replacing_but_distinguishing_symbols()
