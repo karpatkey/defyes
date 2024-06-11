@@ -22,6 +22,7 @@ protocol_path = Path(__file__).parent
 
 class BalancerToken(Unwrappable, DeployedToken):
     protocol = "balancer"
+    id: int
 
     def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
         ta = token_position
