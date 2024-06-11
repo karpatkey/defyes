@@ -32,7 +32,7 @@ MakerToken.objs.create(symbol="MKR", chain=Chain.ETHEREUM, address=EthereumToken
 eth_DAI = MakerToken.objs.create(symbol="DAI", chain=Chain.ETHEREUM, address=EthereumTokenAddr.DAI)
 
 
-class SdaiToken(Unwrappable, Token):
+class SdaiToken(Unwrappable, DeployedToken):
     contract_class = contracts.Sdai
     unwrapped_token: Token
 

@@ -380,6 +380,12 @@ class TokenPosition(Position):
     def __bool__(self):
         return self.amount_teu != 0
 
+    def __add__(self, other):
+        if self.token == other.token:
+            return self.__class__(token=self.token, amount_teu=self.amount_teu + other.amount_teu)
+        else:
+            raise ValueError(f"Cannot add positions for different tokens ({self.token=} {other.token=}")
+
 
 class UnderlyingTokenPosition(TokenPosition):
     """
@@ -393,7 +399,12 @@ class UnderlyingTokenPosition(TokenPosition):
         """
         Amount in terms of the minimun fraction of the token.
         """
-        return int(self.amount.scaleb(self.token.decimals))
+        try:
+            return int(self.amount.scaleb(self.token.decimals))
+        except AttributeError as exc:
+            if not isinstance(self.amount, Decimal):
+                raise ValueError(f"{self.amount=} is expected to be Decimal") from exc
+            raise
 
     def __post_init__(self):
         """
