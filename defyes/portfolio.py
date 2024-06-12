@@ -306,7 +306,7 @@ WETHToken.objs.create()
 ###
 
 
-class Porfolio(FrozenKwInit):
+class Portfolio(FrozenKwInit):
     chain: Blockchain
     block: int
     wallet: str
