@@ -1,8 +1,7 @@
 import importlib
 import logging
-from collections import defaultdict
 from decimal import Decimal
-from functools import cached_property as default
+from functools import cached_property
 from typing import Iterator
 
 from defabipedia import Blockchain, Chain
@@ -12,72 +11,17 @@ from karpatkit.node import get_node
 from web3 import Web3
 
 from defyes.contracts import Erc20
-from defyes.generator import camel_to_snake
+from defyes.dataclasses import FrozenKwInit, repr_dict, repr_for
+from defyes.descriptors import DefaultNameFromClass, InstancesManager
 from defyes.helpers import timeit
 from defyes.lazytime import Time
 from defyes.prices import Chainlink as chainlink
 from defyes.prices.prices import get_price as get_price_in_usd
 
+default = cached_property
 Module = type(logging)
 
 logger = logging.getLogger(__name__)
-
-
-def repr_for(*attrs):
-    """
-    Easy create your class repr function including the specific attributes `attrs`.
-
-    class A:
-        ...
-        __repr__ = repr_for("a", "b")
-
-    repr(A(...)) -> "A(a=1, b=2)"
-    """
-
-    def __repr__(self):
-        pairs = ", ".join(f"{name}={getattr(self, name)!r}" for name in attrs)
-        return f"{self.__class__.__name__}({pairs})"
-
-    return __repr__
-
-
-def repr_dict():
-    def __repr__(self):
-        pairs = ", ".join(f"{name}={value!r}" for name, value in vars(self).items())
-        return f"{self.__class__.__name__}({pairs})"
-
-    return __repr__
-
-
-class DefaultNameFromClass:
-    def __get__(self, instance, owner=None) -> str | None:
-        return camel_to_snake(owner.__name__) if owner else None
-
-
-class FrozenKwInit:
-    """
-    No magical alternative to mitigate the extreme complexity of dataclasses when dealing with inheritance.
-    """
-
-    def __init__(self, /, **attrs):
-        """
-        Set all keyword arguments defined by `attrs` as instance attributes.
-        Call __post_init__, like dataclass.
-        """
-        self.__dict__.update(attrs)
-        self.__post_init__()
-
-    def __post_init__(self):
-        """
-        Override this method in subclasses instead of __init__.
-        """
-
-    def __setattr__(self, name, value):
-        """
-        Make derivative clases with "fozen" instances to reduce incoherent states and all the good behaviours of
-        inmutable data ;)
-        """
-        raise Exception("read-only")
 
 
 class Fiat(float):
@@ -103,55 +47,6 @@ class Fiat(float):
 
 class USD(Fiat):
     symbol: str = "USD"
-
-
-class InstancesManager:
-    def __init__(self, manager=None, owner: type = None):
-        if manager:
-            self._index = manager._index
-        else:
-            self._index = dict()
-        self.owner = owner
-
-    def __get__(self, instance, owner=None):
-        return InstancesManager(self, owner)
-
-    def filter(self, **kwargs) -> Iterator:
-        for obj in set(self._index.values()):
-            if isinstance(obj, self.owner) and all(getattr(obj, attr, None) == value for attr, value in kwargs.items()):
-                yield obj
-
-    @property
-    def all(self) -> list:
-        return list(self.filter())
-
-    def get(self, **kwargs):
-        for index_attrs in self.owner.indexes:
-            try:
-                index = tuple(kwargs[attr] for attr in index_attrs)
-            except KeyError:
-                continue
-            return self._index[index]
-        raise LookupError(f"Not found for {self.owner} and {kwargs!r}")
-
-    def create(self, **kwargs):
-        obj = self.owner(**kwargs)
-        self.add_or_replace(obj)
-        return obj
-
-    def add_or_replace(self, obj):
-        """
-        Add a new obj. Replace if it already exists.
-        """
-        for index_attrs in self.owner.indexes:
-            index = tuple(getattr(obj, attr) for attr in index_attrs)
-            self._index[index] = obj
-
-    def get_or_create(self, **kwargs):
-        try:
-            return self.get(**kwargs)
-        except LookupError:
-            return self.create(**kwargs)
 
 
 class Token(FrozenKwInit):
@@ -373,6 +268,16 @@ class UnderlyingTokenPosition(TokenPosition):
         if not {"amount", "amount_teu"}.intersection(self.__dict__):
             raise ValueError("At least one of either `amount` or `amount_teu` must be defined.")
 
+    @cached_property
+    def root_protocol(self):
+        position = self
+        while hasattr(position, "parent"):
+            position = position.parent
+        try:
+            return position.protocol
+        except AttributeError:
+            return None
+
 
 #### Some token definitions
 
@@ -474,69 +379,6 @@ class Porfolio(FrozenKwInit):
                 else:
                     if token_position:
                         yield token_position
-
-
-def origin_protocol(position):
-    while hasattr(position, "parent"):
-        position = position.parent
-    try:
-        return position.protocol
-    except AttributeError:
-        return None
-
-
-def boolsplit(seq, key=lambda element: element):
-    true, false = [], []
-    for element in seq:
-        (true if key(element) else false).append(element)
-    return true, false
-
-
-def groupby(seq, key):
-    d = defaultdict(list)
-    for element in seq:
-        d[key(element)].append(element)
-    return dict(d)
-
-
-def like_debank(portfolio: Porfolio, show_fiat=False):
-    inprotocol, inwallet = boolsplit(portfolio.token_positions, lambda pos: pos.underlying)
-    print("Wallet")
-    for pos in inwallet:
-        print_amounts(pos, "  ")
-        if pos and show_fiat:
-            print(f"    {pos.amount_fiat!r}")
-    print()
-
-    for protocol, positions in groupby(inprotocol + portfolio.positions, lambda pos: pos.protocol).items():
-        print(protocol)
-        print_pos(positions, show_fiat=show_fiat)
-        print()
-
-
-def decimal_format(dec):
-    s = str(dec)
-    if "." in s:
-        inte, frac = s.split(".")
-        return f"{format(int(inte), '_')}.{frac}"
-    else:
-        return s
-
-
-def print_amounts(pos, prefix=""):
-    print(f"{prefix}{pos.token.symbol} {decimal_format(pos.amount)}")
-
-
-def print_pos(positions, level=1, show_fiat=False):
-    for pos in positions:
-        if isinstance(pos, TokenPosition):
-            print_amounts(pos, "  " * level)
-            if pos and show_fiat and not pos.underlying:
-                print(f"{'  '*(level+1)}{pos.amount_fiat!r}")
-        else:
-            print(f"  {pos.__class__.__name__}")
-        if pos.underlying:
-            print_pos(pos.underlying, level + 1, show_fiat)
 
 
 def discover_defabipedia_tokens():
