@@ -1,4 +1,5 @@
 import logging
+from functools import cached_property
 from typing import Iterator
 
 from defabipedia import Blockchain, Chain
@@ -14,7 +15,6 @@ from defyes.portfolio import (
     TokenPosition,
     UnderlyingTokenPosition,
     Unwrappable,
-    default,
     repr_for,
 )
 
@@ -42,7 +42,7 @@ class SdaiToken(Unwrappable, DeployedToken):
     def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
         self.contract.block = token_position.block  # TODO: improve this workarround
         amount_teu = self.contract.convert_to_assets(token_position.amount_teu)
-        return [UnderlyingTokenPosition(token=self.unwrapped_token, amount_teu=amount_teu)]
+        return [UnderlyingTokenPosition(token=self.unwrapped_token, amount_teu=amount_teu, parent=token_position)]
 
 
 SdaiToken.objs.create(
@@ -103,11 +103,11 @@ class Positions(FrozenKwInit):
         if self.iou:
             yield self.iou
 
-    @default
+    @cached_property
     def DAI(self):
         return DeployedToken.objs.get(chain=self.chain, symbol="DAI")
 
-    @default
+    @cached_property
     @listify
     def vaults(self) -> list[Vault]:
         # contracts = defabipedia.maker.ContractSpecs[self.chain]
@@ -116,7 +116,7 @@ class Positions(FrozenKwInit):
         cdp = contracts.CdpManager(self.chain, self.block)
         ilk_registry = contracts.IlkRegistry(self.chain, self.block)
         vat = contracts.Vat(self.chain, self.block)
-        for vault_id in cdp.get_vault_ids(contracts.ProxyRegistry(self.chain, self.block).proxies(self.wallet)):
+        for vault_id in cdp.get_vault_ids(self.proxy_addr):
             ilk = cdp.ilks(vault_id)
             gem = ilk_registry.info(ilk)[4]
             urn_handler_address = cdp.urns(vault_id)
@@ -126,6 +126,7 @@ class Positions(FrozenKwInit):
             lend_token = DeployedToken.objs.get_or_create(chain=self.chain, address=gem)
             yield Vault(
                 address=cdp.contract.address,
+                proxy_addr=self.proxy_addr,
                 id=vault_id,
                 context=self,
                 underlying=[
@@ -135,7 +136,11 @@ class Positions(FrozenKwInit):
                 rate=rate,
             )
 
-    @default
+    @cached_property
+    def proxy_addr(self) -> str:
+        return contracts.ProxyRegistry(self.chain, self.block).proxies(self.wallet)
+
+    @cached_property
     def dsr(self) -> DSR:
         dsr = contracts.DsrManager(self.chain, self.block)
         return DSR(
@@ -144,7 +149,7 @@ class Positions(FrozenKwInit):
             underlying=[UnderlyingTokenPosition(token=self.DAI, amount_teu=dsr.dai_balance(self.wallet))],
         )
 
-    @default
+    @cached_property
     def dsr_pot(self) -> DSRPot:
         pot = contracts.Pot(self.chain, self.block)
         return DSRPot(
@@ -153,7 +158,7 @@ class Positions(FrozenKwInit):
             underlying=[UnderlyingTokenPosition(token=self.DAI, amount_teu=pot.pie_1(self.wallet) * pot.chi_decimal)],
         )
 
-    @default
+    @cached_property
     def iou(self) -> Iou:
         iou = contracts.Iou(self.chain, self.block)
         MKR = DeployedToken.objs.get(chain=self.chain, symbol="MKR")

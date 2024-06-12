@@ -29,7 +29,11 @@ class AuraToken(Unwrappable, DeployedToken):
         return DeployedToken.objs.get_or_create(chain=self.chain, address=self.unwrapped_address)
 
     def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
-        return [UnderlyingTokenPosition(token=self.unwrapped_token, amount_teu=token_position.amount_teu)]
+        return [
+            UnderlyingTokenPosition(
+                token=self.unwrapped_token, amount_teu=token_position.amount_teu, parent=token_position
+            )
+        ]
 
 
 class AuraTokenSerializer(DeployedTokenSerializer):

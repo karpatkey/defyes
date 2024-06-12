@@ -24,19 +24,21 @@ class BalancerToken(Unwrappable, DeployedToken):
     protocol = "balancer"
 
     def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
-        ta = token_position
-        lp = contracts.LiquidityPool(ta.token.chain, ta.block, ta.token.address)
-        pool_tokens = contracts.Vault(self.chain, ta.block).get_pool_data(lp.poolid)
+        pos = token_position
+        lp = contracts.LiquidityPool(pos.token.chain, pos.block, pos.token.address)
+        pool_tokens = contracts.Vault(self.chain, pos.block).get_pool_data(lp.poolid)
         balances = {}
         for n, (addr, balance) in enumerate(pool_tokens):
             if n == lp.bpt_index:
                 continue
-            token = contracts.PoolToken(self.chain, ta.block, addr)
-            token_addr, token_balance = lp.calc_amount(token, ta.amount, balance, decimals=True)
+            token = contracts.PoolToken(self.chain, pos.block, addr)
+            token_addr, token_balance = lp.calc_amount(token, pos.amount, balance, decimals=True)
             balances[token_addr] = balances.get(token_addr, 0) + token_balance
         return [
             UnderlyingTokenPosition(
-                token=DeployedToken.objs.get_or_create(chain=self.chain, address=addr), amount=amount
+                token=DeployedToken.objs.get_or_create(chain=self.chain, address=addr),
+                amount=amount,
+                parent=token_position,
             )
             for addr, amount in balances.items()
         ]

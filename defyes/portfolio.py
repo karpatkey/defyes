@@ -277,11 +277,6 @@ class DeployedToken(Deployment, Token):
     def block(self):
         return self.contract.block
 
-    @classmethod
-    def fromdict(cls, d: dict):
-        chain = Chain.get_blockchain_by_name(d["chain"])
-        return cls(chain=chain, symbol=d["symbol"], address=d["address"])
-
 
 class Unwrappable:
     def unwrap(self, token_position: "TokenPosition") -> list["UnderlyingTokenPosition"]:
@@ -301,7 +296,7 @@ class Position(FrozenKwInit):
     block: int
     protocol: str | None = None
     underlying: list["Position"] = frozenlist()  # Frozen just to make the default inmutable
-    unlaimed_rewards: list["Position"] = frozenlist()
+    unclaimed_rewards: list["Position"] = frozenlist()
     name: str = DefaultNameFromClass()
 
     __repr__ = repr_dict()
@@ -349,6 +344,10 @@ class TokenPosition(Position):
         """
         if isinstance(self.token, Unwrappable):
             yield from self.token.unwrap(self)
+
+    @default
+    def block(self):
+        return self.token.block
 
     @default
     def time(self) -> Time:
@@ -400,10 +399,6 @@ class UnderlyingTokenPosition(TokenPosition):
         """
         if not {"amount", "amount_teu"}.intersection(self.__dict__):
             raise ValueError("At least one of either `amount` or `amount_teu` must be defined.")
-
-    @default
-    def block(self):
-        return self.token.block
 
 
 #### Some token definitions
@@ -469,7 +464,7 @@ class Porfolio(FrozenKwInit):
 
     def has_just_target_tokens(self, portfolio):
         return False
-        # if target_tokens.intersection({ta.token for ta in portfolio if ta)
+        # if target_tokens.intersection({pos.token for pos in portfolio if pos)
 
     def deeper(self, portfolio):
         for position in portfolio:
@@ -479,11 +474,9 @@ class Porfolio(FrozenKwInit):
                 continue
 
             for underlying in position.underlying:
-                underlying.__dict__["parent"] = position
                 yield underlying
 
             for unclaimed_reward in position.unclaimed_rewards:
-                unclaimed_reward.__dict__["parent"] = position
                 yield unclaimed_reward
 
     @default
@@ -534,15 +527,15 @@ def groupby(seq, key):
 
 
 def like_debank(portfolio: Porfolio, show_fiat=False):
-    inprotocol, inwallet = boolsplit(portfolio.token_positions, lambda ta: ta.underlying)
+    inprotocol, inwallet = boolsplit(portfolio.token_positions, lambda pos: pos.underlying)
     print("Wallet")
-    for ta in inwallet:
-        print_amounts(ta, "  ")
-        if ta and show_fiat:
-            print(f"    {ta.amount_fiat!r}")
+    for pos in inwallet:
+        print_amounts(pos, "  ")
+        if pos and show_fiat:
+            print(f"    {pos.amount_fiat!r}")
     print()
 
-    for protocol, positions in groupby(inprotocol + portfolio.positions, lambda p: p.protocol).items():
+    for protocol, positions in groupby(inprotocol + portfolio.positions, lambda pos: pos.protocol).items():
         print(protocol)
         print_pos(positions, show_fiat=show_fiat)
         print()
@@ -557,21 +550,20 @@ def decimal_format(dec):
         return s
 
 
-def print_amounts(ta, prefix=""):
-    print(f"{prefix}{ta.token.symbol} {decimal_format(ta.amount)}")
+def print_amounts(pos, prefix=""):
+    print(f"{prefix}{pos.token.symbol} {decimal_format(pos.amount)}")
 
 
 def print_pos(positions, level=1, show_fiat=False):
-    for p in positions:
-        if isinstance(p, TokenPosition):
-            ta = p
-            print_amounts(ta, "  " * level)
-            if ta and show_fiat and not ta.underlying:
-                print(f"{'  '*(level+1)}{ta.amount_fiat!r}")
+    for pos in positions:
+        if isinstance(pos, TokenPosition):
+            print_amounts(pos, "  " * level)
+            if pos and show_fiat and not pos.underlying:
+                print(f"{'  '*(level+1)}{pos.amount_fiat!r}")
         else:
-            print(f"  {p.__class__.__name__}")
-        if p.underlying:
-            print_pos(p.underlying, level + 1, show_fiat)
+            print(f"  {pos.__class__.__name__}")
+        if pos.underlying:
+            print_pos(pos.underlying, level + 1, show_fiat)
 
 
 def discover_defabipedia_tokens():
