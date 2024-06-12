@@ -1,9 +1,9 @@
 from collections import defaultdict
 
-from .portfolio import Porfolio, TokenPosition
+from .portfolio import Portfolio, TokenPosition
 
 
-def like_debank(portfolio: Porfolio, show_fiat=False):
+def like_debank(portfolio: Portfolio, show_fiat=False):
     inprotocol, inwallet = boolsplit(portfolio.token_positions, lambda pos: pos.underlying)
     print("Wallet")
     for pos in inwallet:
