@@ -1,10 +1,8 @@
 import importlib
 import logging
-import time
 from collections import defaultdict
 from decimal import Decimal
 from functools import cached_property as default
-from functools import wraps
 from typing import Iterator
 
 from defabipedia import Blockchain, Chain
@@ -15,39 +13,14 @@ from web3 import Web3
 
 from defyes.contracts import Erc20
 from defyes.generator import camel_to_snake
-from defyes.lazytime import Duration, Time
+from defyes.helpers import timeit
+from defyes.lazytime import Time
 from defyes.prices import Chainlink as chainlink
 from defyes.prices.prices import get_price as get_price_in_usd
 
 Module = type(logging)
 
 logger = logging.getLogger(__name__)
-
-
-def timeit(method):
-    @wraps(method)
-    def wrapper(self, *args, **kwargs):
-        t0 = time.monotonic()
-        result = method(self, *args, **kwargs)
-        t1 = time.monotonic()
-        attr = f"{method.__name__}_timeit"
-        try:
-            ti = self.__dict__[attr]
-        except KeyError:
-            ti = {}
-        cumsum = ti.get("cumsum", 0)
-        n_calls = ti.get("n_calls", 0)
-        duration = Duration.seconds(t1 - t0)
-        cumsum += duration
-        n_calls += 1
-        self.__dict__[attr] = {
-            "last_call": {"duration": duration, "args": args, "kwargs": kwargs},
-            "cumsum": cumsum,
-            "n_calls": n_calls,
-        }
-        return result
-
-    return wrapper
 
 
 def repr_for(*attrs):
