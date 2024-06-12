@@ -3,6 +3,7 @@ from typing import Iterator
 
 from defabipedia import Blockchain, Chain
 from defabipedia.tokens import EthereumTokenAddr
+from karpatkit.helpers import listify
 
 from defyes.portfolio import (
     DeployedToken,
@@ -32,7 +33,9 @@ MakerToken.objs.create(symbol="MKR", chain=Chain.ETHEREUM, address=EthereumToken
 eth_DAI = MakerToken.objs.create(symbol="DAI", chain=Chain.ETHEREUM, address=EthereumTokenAddr.DAI)
 
 
+# TODO: Move this to spark when spark will have the newarch.py
 class SdaiToken(Unwrappable, DeployedToken):
+    protocol = "spark"
     contract_class = contracts.Sdai
     unwrapped_token: Token
 
@@ -63,6 +66,7 @@ class Vault(MakerPosition):
 
 # WIP
 class CDPManagerPosition(MakerPosition):
+    @listify
     def vault_ids(self, proxy_addr: str) -> list[int]:
         # next_id = self.contract.functions.first(proxy_addr).call(block_identifier=self.block)
         next_id = self.first(proxy_addr)
@@ -104,6 +108,7 @@ class Positions(FrozenKwInit):
         return DeployedToken.objs.get(chain=self.chain, symbol="DAI")
 
     @default
+    @listify
     def vaults(self) -> list[Vault]:
         # contracts = defabipedia.maker.ContractSpecs[self.chain]
         # node = get_node(self.chain)

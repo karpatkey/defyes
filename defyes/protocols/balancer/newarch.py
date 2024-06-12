@@ -66,5 +66,4 @@ class Positions(FrozenKwInit):
     __repr__ = repr_for("wallet", "chain", "block")
 
     def __iter__(self) -> Iterator[Position]:
-        return
-        yield
+        return iter([])

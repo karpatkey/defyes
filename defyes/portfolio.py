@@ -1,14 +1,15 @@
 import importlib
-import inspect
 import logging
 import time
 from collections import defaultdict
 from decimal import Decimal
-from functools import cached_property, wraps
+from functools import cached_property as default
+from functools import wraps
 from typing import Iterator
 
 from defabipedia import Blockchain, Chain
 from defabipedia.tokens import EthereumTokenAddr
+from karpatkit.helpers import listify
 from karpatkit.node import get_node
 from web3 import Web3
 
@@ -47,20 +48,6 @@ def timeit(method):
         return result
 
     return wrapper
-
-
-def default(method):
-    if inspect.isgeneratorfunction(method):
-
-        def wrapper(self):
-            return list(method(self))
-
-    else:
-
-        def wrapper(self):
-            return method(self)
-
-    return cached_property(wrapper)
 
 
 def repr_for(*attrs):
@@ -355,6 +342,7 @@ class TokenPosition(Position):
         return float(self.amount) * self.token.price(self.block)
 
     @default
+    @listify
     def underlying(self) -> list["UnderlyingTokenPosition"]:
         """
         Returns one UnderlyingTokenPosition or zero in the list, which is the unwrapped token with its converted value.
@@ -503,11 +491,13 @@ class Porfolio(FrozenKwInit):
         return {name: compatible_protocols[name] for name in self.included_protocols_name}
 
     @default
+    @listify
     def positions(self):
         for protocol_name, protocol in self.protocols.items():
             yield from protocol.Positions(wallet=self.wallet, chain=self.chain, block=self.block)
 
     @default
+    @listify
     def token_positions(self):
         for token in self.included_tokens:
             if token.chain == self.chain:
