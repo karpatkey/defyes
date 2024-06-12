@@ -36,8 +36,8 @@ class EthereumStEthToken(Unwrappable, StEthToken):
         return [UnderlyingTokenPosition(token=ETH, amount_teu=token_position.amount_teu, parent=token_position)]
 
 
-eth_stETH = EthereumStEthToken(address=EthereumTokenAddr.stETH)
-gnosis_stETH = StEthToken(chain=Chain.GNOSIS, address="0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84")
+eth_stETH = EthereumStEthToken.objs.create(address=EthereumTokenAddr.stETH)
+gnosis_stETH = StEthToken.objs.create(chain=Chain.GNOSIS, address="0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84")
 
 
 class WrappedStEthToken(Unwrappable, LidoToken):

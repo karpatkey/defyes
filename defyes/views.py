@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from .portfolio import Portfolio, TokenPosition
+from defyes.portfolio import Portfolio, TokenPosition
 
 
 def like_debank(portfolio: Portfolio, show_fiat=False):
@@ -14,7 +14,7 @@ def like_debank(portfolio: Portfolio, show_fiat=False):
 
     for protocol, positions in groupby(inprotocol + portfolio.positions, lambda pos: pos.protocol).items():
         print(protocol)
-        print_pos(positions, show_fiat=show_fiat)
+        print_pos(portfolio, positions, show_fiat=show_fiat)
         print()
 
 
@@ -31,16 +31,18 @@ def decimal_format(dec):
         return s
 
 
-def print_pos(positions, level=1, show_fiat=False):
+def print_pos(portfolio, positions, level=1, show_fiat=False):
     for pos in positions:
         if isinstance(pos, TokenPosition):
             print_amounts(pos, "  " * level)
             if pos and show_fiat and not pos.underlying:
                 print(f"{'  '*(level+1)}{pos.amount_fiat!r}")
+            if pos.token in portfolio.target_tokens:
+                continue
         else:
             print(f"  {pos.__class__.__name__}")
         if pos.underlying:
-            print_pos(pos.underlying, level + 1, show_fiat)
+            print_pos(portfolio, pos.underlying, level + 1, show_fiat)
 
 
 def boolsplit(seq, key=lambda element: element):
