@@ -14,11 +14,13 @@ def test_get_protocol_data_for():
         "decimals": "",
         "positions": {
             "0xB3AC09cd5201569a821d87446A4aF1b202B10aFd": {
-                "holdings": {
-                    "address": "0x30baA3BA9D7089fD8D020a994Db75D14CF7eC83b",
-                    "balance": Decimal("1961178.818477"),
-                },
-                "underlyings": {"address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "balance": 1990508.617719},
+                "holdings": [
+                    {
+                        "address": "0x30baA3BA9D7089fD8D020a994Db75D14CF7eC83b",
+                        "balance": Decimal("1961178.818477"),
+                    }
+                ],
+                "underlyings": [{"address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "balance": 1990508.617719}],
             }
         },
     }
