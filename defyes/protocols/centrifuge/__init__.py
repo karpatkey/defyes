@@ -41,8 +41,8 @@ def get_protocol_data_for(
         token_balance = token_balance / 10 ** get_decimals(token_address, blockchain)
         holding_balance = holding_balance / 10 ** get_decimals(tranche_token, blockchain)
 
-    holdings = {"address": tranche_token, "balance": holding_balance}
-    underlying = {"address": token_address, "balance": token_balance}
+    holdings = [{"address": tranche_token, "balance": holding_balance}]
+    underlyings = [{"address": token_address, "balance": token_balance}]
 
     data = {
         "blockchain": blockchain,
@@ -52,7 +52,7 @@ def get_protocol_data_for(
         "version": 0,
         "wallet": wallet,
         "decimals": "",
-        "positions": {position_identifier: {"holdings": holdings, "underlyings": underlying}},
+        "positions": {position_identifier: {"holdings": holdings, "underlyings": underlyings}},
     }
 
     return data
