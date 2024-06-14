@@ -18,7 +18,7 @@ def test_get_protocol_data_for():
                     "address": "0x30baA3BA9D7089fD8D020a994Db75D14CF7eC83b",
                     "balance": Decimal("1961178.818477"),
                 },
-                "underlying": {"address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "balance": 1990508.617719},
+                "underlyings": {"address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "balance": 1990508.617719},
             }
         },
     }

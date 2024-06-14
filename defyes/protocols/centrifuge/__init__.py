@@ -52,7 +52,7 @@ def get_protocol_data_for(
         "version": 0,
         "wallet": wallet,
         "decimals": "",
-        "positions": {position_identifier: {"holdings": holdings, "underlying": underlying}},
+        "positions": {position_identifier: {"holdings": holdings, "underlyings": underlying}},
     }
 
     return data

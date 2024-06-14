@@ -12,7 +12,7 @@ def test_get_protocol_data_for():
         "decimals": "",
         "positions": {
             "0x3889C8B1f064A1A576caB04D5767a00Bf2308bD4": {
-                "underlying": [
+                "underlyings": [
                     {"address": "0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1", "balance": 71.3390542200428},
                     {"address": "0xaf204776c7245bF4147c2612BF6e5972Ee483701", "balance": 200443.3714747083},
                 ]
