@@ -13,7 +13,7 @@ def test_get_protocol_data_for():
         "positions": {
             "veOLAS": {
                 "holdings": [{"address": "0x7e01A500805f8A52Fad229b3015AD130A332B7b3", "balance": 6000000.0}],
-                "underlying": [{"address": "0x0001A500A6B18995B03f44bb040A5fFc28E45CB0", "balance": 6000000.0}],
+                "underlyings": [{"address": "0x0001A500A6B18995B03f44bb040A5fFc28E45CB0", "balance": 6000000.0}],
             }
         },
     }

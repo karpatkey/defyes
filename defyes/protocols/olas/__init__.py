@@ -36,7 +36,7 @@ def get_protocol_data_for(blockchain: str, wallet: str, block: int, decimals: bo
         "positions": {
             "veOLAS": {
                 "holdings": [{"address": veOLAS.address, "balance": veOLAS_amount}],
-                "underlying": [{"address": veOLAS.token, "balance": veOLAS_amount}],
+                "underlyings": [{"address": veOLAS.token, "balance": veOLAS_amount}],
             },
         },
     }
