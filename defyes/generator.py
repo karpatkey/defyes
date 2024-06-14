@@ -181,6 +181,7 @@ def generate_methods_from_abi(abi_path, const_call_methods=[], always_include_me
         "address": "str",
         "address[]": "list[str]",
         "string": "str",
+        "bytes16": "bytes",
         "bytes32": "bytes",
         "bytes[]": "list[bytes]",
         "bytes32[]": "list[bytes]",
