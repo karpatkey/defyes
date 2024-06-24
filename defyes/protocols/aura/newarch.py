@@ -2,12 +2,15 @@ from pathlib import Path
 from typing import Iterator
 
 from defabipedia import Blockchain, Chain
+from defabipedia.tokens import EthereumTokenAddr, GnosisTokenAddr
+from karpatkit.helpers import listify
 
 from defyes import management
 from defyes.portfolio import (
     DeployedToken,
     FrozenKwInit,
     Position,
+    Rewardable,
     TokenPosition,
     UnderlyingTokenPosition,
     Unwrappable,
@@ -16,11 +19,67 @@ from defyes.portfolio import (
 )
 from defyes.serializers import DeployedTokenSerializer
 
+from . import contracts
+
 protocol_path = Path(__file__).parent
 
 
-class AuraToken(Unwrappable, DeployedToken):
+class Aura:
     protocol = "aura"
+
+
+class AuraToken(Aura, DeployedToken):
+    pass
+
+
+AuraToken.objs.create(symbol="AURA", chain=Chain.ETHEREUM, address=EthereumTokenAddr.AURA)
+AuraToken.objs.create(symbol="AURA", chain=Chain.GNOSIS, address=GnosisTokenAddr.AURA)
+
+
+class UnwrappableAuraToken(Unwrappable, AuraToken):
+    @listify
+    def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
+        yield UnderlyingTokenPosition(
+            token=self.unwrapped_token, amount_teu=token_position.amount_teu, parent=token_position
+        )
+
+
+class LockerToken(Rewardable, UnwrappableAuraToken):
+    contract_class = contracts.Locker
+
+    @default
+    def unwrapped_token(self) -> DeployedToken:
+        return DeployedToken.objs.get_or_create(chain=self.chain, symbol="AURA")
+
+    @listify
+    def claim(self, position: Position) -> list[UnderlyingTokenPosition]:
+        for token_addr, balance in self.contract.claimable_rewards(position.wallet):
+            token = DeployedToken.objs.get_or_create(chain=self.chain, address=token_addr)
+            yield UnderlyingTokenPosition(token=token, amount_teu=balance)
+
+
+LockerToken.objs.create(symbol="vlAURA", chain=Chain.ETHEREUM, address="0x3Fa73f1E5d8A792C80F426fc8F84FBF7Ce9bBCAC")
+
+
+class Positions(FrozenKwInit):
+    wallet: str
+    chain: Blockchain
+    block: int
+
+    __repr__ = repr_for("wallet", "chain", "block")
+
+    def __iter__(self) -> Iterator[Position]:
+        return iter([])
+
+
+@management.updater.register
+def update_jsons():
+    # oldarch.update_db() # TODO: fix update_db in __init__.py
+    load_tokens_from_db_json()
+    AuraTokenSerializer.save()
+
+
+class WrappedToken(UnwrappableAuraToken):
     unwrapped_address: str
     id: int
 
@@ -28,16 +87,9 @@ class AuraToken(Unwrappable, DeployedToken):
     def unwrapped_token(self) -> DeployedToken:
         return DeployedToken.objs.get_or_create(chain=self.chain, address=self.unwrapped_address)
 
-    def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
-        return [
-            UnderlyingTokenPosition(
-                token=self.unwrapped_token, amount_teu=token_position.amount_teu, parent=token_position
-            )
-        ]
-
 
 class AuraTokenSerializer(DeployedTokenSerializer):
-    token_class = AuraToken
+    token_class = WrappedToken
     filename = protocol_path / "tokens.json"
 
     @staticmethod
@@ -70,13 +122,6 @@ class AuraTokenSerializer(DeployedTokenSerializer):
 AuraTokenSerializer.load_replacing_but_distinguishing_symbols()
 
 
-@management.updater.register
-def update_jsons():
-    # oldarch.update_db() # TODO: fix update_db in __init__.py
-    load_tokens_from_db_json()
-    AuraTokenSerializer.save()
-
-
 def load_tokens_from_db_json():
     import json
 
@@ -101,20 +146,3 @@ def load_tokens_from_db_json():
                         unwrapped_address=balancer_address,
                         deployment_block=block,
                     )
-
-
-class Position(Position):
-    protocol: str = "aura"
-    context: "Positions"
-    address: str
-
-
-class Positions(FrozenKwInit):
-    wallet: str
-    chain: Blockchain
-    block: int
-
-    __repr__ = repr_for("wallet", "chain", "block")
-
-    def __iter__(self) -> Iterator[Position]:
-        return iter([])

@@ -146,11 +146,6 @@ class DeployedToken(Deployment, Token):
         return self.contract.block
 
 
-class Unwrappable:
-    def unwrap(self, token_position: "TokenPosition") -> list["UnderlyingTokenPosition"]:
-        raise NotImplementedError
-
-
 frozenlist = tuple
 
 
@@ -171,6 +166,12 @@ class Position(FrozenKwInit):
 
     def __bool__(self):
         return bool(self.underlying) or bool(self.unclaimed_rewards)
+
+
+class DeployedPosition(Deployment, Position):
+    """
+    A Deployed position which has a contract address.
+    """
 
 
 class TokenPosition(Position):
@@ -214,6 +215,12 @@ class TokenPosition(Position):
             yield from self.token.unwrap(self)
 
     @default
+    @listify
+    def unclaimed_rewards(self) -> list["UnderlyingTokenPosition"]:
+        if isinstance(self.token, Rewardable):
+            yield from self.token.claim(self)
+
+    @default
     def block(self):
         return self.token.block
 
@@ -240,6 +247,10 @@ class TokenPosition(Position):
             return self.__class__(token=self.token, amount_teu=self.amount_teu + other.amount_teu)
         else:
             raise ValueError(f"Cannot add positions for different tokens ({self.token=} {other.token=}")
+
+
+class UnderlyingDeployedPosition(DeployedPosition):
+    parent: Position | None = None
 
 
 class UnderlyingTokenPosition(TokenPosition):
@@ -277,6 +288,16 @@ class UnderlyingTokenPosition(TokenPosition):
             return position.protocol
         except AttributeError:
             return None
+
+
+class Unwrappable:
+    def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
+        raise NotImplementedError
+
+
+class Rewardable:
+    def claim(self, position: Position) -> list[UnderlyingTokenPosition]:
+        raise NotImplementedError
 
 
 #### Some token definitions

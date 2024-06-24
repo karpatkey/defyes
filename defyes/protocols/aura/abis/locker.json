@@ -1,0 +1,131 @@
+[
+   {
+      "constant" : true,
+      "inputs" : [],
+      "name" : "name",
+      "outputs" : [
+         {
+            "name" : "",
+            "type" : "string"
+         }
+      ],
+      "payable" : false,
+      "stateMutability" : "view",
+      "type" : "function"
+   },
+   {
+      "constant" : true,
+      "inputs" : [],
+      "name" : "symbol",
+      "outputs" : [
+         {
+            "name" : "",
+            "type" : "string"
+         }
+      ],
+      "payable" : false,
+      "type" : "function"
+   },
+   {
+      "constant" : true,
+      "inputs" : [],
+      "name" : "decimals",
+      "outputs" : [
+         {
+            "name" : "",
+            "type" : "uint8"
+         }
+      ],
+      "payable" : false,
+      "stateMutability" : "view",
+      "type" : "function"
+   },
+   {
+      "constant" : true,
+      "inputs" : [
+         {
+            "name" : "",
+            "type" : "address"
+         }
+      ],
+      "name" : "balanceOf",
+      "outputs" : [
+         {
+            "name" : "",
+            "type" : "uint256"
+         }
+      ],
+      "payable" : false,
+      "stateMutability" : "view",
+      "type" : "function"
+   },
+   {
+      "constant" : true,
+      "inputs" : [],
+      "name" : "totalSupply",
+      "outputs" : [
+         {
+            "name" : "",
+            "type" : "uint256"
+         }
+      ],
+      "payable" : false,
+      "stateMutability" : "view",
+      "type" : "function"
+   },
+   {
+      "inputs" : [
+         {
+            "internalType" : "address",
+            "name" : "",
+            "type" : "address"
+         }
+      ],
+      "name" : "balances",
+      "outputs" : [
+         {
+            "internalType" : "uint112",
+            "name" : "locked",
+            "type" : "uint112"
+         },
+         {
+            "internalType" : "uint32",
+            "name" : "nextUnlockIndex",
+            "type" : "uint32"
+         }
+      ],
+      "stateMutability" : "view",
+      "type" : "function"
+   },
+   {
+      "inputs" : [
+         {
+            "internalType" : "address",
+            "name" : "_account",
+            "type" : "address"
+         }
+      ],
+      "name" : "claimableRewards",
+      "outputs" : [
+         {
+            "components" : [
+               {
+                  "internalType" : "address",
+                  "name" : "token",
+                  "type" : "address"
+               },
+               {
+                  "internalType" : "uint256",
+                  "name" : "amount",
+                  "type" : "uint256"
+               }
+            ],
+            "internalType" : "struct AuraLocker.EarnedData[]",
+            "name" : "userRewards",
+            "type" : "tuple[]"
+         }
+      ],
+      "stateMutability" : "view",
+      "type" : "function"
+   }
+]

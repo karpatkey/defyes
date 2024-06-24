@@ -137,6 +137,7 @@ def generate_methods_from_abi(abi_path, const_call_methods=[], always_include_me
         "uint32": "int",
         "uint96": "int",
         "uint256": "int",
+        "uint112": "int",
         "int104": "int",
         "int256": "int",
         "uint128": "int",
