@@ -24,9 +24,16 @@ logger = logging.getLogger(__name__)
 
 xDAI = NativeToken.objs.get(chain=Chain.GNOSIS)
 
-
-class MakerToken(DeployedToken):
+class Maker:
     protocol = "maker"
+
+
+class MakerToken(Maker, DeployedToken):
+    pass
+
+
+class MakerDeployment(Maker, Deployment):
+    pass
 
 
 MakerToken.objs.create(symbol="MKR", chain=Chain.ETHEREUM, address=EthereumTokenAddr.MKR)
@@ -53,30 +60,60 @@ SdaiToken.objs.create(
 )
 
 
-class MakerPosition(Position):
-    protocol: str = "maker"
-    context: "Positions"
-    address: str
+def create_from_defaul_addresses(deployed_unit_class):
+    for chain, address in deployed_unit_class.contract_class.default_addresses.items():
+        deployed_unit_class.objs.create(chain=chain, address=address)
+
+
+@create_from_defaul_addresses
+class CDPManager(Unwrappable, MakerDeployment):
+    contract_class = contracts.CdpManager
+
+    @listify
+    def unwrap(self, position: Position) -> list[UnderlyingPosition]:
+        ilk_registry = contracts.IlkRegistry(self.chain, position.block)
+        vat = contracts.Vat(self.chain, position.block)
+        proxy_addr = contracts.ProxyRegistry(self.chain, position.block).proxies(position.wallet)
+        for vault_id in self.contract.get_vault_ids(proxy_addr):
+            ilk = self.contract.ilks(vault_id)
+            gem = ilk_registry.info(ilk)[4]
+            urn_handler_address = self.contract.urns(vault_id)
+            ink, art = vat.urns(ilk, urn_handler_address)
+            rate = vat.ilks(ilk)[1]
+
+            lend_token = DeployedToken.objs.get_or_create(chain=self.chain, address=gem)
+            DAI = DeployedToken.objs.get(chain=self.chain, symbol="DAI")
+            yield IdPosition(
+                id=vault_id,
+                unit=self,
+                proxy_addr=proxy_addr,
+                underlying=[
+                    UnderlyingTokenPosition(unit=lend_token, amount_teu=ink, block=position.block),
+                    UnderlyingTokenPosition(unit=DAI, amount_teu=-1 * art * rate, block=position.block),
+                ],
+                rate=rate,
+            )
+
+
+@create_from_defaul_addresses
+class DSR(Unwrappable, MakerDeployment):
+    contract_class = contracts.DsrManager
+    name = "manager"
+
+    @listify
+    def unwrap(self, position: Position) -> list[UnderlyingPosition]:
+        DAI = DeployedToken.objs.get(chain=self.chain, symbol="DAI")
+        yield UnderlyingTokenPosition(unit=DAI, amount_teu=self.contract.dai_balance(position.wallet))
+
+
+
+class MakerPosition(Maker, Position):
+    pass
 
 
 class Vault(MakerPosition):
     id: int
     __repr__ = repr_for("address", "id", "underlying", "unclaimed_rewards")
-
-
-# WIP
-class CDPManagerPosition(MakerPosition):
-    @listify
-    def vault_ids(self, proxy_addr: str) -> list[int]:
-        # next_id = self.contract.functions.first(proxy_addr).call(block_identifier=self.block)
-        next_id = self.first(proxy_addr)
-        for _ in range(self.count(proxy_addr)):
-            yield next_id
-            prev_id, next_id = self._list(next_id)
-
-
-class DSR(MakerPosition):
-    name = "manager"
 
 
 class DSRPot(MakerPosition):

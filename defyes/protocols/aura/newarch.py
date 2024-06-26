@@ -52,7 +52,7 @@ class LockerToken(Rewardable, UnwrappableAuraToken):
         return DeployedToken.objs.get_or_create(chain=self.chain, symbol="AURA")
 
     @listify
-    def claim(self, position: Position) -> list[UnderlyingTokenPosition]:
+    def unclaimed_rewards(self, position: Position) -> list[UnderlyingTokenPosition]:
         for token_addr, balance in self.contract.claimable_rewards(position.wallet):
             token = DeployedToken.objs.get_or_create(chain=self.chain, address=token_addr)
             yield UnderlyingTokenPosition(token=token, amount_teu=balance)

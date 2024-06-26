@@ -49,30 +49,64 @@ class USD(Fiat):
     symbol: str = "USD"
 
 
-class Token(FrozenKwInit):
-    node: Web3
+class Unit(FrozenKwInit):  # Abstract
     chain: Blockchain
+    node: Web3
+
+    @default
+    def chain(self):
+        node = self.__dict__["node"]  # expect already defined node to avoid infinite recursion.
+        return Chain.get_blockchain_by_name(node._network_name)
+
+    @default
+    def node(self) -> Web3:
+        chain = self.__dict__["chain"]  # expect already defined chain to avoid infinite recursion.
+        return get_node(chain)
+
+    objs = InstancesManager()
+
+    def position_of(self, wallet: str, block: int) -> "Position":
+        return Position(unit=self, wallet=wallet, block=block)
+
+
+class DeployMixin:  # Mixin
+    contract_class: type
+    address: str | None
+    deployed_block: int | str = "latest"
+    protocol: str | None = None
+
+    @default
+    def address(self):
+        return self.contract_class.default_addresses[self.chain]
+
+    @default
+    def contract(self):
+        return self.contract_class(self.chain, self.deployed_block, self.address)
+
+    @default
+    def node(self) -> Web3:
+        return self.contract.contract.w3
+
+
+class Deployment(DeployMixin, Unit):
+    def id_position_of(self, wallet: str, block: int, id: int) -> "IdPosition":
+        return IdPosition(token=self, wallet=wallet, block=block, id: int)
+
+
+class Token(Unit):  # Abstract base
     symbol: str
     name: str
     price: Fiat
     decimals: int
-    protocol: str | None = None
 
     __repr__ = repr_for("chain", "symbol", "protocol")
 
-    objs = InstancesManager()
-
-    indexes = [
-        ["chain", "symbol"],
-    ]
+    def position_of(self, wallet: str, block: int) -> "TokenPosition":
+        return TokenPosition(token=self, wallet=wallet, block=block)
 
 
 class NativeToken(Token):
     decimals: int = 18
-
-    @default
-    def node(self) -> Web3:
-        return get_node(self.chain)
 
     indexes = [
         ["chain"],
@@ -88,29 +122,8 @@ class NativeToken(Token):
     def balance_of(self, wallet: str, block: int) -> int:
         return self.node.eth.get_balance(wallet, block)
 
-    def position_of(self, wallet: str, block: int) -> "TokenPosition":
-        return TokenPosition(token=self, wallet=wallet, block=block)
 
-
-class Deployment:
-    contract_class: type
-    address: str | None = None
-    deployed_block: int | str = "latest"
-
-    @default
-    def address(self):
-        return self.contract_class.default_addresses[self.chain]
-
-    @default
-    def contract(self):
-        return self.contract_class(self.chain, self.deployed_block, self.address)
-
-    @default
-    def node(self) -> Web3:
-        return self.contract.contract.w3
-
-
-class DeployedToken(Deployment, Token):
+class DeployedToken(DeployMixin, Token):
     contract_class: type = Erc20
 
     @default
@@ -138,15 +151,9 @@ class DeployedToken(Deployment, Token):
     def balance_of(self, wallet: str, block: int) -> int:
         return self.contract.contract.functions.balanceOf(wallet).call(block_identifier=block)
 
-    def position_of(self, wallet: str, block: int) -> "TokenPosition":
-        return TokenPosition(token=self, wallet=wallet, block=block)
-
     @default
     def block(self):
         return self.contract.block
-
-
-frozenlist = tuple
 
 
 class Position(FrozenKwInit):
@@ -155,23 +162,32 @@ class Position(FrozenKwInit):
     """
 
     wallet: str
-    chain: Blockchain
     block: int
-    protocol: str | None = None
-    underlying: list["Position"] = frozenlist()  # Frozen just to make the default inmutable
-    unclaimed_rewards: list["Position"] = frozenlist()
-    name: str = DefaultNameFromClass()
+    unit: Deployment | DeployedToken | NativeToken
+
+    @default
+    @listify
+    def underlying(self) -> list["UnderlyingPosition"]:
+        """
+        Returns one UnderlyingTokenPosition or zero in the list, which is the unwrapped token with its converted value.
+        """
+        if isinstance(self.unit, Unwrappable):
+            position = self.unit.unwrap(self)
+            position.__dict__["parent"] = self
+            yield from position
+
+    @default
+    @listify
+    def unclaimed_rewards(self) -> list["UnderlyingPosition"]:
+        if isinstance(self.unit, Rewardable):
+            position = self.unit.unclaimed_rewards(self)
+            position.__dict__["parent"] = self
+            yield from position
 
     __repr__ = repr_dict()
 
     def __bool__(self):
         return bool(self.underlying) or bool(self.unclaimed_rewards)
-
-
-class DeployedPosition(Deployment, Position):
-    """
-    A Deployed position which has a contract address.
-    """
 
 
 class TokenPosition(Position):
@@ -180,7 +196,7 @@ class TokenPosition(Position):
     """
 
     __repr__ = repr_for("amount", "token")
-    token: Token
+    unit: DeployedToken | NativeToken
     amount: Decimal | None
     amount_teu: int | None
 
@@ -189,76 +205,63 @@ class TokenPosition(Position):
         """
         Amount in terms of units of the token. Calculated from TEU and decimals.
         """
-        return Decimal(self.amount_teu).scaleb(-self.token.decimals) if self else Decimal(0)
+        return Decimal(self.amount_teu).scaleb(-self.unit.decimals) if self else Decimal(0)
 
     @default
     def amount_teu(self) -> int:
         """
         Amount in terms of TEU (the minimun fraction of the token). Got from the token balance_of.
         """
-        return self.token.balance_of(self.wallet, self.block)
+        return self.unit.balance_of(self.wallet, self.block)
 
     @default
     def amount_fiat(self) -> Fiat:
         """
         Amount in Fiat (mainly USD). Converted to Fiat using the token price.
         """
-        return float(self.amount) * self.token.price(self.block)
-
-    @default
-    @listify
-    def underlying(self) -> list["UnderlyingTokenPosition"]:
-        """
-        Returns one UnderlyingTokenPosition or zero in the list, which is the unwrapped token with its converted value.
-        """
-        if isinstance(self.token, Unwrappable):
-            yield from self.token.unwrap(self)
-
-    @default
-    @listify
-    def unclaimed_rewards(self) -> list["UnderlyingTokenPosition"]:
-        if isinstance(self.token, Rewardable):
-            yield from self.token.claim(self)
-
-    @default
-    def block(self):
-        return self.token.block
+        return float(self.amount) * self.unit.price(self.block)
 
     @default
     def time(self) -> Time:
         if isinstance(self.block, int):
-            return Time(self.token.node.eth.get_block(self.block).timestamp)
+            return Time(self.unit.node.eth.get_block(self.block).timestamp)
         else:
             raise ValueError("Undefined time, because `block` isn't defined as an integer.")
-
-    @property
-    def protocol(self) -> str:
-        return self.token.protocol
-
-    @property
-    def chain(self) -> str:
-        return self.token.chain
 
     def __bool__(self):
         return self.amount_teu != 0
 
     def __add__(self, other):
-        if self.token == other.token:
-            return self.__class__(token=self.token, amount_teu=self.amount_teu + other.amount_teu)
+        if self.unit == other.unit:
+            return self.__class__(unit=self.unit, amount_teu=self.amount_teu + other.amount_teu)
         else:
-            raise ValueError(f"Cannot add positions for different tokens ({self.token=} {other.token=}")
+            raise ValueError(f"Cannot add positions for different units ({self.unit=} {other.unit=}")
 
 
-class UnderlyingDeployedPosition(DeployedPosition):
-    parent: Position | None = None
+class Underlying:
+    parent: Position
+
+    @cached_property
+    def root(self):
+        position = self.parent
+        while isinstance(position, Underlying):
+            position = position.parent
+        return position
 
 
-class UnderlyingTokenPosition(TokenPosition):
+class UnderlyingPosition(Underlying, Position):
+    pass
+
+
+class IdPosition(UnderlyingPosition):
+    id: int
+    __repr__ = repr_for("address", "id")
+
+
+class UnderlyingTokenPosition(Underlying, TokenPosition):
     """
     An underlying value/balance for a Token.
     """
-
-    parent: Position | None = None
 
     @default
     def amount_teu(self) -> int:
@@ -279,24 +282,17 @@ class UnderlyingTokenPosition(TokenPosition):
         if not {"amount", "amount_teu"}.intersection(self.__dict__):
             raise ValueError("At least one of either `amount` or `amount_teu` must be defined.")
 
-    @cached_property
-    def root_protocol(self):
-        position = self
-        while hasattr(position, "parent"):
-            position = position.parent
-        try:
-            return position.protocol
-        except AttributeError:
-            return None
 
 
 class Unwrappable:
+    """For unit"""
     def unwrap(self, token_position: TokenPosition) -> list[UnderlyingTokenPosition]:
         raise NotImplementedError
 
 
 class Rewardable:
-    def claim(self, position: Position) -> list[UnderlyingTokenPosition]:
+    """For unit"""
+    def unclaimed_rewards(self, position: Position) -> list[UnderlyingTokenPosition]:
         raise NotImplementedError
 
 
