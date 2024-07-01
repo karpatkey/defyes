@@ -1,7 +1,7 @@
 """
 # Lazy Time
 
-The main resources from this module are the clases Duration and Time.
+The main resources from this module are the classes Duration and Time.
 
 The calendar interpretation of time is always aware with default UTC. It includes string and tuple/args interpretation.
 But you could specify for example UTC-0300 at the end of the string or a `tzinfo` when using `Time.from_calendar`.

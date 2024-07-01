@@ -1,12 +1,28 @@
+"""
+This module provides utility functions and classes for working with data classes in Python.
+
+It includes the following:
+
+- `repr_for(*attrs)`: A function that simplifies the creation of a `__repr__` method for your class by including specific attributes.
+
+- `repr_dict()`: A function that creates a `__repr__` method for your class that includes all attributes.
+
+- `FrozenKwInit`: A base class that provides a frozen, read-only implementation of keyword-based initialization.
+"""
+
+
 def repr_for(*attrs):
     """
-    Easy create your class repr function including the specific attributes `attrs`.
+    This function simplifies the creation of a `__repr__` method for your class by including specific attributes.
 
-    class A:
-        ...
-        __repr__ = repr_for("a", "b")
+    The `__repr__` method returns a string that describes how to recreate the object in Python code.
 
-    repr(A(...)) -> "A(a=1, b=2)"
+    Example:
+        class A:
+            ...
+            __repr__ = repr_for("a", "b")
+
+        repr(A(...)) -> "A(a=1, b=2)"
     """
 
     def __repr__(self):
@@ -26,7 +42,16 @@ def repr_dict():
 
 class FrozenKwInit:
     """
-    No magical alternative to mitigate the extreme complexity of dataclasses when dealing with inheritance.
+    A base class that provides a frozen, read-only implementation of keyword-based initialization for data classes.
+
+    This class allows setting all keyword arguments defined by `attrs` as instance attributes.
+
+    Methods:
+        __post_init__: Can be overridden in subclasses instead of `__init__`.
+        __setattr__: Raises an exception to ensure instances remain "frozen" and immutable.
+
+    By using `FrozenKwInit` as a base class, derivative classes can have "frozen" instances, which helps reduce
+    incoherent states and ensures the immutability of data.
     """
 
     def __init__(self, /, **attrs):
@@ -44,7 +69,7 @@ class FrozenKwInit:
 
     def __setattr__(self, name, value):
         """
-        Make derivative clases with "fozen" instances to reduce incoherent states and all the good behaviours of
-        inmutable data ;)
+        Make derivative classes with "frozen" instances to reduce incoherent states and ensure all the good behaviors of
+        immutable data.
         """
         raise Exception("read-only")

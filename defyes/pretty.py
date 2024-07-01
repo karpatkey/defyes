@@ -1,3 +1,13 @@
+"""
+This module provides utilities for pretty-printing in Python.
+
+It includes a custom print function that uses the `pprint` module to format output,
+and a `jprint` function for pretty-printing JSON-style objects.
+
+Functions:
+    jprint(obj): Print a JSON-style object with indentation and other formatting.
+"""
+
 import json
 from pprint import PrettyPrinter
 

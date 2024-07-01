@@ -1,3 +1,14 @@
+"""
+This module provides a utility decorator `timeit` for timing the execution of methods.
+
+The `timeit` decorator measures the time taken to execute a method and stores the timing in the object's dictionary.
+The timing information includes the duration of the last call,
+ the cumulative sum of all call durations, and the number of calls made.
+
+Functions:
+    timeit(method): A decorator that times the execution of a method and stores the timing in the object's dictionary.
+"""
+
 import time
 from functools import wraps
 
