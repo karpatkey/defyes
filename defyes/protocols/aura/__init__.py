@@ -237,7 +237,9 @@ def get_aura_mint_amount(web3, bal_earned, block, blockchain, rewarder, decimals
         minter_address = const_call(booster_contract.functions.minter())
         minter_contract = get_contract(minter_address, blockchain, web3=web3, abi=ABI_L2COORDINATOR)
         aura_address = const_call(minter_contract.functions.auraOFT())
-        aura_amount = bal_earned * (minter_contract.functions.mintRate().call(block_identifier=block) / Decimal(10**18))
+        aura_amount = bal_earned * (
+            minter_contract.functions.mintRate().call(block_identifier=block) / Decimal(10**18)
+        )
 
     if not decimals:
         aura_decimals = get_decimals(aura_address, blockchain, web3=web3)

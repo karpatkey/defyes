@@ -101,7 +101,8 @@ def get_mainnet_price(token_address, block, web3=None, index=0):
 
             if quote == CHAINLINK_ETH_QUOTES[0]:
                 return (
-                    price_feed_contract.functions.latestAnswer().call(block_identifier=block) / 10**price_feed_decimals
+                    price_feed_contract.functions.latestAnswer().call(block_identifier=block)
+                    / 10**price_feed_decimals
                 )
             else:
                 return (
