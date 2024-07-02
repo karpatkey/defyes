@@ -68,7 +68,7 @@ def get_pool_rewarders(lptoken_address, block):
                 rewarders.append(db_data["pools"][lptoken_address][iblock]["rewarder"])
 
     else:
-        booster_contract = get_contract(BOOSTER, Chain.ETHEREUM, abi=ABI_BOOSTER, block=block)
+        booster_contract = get_contract(BOOSTER, Chain.ETHEREUM, abi=ABI_BOOSTER)
         number_of_pools = booster_contract.functions.poolLength().call(block_identifier=block)
 
         for pool_id in range(number_of_pools):
@@ -104,9 +104,7 @@ def get_extra_rewards(web3, crv_rewards_contract, wallet, block, blockchain, dec
 
     for i in range(extra_rewards_length):
         extra_reward_contract_address = crv_rewards_contract.functions.extraRewards(i).call(block_identifier=block)
-        extra_reward_contract = get_contract(
-            extra_reward_contract_address, blockchain, web3=web3, abi=ABI_REWARDS, block=block
-        )
+        extra_reward_contract = get_contract(extra_reward_contract_address, blockchain, web3=web3, abi=ABI_REWARDS)
 
         extra_reward_token_address = const_call(extra_reward_contract.functions.rewardToken())
         extra_reward = extra_reward_contract.functions.earned(wallet).call(block_identifier=block)
@@ -128,7 +126,7 @@ def get_cvx_mint_amount(web3, crv_earned, block, blockchain, decimals=True):
     """
     cvx_amount = 0
 
-    cvx_contract = get_contract(EthereumTokenAddr.CVX, blockchain, web3=web3, abi=ABI_CVX, block=block)
+    cvx_contract = get_contract(EthereumTokenAddr.CVX, blockchain, web3=web3, abi=ABI_CVX)
 
     cliff_size = cvx_contract.functions.reductionPerCliff().call(block_identifier=block)
     cliff_count = cvx_contract.functions.totalCliffs().call(block_identifier=block)
@@ -171,7 +169,7 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
         rewarders = get_pool_rewarders(lptoken_address, block)
 
     for rewarder in rewarders:
-        rewarder_contract = get_contract(rewarder, blockchain, web3=web3, abi=ABI_REWARDS, block=block)
+        rewarder_contract = get_contract(rewarder, blockchain, web3=web3, abi=ABI_REWARDS)
 
         crv_rewards = get_rewards(web3, rewarder_contract, wallet, block, blockchain, decimals=decimals)
         if crv_rewards[0] in all_rewards.keys():
@@ -212,7 +210,7 @@ def get_locked(wallet, block, blockchain, web3=None, reward=False, decimals=True
 
     wallet = Web3.to_checksum_address(wallet)
 
-    cvx_locker_contract = get_contract(CVX_LOCKER, blockchain, web3=web3, block=block)
+    cvx_locker_contract = get_contract(CVX_LOCKER, blockchain, web3=web3)
     cvx_locker = cvx_locker_contract.functions.balances(wallet).call(block_identifier=block)[0]
 
     result = [[EthereumTokenAddr.CVX, to_token_amount(EthereumTokenAddr.CVX, cvx_locker, blockchain, web3, decimals)]]
@@ -246,7 +244,7 @@ def get_staked(wallet, block, blockchain, web3=None, reward=False, decimals=True
 
     wallet = Web3.to_checksum_address(wallet)
 
-    cvx_staking_contract = get_contract(CVX_STAKER, blockchain, web3=web3, block=block)
+    cvx_staking_contract = get_contract(CVX_STAKER, blockchain, web3=web3)
     cvx_staked = cvx_staking_contract.functions.balanceOf(wallet).call(block_identifier=block)
 
     result = [[EthereumTokenAddr.CVX, to_token_amount(EthereumTokenAddr.CVX, cvx_staked, blockchain, web3, decimals)]]
@@ -294,7 +292,7 @@ def underlying(
     rewarders = get_pool_rewarders(lptoken_address, block)
 
     for rewarder in rewarders:
-        rewarder_contract = get_contract(rewarder, blockchain, web3=web3, abi=ABI_REWARDS, block=block)
+        rewarder_contract = get_contract(rewarder, blockchain, web3=web3, abi=ABI_REWARDS)
         lptoken_staked = rewarder_contract.functions.balanceOf(wallet).call(block_identifier=block)
 
         if no_curve_underlying is False:
@@ -340,7 +338,7 @@ def update_db(output_file=DB_FILE, block="latest"):
     db_data = {"pools": {}}
 
     web3 = get_node(Chain.ETHEREUM)
-    booster = get_contract(BOOSTER, Chain.ETHEREUM, web3=web3, abi=ABI_BOOSTER, block=block)
+    booster = get_contract(BOOSTER, Chain.ETHEREUM, web3=web3, abi=ABI_BOOSTER)
     pools_length = booster.functions.poolLength().call(block_identifier=block)
 
     for i in range(pools_length):

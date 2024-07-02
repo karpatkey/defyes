@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from defabipedia import Chain
 
 from defyes.protocols import stader
@@ -15,3 +17,15 @@ def test_get_protocol_data_for():
         "unclaimed_rewards": [],
         "financial_metrics": {},
     }
+
+
+def test_unwrap_polygon():
+    result = stader.unwrap(12567.567, 56726863, False, "polygon")
+    expected = ["0x0000000000000000000000000000000000001010", Decimal("13957.39501740044196177572694")]
+    assert result == expected
+
+
+def test_unwrap_ethereum():
+    result = stader.unwrap(12567.567, 19825299, False, "ethereum")
+    expected = ["0x0000000000000000000000000000000000000000", Decimal("12932.423602700606662488222")]
+    assert result == expected

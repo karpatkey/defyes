@@ -1,5 +1,6 @@
 import logging
 from decimal import Decimal
+from typing import List, Tuple
 
 from karpatkit.cache import const_call
 from karpatkit.node import get_node
@@ -9,9 +10,6 @@ from defyes.functions import get_contract, get_decimals, get_logs_web3, to_token
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ABIs
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # LP Token ABI - decimals, totalSupply, getReserves, balanceOf, token0, token1, kLast
 ABI_LPTOKEN = '[{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"getReserves","outputs":[{"internalType":"uint112","name":"_reserve0","type":"uint112"},{"internalType":"uint112","name":"_reserve1","type":"uint112"},{"internalType":"uint32","name":"_blockTimestampLast","type":"uint32"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"token0","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"token1","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"kLast","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]'
 
@@ -26,7 +24,7 @@ def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
 
     lptoken_data = {}
 
-    lptoken_data["contract"] = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
+    lptoken_data["contract"] = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
 
     lptoken_data["decimals"] = const_call(lptoken_data["contract"].functions.decimals())
     lptoken_data["totalSupply"] = lptoken_data["contract"].functions.totalSupply().call(block_identifier=block)
@@ -49,9 +47,11 @@ def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
     return lptoken_data
 
 
-# Output: a list with 1 element:
-# 1 - List of Tuples: [liquidity_token_address, balance]
-def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=True):
+def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=True) -> List[Tuple]:
+    """
+    Returns:
+        List[Tuple]: List of (liquidity_token_address, balance)
+    """
     result = []
 
     if web3 is None:
@@ -83,16 +83,18 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=T
     return result
 
 
-# Output: a list with 1 element:
-# 1 - List of Tuples: [liquidity_token_address, balance]
-def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
+def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True) -> List[Tuple]:
+    """
+    Returns:
+        List[Tuple]: List of (liquidity_token_address, balance)
+    """
     balances = []
 
     if web3 is None:
         web3 = get_node(blockchain)
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
-    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
+    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
     reserves = lptoken_contract.functions.getReserves().call(block_identifier=block)
 
     for n, reserve in enumerate(reserves):
@@ -115,7 +117,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
-    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block_start)
+    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
 
     token0 = const_call(lptoken_contract.functions.token0())
     token1 = const_call(lptoken_contract.functions.token1())

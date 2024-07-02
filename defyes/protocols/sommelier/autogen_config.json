@@ -1,0 +1,7 @@
+{
+    "cellar_balancer_multi_asset": {
+        "const_call": [
+            "asset"
+        ]
+    }
+}

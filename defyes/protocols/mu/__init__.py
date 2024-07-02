@@ -21,7 +21,14 @@ def get_protocol_data_for(
     msDAI.
 
     Args:
+        blockchain (str): The blockchain to interact with.
+        wallet (str): The address of the wallet to get the data for.
         position_identifier (str): The address of the vault to get the data from. e.g. msDAI vault.
+        block (int | str, optional): The block number or block tag to use for fetching data. Defaults to "latest".
+        decimals (bool, optional): Whether to include decimals in the data. Defaults to True.
+
+    Returns:
+        dict: The data for the wallet for the mu exchange protocol.
     """
     wallet = Addr(Web3.to_checksum_address(wallet))
     position_identifier = Web3.to_checksum_address(position_identifier)
@@ -64,7 +71,8 @@ def get_protocol_data_for(
 def get_sdai_amount(shares, total_supply, current_balance):
     """Function to calculate the amount of sDAI in the pool.
     This function is based on the function withdraw of the trading vault contract.
-    https://gnosisscan.io/address/0x0d80D7f7719407523A09ee2ef7eD573e0eA3487a#code#F12#L109
+
+    `Contract Example <https://gnosisscan.io/address/0x0d80D7f7719407523A09ee2ef7eD573e0eA3487a#code#F12#L109>`_
     """
     user_asset = (current_balance * shares) // total_supply
 

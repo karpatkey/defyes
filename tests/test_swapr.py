@@ -26,9 +26,7 @@ BER = "0x05698e7346Ea67Cfb088f64Ad8962B18137d17c0"
 @pytest.mark.parametrize("campaigns", [0, 1, "all"])
 @pytest.mark.parametrize("db", [True])
 def test_get_distribution_contracts(campaigns, db):
-    staking_rewards_contract = get_contract(
-        Swapr.SRC_GNOSIS, Chain.GNOSIS, web3=WEB3, abi=Swapr.ABI_SRC, block=TEST_BLOCK
-    )
+    staking_rewards_contract = get_contract(Swapr.SRC_GNOSIS, Chain.GNOSIS, web3=WEB3, abi=Swapr.ABI_SRC)
     x = Swapr.get_distribution_contracts(
         WEB3, GnosisTokenAddr.GNO, staking_rewards_contract, campaigns, TEST_BLOCK, Chain.GNOSIS, db=db
     )

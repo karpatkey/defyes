@@ -5,8 +5,6 @@ Docs: https://docs.stakewise.io/
 main contracts: https://github.com/stakewise/v3-core/blob/main/deployments/mainnet.json
 """
 
-from typing import Union
-
 from karpatkit.constants import Address, Chain
 
 from defyes.functions import ensure_a_block_number
@@ -16,15 +14,13 @@ from defyes.types import Token, TokenAmount
 OsTokenVaultController.default_addresses = {Chain.ETHEREUM: "0x2A261e60FB14586B474C208b1B7AC6D0f5000306"}
 
 
-def reduce_osETH(
-    amount: Union[int | float], blockchain: Union[str | Chain], block: Union[int, str], teu: bool = False
-) -> tuple[str, int]:
+def reduce_osETH(amount: int | float, blockchain: str | Chain, block: int | str, teu: bool = False) -> tuple[str, int]:
     """Reduce osETH to ETH.
     Currently the only available blockchain is Ethereum.
 
     Args:
         amount (float): Amount of osETH to reduce
-        block (Union[int, str]): Block number or "latest"
+        block (int | str): Block number or "latest"
         teu (bool, optional): If the amount is in teu. Defaults to False.
     """
     if blockchain != Chain.ETHEREUM:

@@ -1,7 +1,6 @@
 import logging
 from contextlib import suppress
 from decimal import Decimal
-from typing import Union
 
 from defabipedia import Chain
 from defabipedia.tokens import EthereumTokenAddr, GnosisTokenAddr
@@ -19,19 +18,10 @@ from defyes.prices.prices import get_price
 
 logger = logging.getLogger(__name__)
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# PROVIDER ADDRESS
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 PROVIDER_ADDRESS = "0x0000000022D53366457F9d5E68Ec105046FC4383"
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# X-CHAIN GAUGE FACTORY ADDRESS
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 X_CHAIN_GAUGE_FACTORY_ADDRESS = "0xabC000d88f23Bb45525E447528DBF656A9D55bf5"
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ABIs
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Provider ABI - get_address
 ABI_PROVIDER = '[{"name":"get_address","outputs":[{"type":"address","name":""}],"inputs":[{"type":"uint256","name":"_id"}],"stateMutability":"view","type":"function","gas":1308}]'
 
@@ -65,9 +55,6 @@ ABI_POOL_ALTERNATIVE = '[{"name":"coins","outputs":[{"type":"address","name":""}
 # Gauge ABI - crv_token, claimable_tokens, rewarded_token, claimable_reward, claimed_rewards_for, reward_tokens, claimable_reward, claimable_reward_write, decimals, version, minter
 ABI_GAUGE = '[{"name":"crv_token","outputs":[{"type":"address","name":""}],"inputs":[],"stateMutability":"view","type":"function","gas":1451}, {"name":"claimable_tokens","outputs":[{"type":"uint256","name":""}],"inputs":[{"type":"address","name":"addr"}],"stateMutability":"nonpayable","type":"function","gas":1989612}, {"name":"rewarded_token","outputs":[{"type":"address","name":""}],"inputs":[],"stateMutability":"view","type":"function","gas":2201}, {"name":"claimable_reward","outputs":[{"type":"uint256","name":""}],"inputs":[{"type":"address","name":"addr"}],"stateMutability":"view","type":"function","gas":7300}, {"name":"claimed_rewards_for","outputs":[{"type":"uint256","name":""}],"inputs":[{"type":"address","name":"arg0"}],"stateMutability":"view","type":"function","gas":2475}, {"name":"reward_tokens","outputs":[{"type":"address","name":""}],"inputs":[{"type":"uint256","name":"arg0"}],"stateMutability":"view","type":"function","gas":2550}, {"name":"claimable_reward","outputs":[{"type":"uint256","name":""}],"inputs":[{"type":"address","name":"_addr"},{"type":"address","name":"_token"}],"stateMutability":"nonpayable","type":"function","gas":1017930}, {"stateMutability":"nonpayable","type":"function","name":"claimable_reward_write","inputs":[{"name":"_addr","type":"address"},{"name":"_token","type":"address"}],"outputs":[{"name":"","type":"uint256"}],"gas":1211002}, {"stateMutability":"view","type":"function","name":"decimals","inputs":[],"outputs":[{"name":"","type":"uint256"}],"gas":288}, {"stateMutability":"view","type":"function","name":"version","inputs":[],"outputs":[{"name":"","type":"string"}]}, {"name":"minter","outputs":[{"type":"address","name":""}],"inputs":[],"stateMutability":"view","type":"function","gas":1421}]'
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# EVENT SIGNATURES
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # TokenExchange Event Signatures
 TOKEN_EXCHANGE_EVENT_SIGNATURES = [
     "TokenExchange(address,int128,uint256,int128,uint256)",
@@ -82,7 +69,7 @@ TOKEN_EXCHANGE_UNDERLYING_EVENT_SIGNATURES = [
 
 
 def get_registry_contract(web3, id, block, blockchain):
-    provider_contract = get_contract(PROVIDER_ADDRESS, blockchain, web3=web3, abi=ABI_PROVIDER, block=block)
+    provider_contract = get_contract(PROVIDER_ADDRESS, blockchain, web3=web3, abi=ABI_PROVIDER)
 
     registry_address = const_call(provider_contract.functions.get_address(id))
 
@@ -99,7 +86,7 @@ def get_registry_contract(web3, id, block, blockchain):
     else:
         abi = ABI_REGISTRY_REGULAR_POOLS
 
-    return get_contract(registry_address, blockchain, web3=web3, abi=abi, block=block)
+    return get_contract(registry_address, blockchain, web3=web3, abi=abi)
 
 
 def get_pool_gauge_address(web3, pool_address, lptoken_address, block, blockchain):
@@ -142,7 +129,7 @@ def get_pool_gauge_address(web3, pool_address, lptoken_address, block, blockchai
     # Pools which don't have their gauge registered in none of the registries
     if gauge_address == Address.ZERO and blockchain != Chain.ETHEREUM:
         x_chain_factory_contract = get_contract(
-            X_CHAIN_GAUGE_FACTORY_ADDRESS, blockchain, web3=web3, abi=ABI_X_CHAIN_GAUGE_FACTORY_ADDRESS, block=block
+            X_CHAIN_GAUGE_FACTORY_ADDRESS, blockchain, web3=web3, abi=ABI_X_CHAIN_GAUGE_FACTORY_ADDRESS
         )
         gauge_address = const_call(x_chain_factory_contract.functions.get_gauge_from_lp_token(lptoken_address))
 
@@ -194,7 +181,7 @@ def get_gauge_version(gauge_address, block, blockchain, web3=None, only_version=
 
     # The ABI used to get the Gauge Contract is a general ABI for all types. This is because some gauges do not have
     # their ABIs available in the explorers
-    gauge_contract = get_contract(gauge_address, blockchain, web3=web3, abi=ABI_GAUGE, block=block)
+    gauge_contract = get_contract(gauge_address, blockchain, web3=web3, abi=ABI_GAUGE)
     version = working_version_request(gauge_contract)
     if only_version:
         return version
@@ -229,7 +216,7 @@ def get_pool_address(web3, lptoken_address, block, blockchain):
 
 def get_pool_data(web3, minter, block, blockchain):
     pool_data = {
-        "contract": get_contract(minter, blockchain, web3=web3, block=block, abi=ABI_POOL),
+        "contract": get_contract(minter, blockchain, web3=web3, abi=ABI_POOL),
         "is_metapool": False,
         "coins": {},
     }
@@ -250,9 +237,7 @@ def get_pool_data(web3, minter, block, blockchain):
         except ContractLogicError:
             # If the query fails when i == 0 -> the pool contract must be retrieved with the ABI_POOL_ALETRNATIVE
             if i == 0:
-                pool_data["contract"] = get_contract(
-                    minter, blockchain, web3=web3, block=block, abi=ABI_POOL_ALTERNATIVE
-                )
+                pool_data["contract"] = get_contract(minter, blockchain, web3=web3, abi=ABI_POOL_ALTERNATIVE)
             else:
                 next_token = False
 
@@ -268,7 +253,7 @@ def get_pool_data(web3, minter, block, blockchain):
             pool_data["is_metapool"] = True
 
             x3crv_minter = get_pool_address(web3, token_address, block, blockchain)
-            x3crv_pool_contract = get_contract(x3crv_minter, blockchain, web3=web3, block=block, abi=ABI_POOL)
+            x3crv_pool_contract = get_contract(x3crv_minter, blockchain, web3=web3, abi=ABI_POOL)
 
             x3crv_next_token = True
             while x3crv_next_token:
@@ -279,7 +264,7 @@ def get_pool_data(web3, minter, block, blockchain):
                     # If the query fails when j == 0 -> the pool contract must be retrieved with the ABI_POOL_ALETRNATIVE
                     if i == 0:
                         x3crv_pool_contract = get_contract(
-                            x3crv_minter, blockchain, web3=web3, block=block, abi=ABI_POOL_ALTERNATIVE
+                            x3crv_minter, blockchain, web3=web3, abi=ABI_POOL_ALTERNATIVE
                         )
                     else:
                         x3crv_next_token = False
@@ -307,7 +292,7 @@ def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
 
     lptoken_data = {}
 
-    lptoken_data["contract"] = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
+    lptoken_data["contract"] = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
 
     lptoken_data["minter"] = None
     with suppress(ContractLogicError, BadFunctionCallOutput), suppress_error_codes():
@@ -462,7 +447,7 @@ def underlying(
     else:
         lptoken_data["staked"] = 0
 
-    pool_contract = get_contract(lptoken_data["minter"], blockchain, web3=web3, block=block, abi=ABI_POOL)
+    pool_contract = get_contract(lptoken_data["minter"], blockchain, web3=web3, abi=ABI_POOL)
 
     pool_balance_fraction = lptoken_data["balanceOf"] / lptoken_data["totalSupply"]
     pool_staked_fraction = lptoken_data["staked"] / lptoken_data["totalSupply"]
@@ -475,9 +460,7 @@ def underlying(
         except ContractLogicError:
             # If the query fails when i == 0 -> the pool contract must be retrieved with the ABI_POOL_ALETRNATIVE
             if i == 0:
-                pool_contract = get_contract(
-                    lptoken_data["minter"], blockchain, web3=web3, block=block, abi=ABI_POOL_ALTERNATIVE
-                )
+                pool_contract = get_contract(lptoken_data["minter"], blockchain, web3=web3, abi=ABI_POOL_ALTERNATIVE)
             else:
                 next_token = False
             continue
@@ -535,7 +518,7 @@ def unwrap(lptoken_amount, lptoken_address, block, blockchain, web3=None, decima
     if lptoken_data["minter"] is None:
         lptoken_data["minter"] = get_pool_address(web3, lptoken_address, block, blockchain)
 
-    pool_contract = get_contract(lptoken_data["minter"], blockchain, web3=web3, block=block)
+    pool_contract = get_contract(lptoken_data["minter"], blockchain, web3=web3)
     pool_fraction = (
         Decimal(lptoken_amount) / Decimal(lptoken_data["totalSupply"]) * Decimal(10 ** lptoken_data["decimals"])
     )
@@ -548,9 +531,7 @@ def unwrap(lptoken_amount, lptoken_address, block, blockchain, web3=None, decima
         except ContractLogicError:
             # If the query fails when i == 0 -> the pool contract must be retrieved with the ABI_POOL_ALTERNATIVE
             if i == 0:
-                pool_contract = get_contract(
-                    lptoken_data["minter"], blockchain, web3=web3, block=block, abi=ABI_POOL_ALTERNATIVE
-                )
+                pool_contract = get_contract(lptoken_data["minter"], blockchain, web3=web3, abi=ABI_POOL_ALTERNATIVE)
             else:
                 next_token = False
             continue
@@ -593,7 +574,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True, 
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
-    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
+    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
 
     minter = None
     with suppress(ContractLogicError, BadFunctionCallOutput), suppress_error_codes():
@@ -602,7 +583,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True, 
     if minter is None:
         minter = get_pool_address(web3, lptoken_address, block, blockchain)
 
-    pool_contract = get_contract(minter, blockchain, web3=web3, block=block, abi=ABI_POOL)
+    pool_contract = get_contract(minter, blockchain, web3=web3, abi=ABI_POOL)
 
     next_token = True
     i = 0
@@ -612,7 +593,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True, 
         except ContractLogicError:
             # If the query fails when i == 0 -> the pool contract must be retrieved with the ABI_POOL_ALTERNATIVE
             if i == 0:
-                pool_contract = get_contract(minter, blockchain, web3=web3, block=block, abi=ABI_POOL_ALTERNATIVE)
+                pool_contract = get_contract(minter, blockchain, web3=web3, abi=ABI_POOL_ALTERNATIVE)
             else:
                 next_token = False
             continue
@@ -659,7 +640,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
-    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block_start)
+    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
 
     try:
         minter = const_call(lptoken_contract.functions.minter())
@@ -713,7 +694,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
 def get_base_apr(
     lptoken_address: str,
     blockchain: str,
-    block_end: Union[int, str] = "latest",
+    block_end: int | str = "latest",
     web3=None,
     days: int = 1,
     apy: bool = False,
@@ -726,7 +707,7 @@ def get_base_apr(
     lptoken_address = Web3.to_checksum_address(lptoken_address)
     address_abi = chain_explorer.abi_from_address(lptoken_address)
 
-    lp_contract = get_contract(lptoken_address, blockchain, web3, abi=address_abi, block=block_end)
+    lp_contract = get_contract(lptoken_address, blockchain, web3, abi=address_abi)
 
     try:
         xcp_profit = lp_contract.functions.xcp_profit().call(block_identifier=block_end)
@@ -747,7 +728,7 @@ def get_base_apr(
 def swap_fees_v2(
     lptoken_address: str,
     blockchain: str,
-    block_end: Union[int, str] = "latest",
+    block_end: int | str = "latest",
     web3=None,
     days: int = 1,
     apy: bool = False,
@@ -757,7 +738,7 @@ def swap_fees_v2(
     rate = get_base_apr(lptoken_address, blockchain, block_end, web3, days, apy)
     lptoken_address = Web3.to_checksum_address(lptoken_address)
     address_abi = ChainExplorer(blockchain).abi_from_address(lptoken_address)
-    lp_contract = get_contract(lptoken_address, blockchain, web3, abi=address_abi, block=block_end)
+    lp_contract = get_contract(lptoken_address, blockchain, web3, abi=address_abi)
     balance = []
     for i in range(0, 5):
         try:
@@ -776,7 +757,7 @@ def swap_fees_v2(
 def get_swap_fees_APR(
     lptoken_address: str,
     blockchain: str,
-    block_end: Union[int, str] = "latest",
+    block_end: int | str = "latest",
     web3=None,
     days: int = 1,
     apy: bool = False,

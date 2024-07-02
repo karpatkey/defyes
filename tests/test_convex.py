@@ -23,7 +23,7 @@ def test_get_pool_rewarder():
 
 def test_get_rewards():
     rewarders = Convex.get_pool_rewarders(CRV3CRYPTO, 16993460)
-    rw_contract = get_contract(rewarders[0], Chain.ETHEREUM, web3=web3, abi=Convex.ABI_REWARDS, block=16993460)
+    rw_contract = get_contract(rewarders[0], Chain.ETHEREUM, web3=web3, abi=Convex.ABI_REWARDS)
     wallet = "0x58e6c7ab55Aa9012eAccA16d1ED4c15795669E1C"
     rewards = Convex.get_rewards(web3, rw_contract, wallet, 16993460, Chain.ETHEREUM, decimals=False)
     assert rewards == [EthereumTokenAddr.CRV, Decimal("2628703131997023420479")]
@@ -37,7 +37,7 @@ def test_get_rewards():
 # '0x849D52316331967b6fF1198e5E32A0eB168D039d'])
 def test_get_extra_rewards(lp_token, wallet):
     rewarders = Convex.get_pool_rewarders(lp_token, 16993460)
-    rw_contract = get_contract(rewarders[0], Chain.ETHEREUM, web3=web3, abi=Convex.ABI_REWARDS, block=16993460)
+    rw_contract = get_contract(rewarders[0], Chain.ETHEREUM, web3=web3, abi=Convex.ABI_REWARDS)
     extra_rewards = Convex.get_extra_rewards(web3, rw_contract, wallet, 16993460, Chain.ETHEREUM, decimals=False)
     assert extra_rewards == [[EthereumTokenAddr.LDO, Decimal("1680694318843318519229")]]
 

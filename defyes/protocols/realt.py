@@ -1,5 +1,4 @@
 from decimal import Decimal
-from typing import Union
 
 from karpatkit.cache import const_call
 from karpatkit.node import get_node
@@ -17,7 +16,7 @@ TOKEN_CONTRACT_ABI = '[{"type":"function","stateMutability":"view","outputs":[{"
                         {"type":"function","stateMutability":"view","outputs":[{"type":"uint8","name":"","internalType":"uint8"}],"name":"decimals","inputs":[]}]'
 
 
-def underlying(wallet: str, block: Union[int, str], blockchain: str, web3=None, decimals=True) -> list:
+def underlying(wallet: str, block: int | str, blockchain: str, web3=None, decimals=True) -> list:
     if web3 is None:
         web3 = get_node(blockchain)
 

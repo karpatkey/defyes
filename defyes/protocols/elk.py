@@ -1,5 +1,6 @@
 import logging
 from decimal import Decimal
+from typing import List, Tuple
 
 import requests
 from defabipedia import Chain
@@ -12,48 +13,26 @@ from defyes.functions import get_contract, get_decimals, get_logs_web3, to_token
 
 logger = logging.getLogger(__name__)
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# LITERALS
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # API Call - List of the latest pools
 API_ELK_POOLS = "https://api.elk.finance/v2/info/latest_pools"
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ABIs
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # LP Token ABI - decimals, totalSupply, getReserves, balanceOf, token0, token1, kLast
 ABI_LPTOKEN = '[{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint8","name":"","internalType":"uint8"}],"name":"decimals","inputs":[],"constant":true}, {"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"totalSupply","inputs":[],"constant":true}, {"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint112","name":"_reserve0","internalType":"uint112"},{"type":"uint112","name":"_reserve1","internalType":"uint112"},{"type":"uint32","name":"_blockTimestampLast","internalType":"uint32"}],"name":"getReserves","inputs":[],"constant":true}, {"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"balanceOf","inputs":[{"type":"address","name":"","internalType":"address"}],"constant":true}, {"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"address","name":"","internalType":"address"}],"name":"token0","inputs":[],"constant":true}, {"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"address","name":"","internalType":"address"}],"name":"token1","inputs":[],"constant":true}, {"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"kLast","inputs":[],"constant":true}]'
 
 # Pool ABI - balanceOf, boosterEarned, boosterToken, earned, rewardsToken, totalSupply, boosterRewardPerToken, rewardPerToken
 ABI_POOL = '[{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"balanceOf","inputs":[{"type":"address","name":"account","internalType":"address"}]}, {"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"boosterEarned","inputs":[{"type":"address","name":"account","internalType":"address"}]}, {"type":"function","stateMutability":"view","outputs":[{"type":"address","name":"","internalType":"contract IERC20"}],"name":"boosterToken","inputs":[]}, {"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"earned","inputs":[{"type":"address","name":"account","internalType":"address"}]}, {"type":"function","stateMutability":"view","outputs":[{"type":"address","name":"","internalType":"contract IERC20"}],"name":"rewardsToken","inputs":[]}, {"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"totalSupply","inputs":[]}, {"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"boosterRewardPerToken","inputs":[]}, {"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"rewardPerToken","inputs":[]}]'
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# EVENT SIGNATURES
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Swap Event Signature
 SWAP_EVENT_SIGNATURE = "Swap(address,uint256,uint256,uint256,uint256,address)"
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_lptoken_data
-# 'execution' = the current iteration, as the function goes through the different Full/Archival nodes of the blockchain attempting a successfull execution
-# 'index' = specifies the index of the Archival or Full Node that will be retrieved by the getNode() function
-# 'web3' = web3 (Node) -> Improves performance
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
-    """
-    :param lptoken_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :return:
-    """
     if web3 is None:
         web3 = get_node(blockchain)
 
     lptoken_data = {}
 
-    lptoken_data["contract"] = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
+    lptoken_data["contract"] = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
 
     lptoken_data["decimals"] = const_call(lptoken_data["contract"].functions.decimals())
     lptoken_data["totalSupply"] = lptoken_data["contract"].functions.totalSupply().call(block_identifier=block)
@@ -68,23 +47,12 @@ def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
     return lptoken_data
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_pool_address
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_pool_address(web3, token0, token1, block, blockchain):
     # FIXME: no need to use block. Latest can be hardcoded for this function.
-    """
-    :param web3:
-    :param token0:
-    :param token1:
-    :param block:
-    :param blockchain:
-    :return:
-    """
     pools = requests.get(API_ELK_POOLS).json()
     symbols = []
     for token in [token0, token1]:
-        token_contract = get_contract(token, blockchain, web3=web3, abi=ABI_TOKEN_SIMPLIFIED, block=block)
+        token_contract = get_contract(token, blockchain, web3=web3, abi=ABI_TOKEN_SIMPLIFIED)
         symbol = const_call(token_contract.functions.symbol())
 
         if "wrapped" in const_call(token_contract.functions.name()).lower():
@@ -112,21 +80,10 @@ def get_pool_address(web3, token0, token1, block, blockchain):
     return pool_address
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_elk_rewards
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# Output:
-# 1 - Tuple: [elk_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_elk_rewards(web3, pool_contract, wallet, block, blockchain, decimals=True):
     """
-    :param web3:
-    :param pool_contract:
-    :param wallet:
-    :param block:
-    :param blockchain:
-    :param decimals:
-    :return:
+    Returns:
+        Tuple: (elk_token_address, balance)
     """
     elk_token_address = const_call(pool_contract.functions.rewardsToken())
     elk_rewards = pool_contract.functions.earned(wallet).call(block_identifier=block)
@@ -134,13 +91,11 @@ def get_elk_rewards(web3, pool_contract, wallet, block, blockchain, decimals=Tru
     return [elk_token_address, to_token_amount(elk_token_address, elk_rewards, blockchain, web3, decimals)]
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_booster_rewards
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# Output:
-# 1 - List of Tuples: [reward_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def get_booster_rewards(web3, pool_contract, wallet, block, blockchain, decimals=True):
+def get_booster_rewards(web3, pool_contract, wallet, block, blockchain, decimals=True) -> List[Tuple]:
+    """
+    Returns:
+        List[Tuple]: List of (reward_token_address, balance)
+    """
     rewards = []
     booster_token_address = const_call(pool_contract.functions.boosterToken())
     if booster_token_address != Address.ZERO:
@@ -153,27 +108,9 @@ def get_booster_rewards(web3, pool_contract, wallet, block, blockchain, decimals
     return rewards
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_all_rewards
-# 'execution' = the current iteration, as the function goes through the different Full/Archival nodes of the blockchain attempting a successfull execution
-# 'web3' = web3 (Node) -> Improves performance
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# 'index' = specifies the index of the Archival or Full Node that will be retrieved by the getNode() function
-# 'pool_contract' -> Improves performance
-# Output:
-# 1 - List of Tuples: [reward_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decimals=True, pool_contract=None):
-    """
-    :param wallet:
-    :param lptoken_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param decimals:
-    :param pool_contract:
-    :return:
-    """
+def get_all_rewards(
+    wallet, lptoken_address, block, blockchain, web3=None, decimals=True, pool_contract=None
+) -> List[Tuple]:
     all_rewards = []
 
     if web3 is None:
@@ -185,7 +122,7 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
     if pool_contract is None:
         lptoken_data = get_lptoken_data(lptoken_address, block, blockchain, web3=web3)
         pool_address = get_pool_address(web3, lptoken_data["token0"], lptoken_data["token1"], block, blockchain)
-        pool_contract = get_contract(pool_address, blockchain, web3=web3, abi=ABI_POOL, block=block)
+        pool_contract = get_contract(pool_address, blockchain, web3=web3, abi=ABI_POOL)
 
     elk_rewards = get_elk_rewards(web3, pool_contract, wallet, block, blockchain, decimals=decimals)
     all_rewards.append(elk_rewards)
@@ -197,27 +134,10 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
     return all_rewards
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# underlying
-# 'execution' = the current iteration, as the function goes through the different Full/Archival nodes of the blockchain attempting a successfull execution
-# 'index' = specifies the index of the Archival or Full Node that will be retrieved by the getNode() function
-# 'web3' = web3 (Node) -> Improves performance
-# 'reward' = True -> retrieves the rewards / 'reward' = False or not passed onto the function -> no reward retrieval
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# Output: a list with 2 elements:
-# 1 - List of Tuples: [liquidity_token_address, balance, staked_balance]
-# 2 - List of Tuples: [reward_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=True, reward=False):
     """
-    :param wallet:
-    :param lptoken_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param decimals:
-    :param reward:
-    :return:
+    Returns:
+        List[List[Tuple]]: List of [List(liquidity_token_address, balance, staked_balance), List(reward_token_address, balance)]
     """
     result = []
 
@@ -234,7 +154,7 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=T
         logging.warning(f"Cannot find Elk Pool Address for LPToken Address: {lptoken_address}")
         return None
 
-    pool_contract = get_contract(pool_address, blockchain, web3=web3, abi=ABI_POOL, block=block)
+    pool_contract = get_contract(pool_address, blockchain, web3=web3, abi=ABI_POOL)
 
     # WARNING: Fees are deactivated in Elk
     pool_balance_fraction = (
@@ -259,23 +179,10 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=T
     return result
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# pool_balances
-# 'execution' = the current iteration, as the function goes through the different Full/Archival nodes of the blockchain attempting a successfull execution
-# 'index' = specifies the index of the Archival or Full Node that will be retrieved by the getNode() function
-# 'web3' = web3 (Node) -> Improves performance
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# Output: a list with 1 element:
-# 1 - List of Tuples: [liquidity_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
     """
-    :param lptoken_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param decimals:
-    :return:
+    Returns:
+        List[Tuple] : (liquidity_token_address, balance)
     """
     balances = []
 
@@ -283,7 +190,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
         web3 = get_node(blockchain)
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
-    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
+    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
 
     reserves = lptoken_contract.functions.getReserves().call(block_identifier=block)[:2]
     for token, reserve in zip(["token0", "token1"], reserves):
@@ -294,23 +201,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
     return balances
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# swap_fees
-# 'execution' = the current iteration, as the function goes through the different Full/Archival nodes of the blockchain attempting a successfull execution
-# 'index' = specifies the index of the Archival or Full Node that will be retrieved by the getNode() function
-# 'web3' = web3 (Node) -> Improves performance
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, decimals=True):
-    """
-    :param lptoken_address:
-    :param block_start:
-    :param block_end:
-    :param blockchain:
-    :param web3:
-    :param decimals:
-    :return:
-    """
     result = {}
 
     if web3 is None:
@@ -318,7 +209,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
-    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block_start)
+    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
 
     token0 = const_call(lptoken_contract.functions.token0())
     token1 = const_call(lptoken_contract.functions.token1())
@@ -365,7 +256,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
 #         print('Error: Cannot find Elk Pool Address for LPToken Address: ', lptoken_address)
 #         return None
 
-#     pool_contract = get_contract(pool_address, blockchain, web3=web3, abi=ABI_POOL, block=block)
+#     pool_contract = get_contract(pool_address, blockchain, web3=web3, abi=ABI_POOL)
 
 #     booster_token = pool_contract.functions.boosterToken().call()
 #     if booster_token is not None and booster_token != Address.ZERO:

@@ -4,7 +4,7 @@ import os
 from contextlib import suppress
 from decimal import Decimal
 from pathlib import Path
-from typing import Union
+from typing import List, Tuple
 
 from defabipedia import Chain
 from karpatkit.cache import const_call
@@ -56,54 +56,39 @@ ABI_LPTOKEN = '[{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8
 SWAP_EVENT_SIGNATURE = "Swap(address,uint256,uint256,uint256,uint256,address)"
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_chef_contract
-# **kwargs:
-# 'v1' = True -> If blockchain = ETHEREUM retrieves the MASTERCHEF_V1 Contract / 'v1' = False or not passed onto the function -> retrieves the MASTERCHEF_V2 Contract
-# Output: chef_contract
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_chef_contract(web3, block, blockchain, v1=False):
     """
-    :param web3:
-    :param block:
-    :param blockchain:
-    :param v1:
-    :return:
+    Args:
+        v1 (bool, optional): Only for Ethereum: If True retrieved MASTERCHEFV1, if not V2 . Defaults to False.
+
+    Returns:
+        web3.eth.Contract: Chef Contract
     """
     if blockchain == Chain.ETHEREUM:
         if v1 is False:
-            chef_contract = get_contract(MASTERCHEF_V2, blockchain, web3=web3, abi=ABI_CHEF_V2, block=block)
+            chef_contract = get_contract(MASTERCHEF_V2, blockchain, web3=web3, abi=ABI_CHEF_V2)
         else:
-            chef_contract = get_contract(MASTERCHEF_V1, blockchain, web3=web3, abi=ABI_CHEF_V1, block=block)
+            chef_contract = get_contract(MASTERCHEF_V1, blockchain, web3=web3, abi=ABI_CHEF_V1)
 
     elif blockchain == Chain.POLYGON:
-        chef_contract = get_contract(MINICHEF_POLYGON, blockchain, web3=web3, abi=ABI_CHEF_V2, block=block)
+        chef_contract = get_contract(MINICHEF_POLYGON, blockchain, web3=web3, abi=ABI_CHEF_V2)
 
     elif blockchain == Chain.GNOSIS:
-        chef_contract = get_contract(MINICHEF_GNOSIS, blockchain, web3=web3, abi=ABI_CHEF_V2, block=block)
+        chef_contract = get_contract(MINICHEF_GNOSIS, blockchain, web3=web3, abi=ABI_CHEF_V2)
 
     return chef_contract
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_pool_info
-# 'use_db' = True -> uses the /db/sushi_swap.json to improve performance / 'use_db' = False -> fetches all the data on-chain
-# Output:
-# 1 - Dictionary: result['chef_contract'] = chef_contract
-#                 result['pool_info'] = {
-#                     'poolId': poolID
-#                     'allocPoint': allocPoint
-#                 }
-#                 result['totalAllocPoint']: totalAllocPoint
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def get_pool_info(web3, lptoken_address, block, blockchain, use_db=True):
-    """
-    :param web3:
-    :param lptoken_address:
-    :param block:
-    :param blockchain:
-    :param use_db:
-    :return:
+def get_pool_info(web3, lptoken_address, block, blockchain, use_db=True) -> dict:
+    """Get the info from a sushiswap pool.
+
+    Args:
+        use_db (bool, optional): If True uses the /db/sushi_swap.json to improve perforamnce.
+            If not goes through blockchain Defaults to True.
+
+    Returns:
+        dict:  result['chef_contract'] = chef_contract | result['pool_info'] = {'poolId': poolID, 'allocPoint': allocPoint}
+            result['totalAllocPoint']: totalAllocPoint
     """
     result = {}
 
@@ -208,25 +193,12 @@ def get_pool_info(web3, lptoken_address, block, blockchain, use_db=True):
     return None
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_lptoken_data
-# 'web3' = web3 (Node) -> Improves performance
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
-    """
-    :param lptoken_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param execution:
-    :param index:
-    :return:
-    """
     if web3 is None:
         web3 = get_node(blockchain)
 
     lptoken_data = {}
-    lptoken_data["contract"] = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
+    lptoken_data["contract"] = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
 
     lptoken_data["decimals"] = const_call(lptoken_data["contract"].functions.decimals())
     lptoken_data["totalSupply"] = lptoken_data["contract"].functions.totalSupply().call(block_identifier=block)
@@ -246,27 +218,13 @@ def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
     return lptoken_data
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_virtual_total_supply
-# 'web3' = web3 (Node) -> Improves performance
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_virtual_total_supply(lptoken_address, block, blockchain, web3=None):
-    """
-
-    :param lptoken_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param execution:
-    :param index:
-    :return:
-    """
     if web3 is None:
         web3 = get_node(blockchain)
 
     lptoken_data = {}
 
-    lptoken_data["contract"] = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
+    lptoken_data["contract"] = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
 
     lptoken_data["totalSupply"] = lptoken_data["contract"].functions.totalSupply().call(block_identifier=block)
     lptoken_data["reserves"] = lptoken_data["contract"].functions.getReserves().call(block_identifier=block)
@@ -278,46 +236,21 @@ def get_virtual_total_supply(lptoken_address, block, blockchain, web3=None):
     return lptoken_data["totalSupply"] * 6 * root_k / (5 * root_k + root_k_last)
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_rewarder_contract
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_rewarder_contract(web3, block, blockchain, chef_contract, pool_id):
-    """
-    :param web3:
-    :param block:
-    :param blockchain:
-    :param chef_contract:
-    :param pool_id:
-    :return:
-    """
     # TODO: determine if const_call can be used
     rewarder_contract_address = chef_contract.functions.rewarder(pool_id).call(block_identifier=block)
     if rewarder_contract_address != Address.ZERO:
-        rewarder_contract = get_contract(
-            rewarder_contract_address, blockchain, web3=web3, abi=ABI_REWARDER, block=block
-        )
+        rewarder_contract = get_contract(rewarder_contract_address, blockchain, web3=web3, abi=ABI_REWARDER)
     else:
         rewarder_contract = None
 
     return rewarder_contract
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_sushi_rewards
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# Output:
-# 1 - Tuple: [sushi_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def get_sushi_rewards(web3, wallet, chef_contract, pool_id, block, blockchain, decimals=True):
+def get_sushi_rewards(web3, wallet, chef_contract, pool_id, block, blockchain, decimals=True) -> Tuple:
     """
-    :param web3:
-    :param wallet:
-    :param chef_contract:
-    :param pool_id:
-    :param block:
-    :param blockchain:
-    :param decimals:
-    :return:
+    Returns:
+        tuple: (sushi_token_address, balance)
     """
     try:
         sushi_address = const_call(chef_contract.functions.SUSHI())
@@ -329,22 +262,9 @@ def get_sushi_rewards(web3, wallet, chef_contract, pool_id, block, blockchain, d
     return [sushi_address, to_token_amount(sushi_address, sushi_rewards, blockchain, web3, decimals)]
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_rewards
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# Output:
-# 1 - List of Tuples: [reward_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def get_rewards(web3, wallet, chef_contract, pool_id, block, blockchain, decimals=True):
+def get_rewards(web3, wallet, chef_contract, pool_id, block, blockchain, decimals=True) -> List[Tuple]:
     """
-    :param web3:
-    :param wallet:
-    :param chef_contract:
-    :param pool_id:
-    :param block:
-    :param blockchain:
-    :param decimals:
-    :return:
+    :return: reward_token_address, balance
     """
     rewards = []
 
@@ -366,24 +286,13 @@ def get_rewards(web3, wallet, chef_contract, pool_id, block, blockchain, decimal
     return rewards
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_all_rewards
-# 'web3' = web3 (Node) -> Improves performance
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# 'pool_info' = Dictionary -> Improves performance
-# Output:
-# 1 - List of Tuples: [reward_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decimals=True, pool_info=None):
-    """
-    :param wallet:
-    :param lptoken_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param decimals:
-    :param pool_info:
-    :return:
+def get_all_rewards(
+    wallet, lptoken_address, block, blockchain, web3=None, decimals=True, pool_info: dict = None
+) -> List[Tuple]:
+    """Get all rewards.
+
+    Returns:
+        List[Tuple]:
     """
     all_rewards = []
 
@@ -417,25 +326,11 @@ def get_all_rewards(wallet, lptoken_address, block, blockchain, web3=None, decim
     return all_rewards
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# underlying
-# 'web3' = web3 (Node) -> Improves performance
-# 'reward' = True -> retrieves the rewards / 'reward' = False or not passed onto the function -> no reward retrieval
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# Output: a list with 2 elements:
-# 1 - List of Tuples: [liquidity_token_address, balance, staked_balance]
-# 2 - List of Tuples: [reward_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=True, reward=False):
+def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=True, reward=False) -> List[Tuple]:
     """
-    :param wallet:
-    :param lptoken_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param decimals:
-    :param reward:
-    :return:
+    Returns:
+        List[Tuple,Tuple]: First Tuple (liquidity_token_address, balance, staked_balance)
+                           Second Tuple (reward_token_address, balance)
     """
 
     result = []
@@ -492,21 +387,10 @@ def underlying(wallet, lptoken_address, block, blockchain, web3=None, decimals=T
     return result
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# pool_balances
-# 'web3' = web3 (Node) -> Improves performance
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# Output: a list with 1 element:
-# 1 - List of Tuples: [liquidity_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
+def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True) -> List[Tuple]:
     """
-    :param lptoken_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param decimals:
-    :return:
+    Returns:
+        List[Tuple]: (liquidity_token_address, balance)
     """
     balances = []
 
@@ -515,7 +399,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
-    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
+    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
     reserves = lptoken_contract.functions.getReserves().call(block_identifier=block)
 
     for n, reserve in enumerate(reserves):
@@ -528,21 +412,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
     return balances
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# swap_fees
-# 'web3' = web3 (Node) -> Improves performance
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, decimals=True):
-    """
-    :param lptoken_address:
-    :param block_start:
-    :param block_end:
-    :param blockchain:
-    :param web3:
-    :param decimals:
-    :return:
-    """
     result = {}
 
     if web3 is None:
@@ -550,7 +420,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
-    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block_start)
+    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
 
     token0 = const_call(lptoken_contract.functions.token0())
     token1 = const_call(lptoken_contract.functions.token1())
@@ -583,19 +453,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
     return result
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_wallet_by_tx
-# 'web3' = web3 (Node) -> Improves performance
-# 'signature' = signature of the type of transaction that will be searched for
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_wallet_by_tx(lptoken_address, block, blockchain, web3=None):
-    """
-    :param lptoken_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :return:
-    """
     if web3 is None:
         web3 = get_node(blockchain)
 
@@ -623,19 +481,7 @@ def get_wallet_by_tx(lptoken_address, block, blockchain, web3=None):
                     return tx["from"]
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_rewards_per_unit
-# 'web3' = web3 (Node) -> Improves performance
-# 'block' = block identifier
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_rewards_per_unit(lptoken_address, blockchain, web3=None, block="latest"):
-    """
-    :param lptoken_address:
-    :param blockchain:
-    :param web3:
-    :param block:
-    :return:
-    """
     result = []
 
     if web3 is None:
@@ -739,7 +585,7 @@ def get_rewards_per_unit(lptoken_address, blockchain, web3=None, block="latest")
 def get_swap_fees_APR(
     lptoken_address: str,
     blockchain: str,
-    block_end: Union[int, str] = "latest",
+    block_end: int | str = "latest",
     web3=None,
     days: int = 1,
     apy: bool = False,
@@ -763,10 +609,10 @@ def get_swap_fees_APR(
     pool_contract = get_contract(lptoken_address, blockchain, web3, ABI_LPTOKEN, block_end)
     token0_address = const_call(pool_contract.functions.token0())
     token0_price = get_price(token0_address, block_end, blockchain, web3)[0]
-    token0_decimals = get_decimals(token0_address, blockchain, web3=web3, block=block_end)
+    token0_decimals = get_decimals(token0_address, blockchain, web3=web3)
     token1_address = const_call(pool_contract.functions.token1())
     token1_price = get_price(token1_address, block_end, blockchain, web3)[0]
-    token1_decimals = get_decimals(token1_address, blockchain, web3=web3, block=block_end)
+    token1_decimals = get_decimals(token1_address, blockchain, web3=web3)
     reserves = const_call(pool_contract.functions.getReserves())
     tvl = (reserves[0] / 10**token0_decimals) * token0_price + (reserves[1] / 10**token1_decimals) * token1_price
     apr = token_fees_usd / tvl * (365 / days) * 100
@@ -778,9 +624,6 @@ def get_swap_fees_APR(
         return apr
 
 
-# #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# # update_db
-# #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def update_db():
     update = False
 

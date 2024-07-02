@@ -111,7 +111,7 @@ class Connext:
             assert isinstance(self.web3, Web3), "web3 is not a Web3 instance"
 
         self.diamond_contract = get_contract(
-            self.diamond_adrr, self.blockchain, web3=self.web3, abi=ABI_CONNEXT_DIAMOND, block=self.block
+            self.diamond_adrr, self.blockchain, web3=self.web3, abi=ABI_CONNEXT_DIAMOND
         )
         self.assets = query_assets(self.subgraph_api_endpoint)
 

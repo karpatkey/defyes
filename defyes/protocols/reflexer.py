@@ -1,7 +1,6 @@
 import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Union
 
 from defabipedia.tokens import EthereumTokenAddr
 from karpatkit.node import get_node
@@ -24,7 +23,7 @@ LPTOKENS_DB = {
 @dataclass
 class LiquidityPool:
     addr: str
-    block: Union[int, str] = "latest"
+    block: int | str = "latest"
     web3: Web3 = None
     blockchain: str = field(init=False)
 

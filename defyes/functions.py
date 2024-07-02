@@ -5,9 +5,11 @@ import re
 from contextlib import suppress
 from datetime import datetime
 from decimal import Decimal
+from typing import List, Tuple
 
 import requests
 from defabipedia import Blockchain, Chain
+from hexbytes import HexBytes
 from karpatkit.api_services import APIKey
 from karpatkit.cache import cache_call, const_call
 from karpatkit.constants import ABI_TOKEN_SIMPLIFIED, Address
@@ -16,6 +18,7 @@ from karpatkit.helpers import suppress_error_codes
 from karpatkit.node import get_node
 from web3 import Web3
 from web3.exceptions import ABIFunctionNotFound, BadFunctionCallOutput, ContractLogicError
+from web3.types import LogReceipt
 
 from defyes.lazytime import Time
 
@@ -34,12 +37,28 @@ def tz_aware(dt):
 def to_token_amount(
     token_address: str, amount: int | Decimal, blockchain: str, web3: Web3 = None, decimals: bool = True
 ) -> Decimal:
-    # This function provides support for correctly rounded decimal floating point arithmetic.
+    """
+    Converts the given amount to the corresponding token amount based on the token's decimals.
+
+    Args:
+        token_address (str): The address of the token.
+        amount (int | Decimal): The amount to be converted.
+        blockchain (str): The blockchain on which the token exists.
+        web3 (Web3, optional): The Web3 instance to use for blockchain interactions. Defaults to None.
+        decimals (bool, optional): Whether to fetch the token's decimals from the blockchain. Defaults to True.
+            In case False, decimals are assumed to be 0.
+
+    Returns:
+        Decimal: The converted token amount.
+    """
     decimals = get_decimals(token_address, blockchain=blockchain, web3=web3) if decimals else 0
     return amount / Decimal(10**decimals)
 
 
 def last_block(blockchain, web3=None):
+    """
+    Returns the number of the last block in the blockchain.
+    """
     if web3 is None:
         web3 = get_node(blockchain)
 
@@ -47,6 +66,18 @@ def last_block(blockchain, web3=None):
 
 
 def ensure_a_block_number(block: int | str, blockchain: Blockchain):
+    """Ensures that the provided block number is valid.
+
+    Args:
+        block (int | str): The block number or the string 'latest'.
+        blockchain (Blockchain): The blockchain object.
+
+    Returns:
+        int: The validated block number.
+
+    Raises:
+        ValueError: If the block is not an integer or the string 'latest'.
+    """
     if isinstance(block, int):
         return block
     elif block == "latest":
@@ -71,15 +102,18 @@ def date_to_block(datestring, blockchain) -> int:
     return timestamp_to_block(timestamp, blockchain)
 
 
-def timestamp_to_block(timestamp, blockchain) -> int:
+def timestamp_to_block(timestamp: int, blockchain) -> int:
+    """Converts a timestamp (Unix epoch) to a block number. (int)"""
     return ChainExplorer(blockchain).block_from_time(timestamp)
 
 
 def block_to_date(block, blockchain):
+    """Converts a block number to a date string."""
     return str(Time(ChainExplorer(blockchain).time_from_block(block)))
 
 
 def get_blocks_per_year(blockchain):
+    """Calculates the number of blocks per year in the blockchain."""
     current_block = last_block(blockchain)
     ts = math.floor(datetime.now().timestamp()) - (3600 * 24 * 365)
     block = ChainExplorer(blockchain).block_from_time(ts)
@@ -92,7 +126,7 @@ def get_blocks_per_year(blockchain):
 # ERC20 TOKENS
 # token_info
 @cache_call()
-def token_info(token_address, blockchain):  # NO ESTÁ Chain.POLYGON
+def token_info(token_address, blockchain):
     ETHPLORER_URL = "https://api.ethplorer.io/getTokenInfo/%s?apiKey=%s"
     BLOCKSCOUT_URL = "https://blockscout.com/xdai/mainnet/api?module=token&action=getToken&contractaddress=%s"
 
@@ -105,7 +139,23 @@ def token_info(token_address, blockchain):  # NO ESTÁ Chain.POLYGON
     return data
 
 
-def balance_of(address, contract_address, block, blockchain, web3=None, decimals=True) -> Decimal:
+def balance_of(
+    address: str, contract_address: str, block: int | str, blockchain: str, web3=None, decimals: bool = True
+) -> Decimal:
+    """
+    Get the balance of an address for a given contract on a specific block in a blockchain.
+
+    Args:
+        address (str): The address (wallet) for which to retrieve the balance.
+        contract_address (str): The address of the contract (Token or ERC20) for which to retrieve the balance.
+        block (int | str): The block number or block identifier.
+        blockchain (str): The name of the blockchain.
+        web3 (Web3, optional): The Web3 instance to use. If not provided, a default instance will be used.
+        decimals (bool, optional): Whether to convert the balance to token decimals. Defaults to True.
+
+    Returns:
+        Decimal: The balance of the address in the specified contract.
+    """
     if web3 is None:
         web3 = get_node(blockchain)
 
@@ -128,6 +178,7 @@ def balance_of(address, contract_address, block, blockchain, web3=None, decimals
 def total_supply(
     token_address: str, block: int | str, blockchain: str, web3: Web3 = None, decimals: bool = True
 ) -> Decimal:
+    """Retrieves the total supply of a token at a specific block."""
     if web3 is None:
         web3 = get_node(blockchain)
 
@@ -139,7 +190,8 @@ def total_supply(
     return to_token_amount(token_address, total_supply_v, blockchain, web3, decimals)
 
 
-def get_decimals(token_address, blockchain, web3=None, block="latest"):
+def get_decimals(token_address: str, blockchain: str | Blockchain, web3=None) -> int:
+    """Get the number of decimals for a given token address."""
     if web3 is None:
         web3 = get_node(blockchain)
 
@@ -154,7 +206,7 @@ def get_decimals(token_address, blockchain, web3=None, block="latest"):
     return decimals
 
 
-def get_symbol(token_address, blockchain, web3=None, block="latest") -> str:
+def get_symbol(token_address: str, blockchain: str | Blockchain, web3=None) -> str:
     token_address = Web3.to_checksum_address(token_address)
 
     if web3 is None:
@@ -197,7 +249,21 @@ def infer_symbol(web3, blockchain, token_address):
 
 
 # CONTRACTS AND ABIS
-def get_contract(contract_address, blockchain, web3=None, abi=None, block="latest"):
+def get_contract(contract_address, blockchain, web3=None, abi=None):
+    """
+    Retrieves a contract instance from the specified blockchain using the contract address and ABI.
+
+    Args:
+        contract_address (str): The address of the contract on the blockchain.
+        blockchain (str): The name of the blockchain network.
+        web3 (Web3, optional): An instance of the Web3 class. If not provided, a default instance will be used.
+        abi (list, optional): The ABI (Application Binary Interface) of the contract.
+            If not provided, it will be fetched from the blockchain explorer.
+
+    Returns:
+        Contract: An instance of the contract.
+
+    """
     if web3 is None:
         web3 = get_node(blockchain)
 
@@ -210,7 +276,18 @@ def get_contract(contract_address, blockchain, web3=None, abi=None, block="lates
         return web3.eth.contract(address=contract_address, abi=abi)
 
 
-def get_contract_proxy_abi(contract_address, abi_contract_address, blockchain, web3=None, block="latest"):
+def get_contract_proxy_abi(contract_address: str, abi_contract_address: str, blockchain: str | Blockchain, web3=None):
+    """Retrieves the contract proxy ABI for a given contract address and ABI contract address.
+
+    Args:
+        contract_address (str): The address of the contract.
+        abi_contract_address (str): The address of the ABI contract. (Implementation contract)
+        blockchain (str): The name of the blockchain.
+        web3 (Web3, optional): An instance of the Web3 class. If not provided, a default instance will be used.
+
+    Returns:
+        Contract: An instance of the contract proxy with the specified address and ABI.
+    """
     if web3 is None:
         web3 = get_node(blockchain)
 
@@ -220,8 +297,22 @@ def get_contract_proxy_abi(contract_address, abi_contract_address, blockchain, w
     return web3.eth.contract(address=address, abi=abi)
 
 
-def format_address(address):
-    hex_address = Web3.to_hex(address)
+def format_address(address: str | bytes) -> str:
+    """
+    Formats the given Ethereum address. It converts the address to a checksum address.
+
+    Example:
+        address = "0x0000000000000000000000006bd780e7fdf01d77e4d475c821f1e7ae05409072"
+        formatted_address = format_address(address)
+        print(formatted_address)
+        # Output: 0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed
+    """
+    if isinstance(address, str) and address.startswith("0x"):
+        # If the address is already a hex string, skip the to_hex conversion
+        hex_address = address
+    else:
+        hex_address = Web3.to_hex(address)
+
     return Web3.to_checksum_address("0x" + hex_address[-40:])
 
 
@@ -341,7 +432,7 @@ def get_abi_function_signatures(
     if abi_address == Address.ZERO:
         contract = get_contract(contract_address, blockchain, web3=web3)
     else:
-        contract = get_contract_proxy_abi(contract_address, abi_address, blockchain, web3=web3, block=block)
+        contract = get_contract_proxy_abi(contract_address, abi_address, blockchain, web3=web3)
 
     if contract is not None:
         abi = contract.abi
@@ -422,8 +513,12 @@ def get_data(contract_address, function_name, parameters, blockchain, web3=None,
         return None
 
 
-# LOGS
-def get_block_intervals(blockchain, block_start, block_end, block_interval):
+def get_block_intervals(
+    blockchain: str, block_start: int, block_end: int, block_interval: int
+) -> List[Tuple[int, int]]:
+    """Function used by get_logs_web3 to get the block intervals.
+    It returns a list of tuples with the start and end block numbers of each interval.
+    """
     block_interval = block_end if block_interval is None else block_interval
 
     if block_end == "latest":
@@ -437,6 +532,7 @@ def get_block_intervals(blockchain, block_start, block_end, block_interval):
 
 
 def prepare_log_params(address, topics, tx_hash, block_hash, block_start, block_end):
+    """Function used by get_logs_web3 to prepare the parameters for fetching logs."""
     params = {}
     if address:
         params["address"] = Web3.to_checksum_address(address)
@@ -453,6 +549,29 @@ def prepare_log_params(address, topics, tx_hash, block_hash, block_start, block_
     return params
 
 
+def get_logs_from_transaction(tx_receipt: dict, address: str = None, topics: list[str] = None) -> list[LogReceipt]:
+    """
+    Retrieves logs from a transaction receipt.
+
+    Args:
+        tx_receipt (dict): The transaction receipt containing logs.
+        address (str, optional): The address to filter logs by. Defaults to None.
+        topics (list[str], optional): The topics to filter logs by. Defaults to None.
+
+    Returns:
+        list[LogReceipt]: The filtered logs from the transaction receipt.
+    """
+    tx_logs = tx_receipt.get("logs", [])
+    logs = []
+    for log in tx_logs:
+        if address is not None and log.get("address") != address:
+            continue
+        if topics is not None and not all(HexBytes(topic) in log.get("topics", []) for topic in topics):
+            continue
+        logs.append(log)
+    return logs
+
+
 def get_logs_web3(
     blockchain: str,
     tx_hash: str = None,
@@ -462,46 +581,94 @@ def get_logs_web3(
     topics: list = None,
     block_hash: str = None,
     web3: Web3 = None,
-) -> list:
-    # FIXME: Add documentation
+) -> list[LogReceipt]:
+    """
+    Fetches logs from a specified blockchain using the Web3 library.
+    You can fetch logs from a specific transaction, contract address, block range, or block hash.
+    Some arguments are optional, but one of `tx_hash`, `address`, `block_start`, or `block_hash` must be provided.
+    If `tx_hash` is provided, the function fetches the logs from the transaction receipt.
+    If `address` is provided, the function fetches the logs from the specified contract.
+    If `block_start` and `block_end` are provided, the function fetches logs from the specified block range.
+
+    Args:
+        blockchain (str): The name of the blockchain from which to fetch logs.
+        tx_hash (str, optional): The transaction hash. Fetches the receipt of this transaction and extracts its logs.
+        address (str, optional): The address of the contract for which to fetch logs.
+        block_start (int | str, optional): The start block number or block hash.
+        block_end (int | str, optional): The end block number. If not provided, fetches logs until the latest block.
+        topics (list, optional): The topics of the logs to fetch. If not provided, fetches all logs.
+        block_hash (str, optional): The hash of a specific block from which to fetch logs.
+        web3 (Web3, optional): An instance of the Web3 class.
+
+    Returns:
+        list[LogReceipt]: The fetched logs.
+    """
+    # Check if tx_hash is used with block_start, block_end or block_hash
+    if tx_hash and (block_start or block_end != "latest" or block_hash):
+        raise ValueError("tx_hash cannot be used with block_start, block_end or block_hash")
+
     if web3 is None:
         web3 = get_node(blockchain)
-    try:
-        params = prepare_log_params(address, topics, tx_hash, block_hash, block_start, block_end)
-        logs = web3.eth.get_logs(params)
-        if not isinstance(block_end, str):
-            for n in range(len(logs)):
-                if logs[n]["blockNumber"] > block_end:
-                    logs = logs[:n]
-                    break
-    except ValueError as error:
-        error_info = error.args[0]
-        if error_info["code"] == -32005:  # error code in infura
-            block_interval = int(error_info["data"]["to"], 16) - int(error_info["data"]["from"], 16)
-        elif "max_block_range" in error_info:  # error code in Quicknode, see ProviderManager class
-            block_interval = error_info["max_block_range"]
-        elif error_info["code"] == -32602:  # error code in alchemy
-            blocks = [int(block, 16) for block in re.findall(r"0x[0-9a-fA-F]+", error_info["message"])]
-            block_interval = blocks[1] - blocks[0]
-        elif error_info["code"] == -32600:  # error code in anker: "block range is too wide"
-            block_interval = 3000
-        else:
-            raise ValueError(error_info)
-        logger.debug(
-            f"Web3.eth.get_logs: query returned more than 10000 results. Trying with a {block_interval} block range."
-        )
-        logs = []
-        params = {"address": address, "topics": topics}
-        if block_hash is not None:
-            params.update({"blockHash": block_hash})
-        for from_block, to_block in get_block_intervals(blockchain, block_start, block_end, block_interval):
-            params.update({"fromBlock": from_block, "toBlock": to_block})
-            logs += web3.eth.get_logs(params)
+
+    if tx_hash:
+        # Get transaction receipt
+        tx_receipt = web3.eth.get_transaction_receipt(tx_hash)
+        if tx_receipt is None:
+            return []
+        # Get logs from the transaction receipt
+        logs = get_logs_from_transaction(tx_receipt, address, topics)
+    else:
+        try:
+            # Prepare the parameters for fetching logs
+            params = prepare_log_params(address, topics, tx_hash, block_hash, block_start, block_end)
+            # Fetch the logs
+            logs = web3.eth.get_logs(params)
+            # If block_end is not a string, trim the logs to the block range
+            if not isinstance(block_end, str):
+                for n in range(len(logs)):
+                    if logs[n]["blockNumber"] > block_end:
+                        logs = logs[:n]
+                        break
+        except ValueError as error:
+            # Handle ValueError by adjusting the block range and retrying
+            error_info = error.args[0]
+            if error_info["code"] == -32005:  # error code in infura
+                block_interval = int(error_info["data"]["to"], 16) - int(error_info["data"]["from"], 16)
+            elif "max_block_range" in error_info:  # error code in Quicknode, see ProviderManager class
+                block_interval = error_info["max_block_range"]
+            elif error_info["code"] == -32602:  # error code in alchemy
+                blocks = [int(block, 16) for block in re.findall(r"0x[0-9a-fA-F]+", error_info["message"])]
+                block_interval = blocks[1] - blocks[0]
+            elif error_info["code"] == -32600:  # error code in anker: "block range is too wide"
+                block_interval = 3000
+            else:
+                raise ValueError(error_info)
+            # Log the error and the new block range
+            logger.debug(
+                f"Web3.eth.get_logs: query returned more than 10000 results. Trying with a {block_interval} block range."
+            )
+            # Retry fetching the logs with the new block range
+            logs = []
+            params = {"address": address, "topics": topics}
+            if block_hash is not None:
+                params.update({"blockHash": block_hash})
+            for from_block, to_block in get_block_intervals(blockchain, block_start, block_end, block_interval):
+                params.update({"fromBlock": from_block, "toBlock": to_block})
+                logs += web3.eth.get_logs(params)
     return logs
 
 
-# get_4byte_signature
 def get_4byte_signature(hex_signature: str) -> list:
+    """
+    Retrieves the text signatures associated with a given hexadecimal signature from the 4byte.directory API.
+    More information: https://www.4byte.directory/
+
+    Args:
+        hex_signature (str): The hexadecimal signature to search for.
+
+    Returns:
+        list: A list of text signatures associated with the given hexadecimal signature.
+    """
     API_4BYTE_DIRECTORY_SIGNATURES = "https://www.4byte.directory/api/v1/signatures/?hex_signature=%s"
     results = []
 
@@ -514,15 +681,16 @@ def get_4byte_signature(hex_signature: str) -> list:
     return results
 
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def is_archival(endpoint) -> bool:
     """
     Checks whether a node is an archival node or a full node.
 
-    :param str endpoint: The node's RPC endpoint to analyse
-    :return: True if the node is archival, False if it isn't
-    """
+    Args:
+        endpoint (str): The node's RPC endpoint to analyze.
 
+    Returns:
+        bool: True if the node is archival, False if it isn't.
+    """
     web3 = Web3(Web3.HTTPProvider(endpoint))
 
     try:

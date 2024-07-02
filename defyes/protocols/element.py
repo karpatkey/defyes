@@ -79,10 +79,10 @@ def get_tranche(
     web3: str,
     block: int,
 ) -> Tranche:
-    deploy_contract = get_contract(underlying_address, blockchain, web3=web3, abi=underlying_address_abi, block=block)
+    deploy_contract = get_contract(underlying_address, blockchain, web3=web3, abi=underlying_address_abi)
     function_output = deploy_contract.decode_function_input(input_data)
 
-    yield_token_contract = get_contract(function_output[1]["_bond"], blockchain, web3=web3, abi=PT_ABI, block=block)
+    yield_token_contract = get_contract(function_output[1]["_bond"], blockchain, web3=web3, abi=PT_ABI)
 
     yield_token = const_call(yield_token_contract.functions.interestToken())
 
@@ -150,19 +150,17 @@ def get_amount(
 
     wallet = Web3.to_checksum_address(wallet)
 
-    pt_token_contract = get_contract(pt_token, blockchain, web3=web3, abi=PT_ABI, block=block)
+    pt_token_contract = get_contract(pt_token, blockchain, web3=web3, abi=PT_ABI)
     pt_token_balanceOf = pt_token_contract.functions.balanceOf(wallet).call(block_identifier=block)
 
-    pool_token_contract = get_contract(pool_address, blockchain=blockchain, web3=web3, abi=LP_PYV_ABI, block=block)
+    pool_token_contract = get_contract(pool_address, blockchain=blockchain, web3=web3, abi=LP_PYV_ABI)
     pool_total_supply = pool_token_contract.functions.totalSupply().call(block_identifier=block)
     pool_share_wallet = pool_token_contract.functions.balanceOf(wallet).call(block_identifier=block) / Decimal(
         pool_total_supply
     )
 
     pool_token_vault_address = const_call(pool_token_contract.functions.getVault())
-    pool_token_vault = get_contract(
-        pool_token_vault_address, blockchain, web3=web3, abi=BALANCER_VAULT_ABI, block=block
-    )
+    pool_token_vault = get_contract(pool_token_vault_address, blockchain, web3=web3, abi=BALANCER_VAULT_ABI)
     pool_totals = pool_token_vault.functions.getPoolTokens(pool_id).call(block_identifier=block)
 
     amount = pt_token_balanceOf + pool_totals[1][0] * pool_share_wallet + pool_totals[1][1] * pool_share_wallet

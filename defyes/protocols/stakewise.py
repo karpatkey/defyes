@@ -181,22 +181,26 @@ def underlying(
     """
     Returns the balances of the staking and reward tokens as a dictionary.
 
-    Parameters
-    ----------
-    wallet : str
-        address of the wallet holding the position
-    block : int or 'latest'
-        block number at which the data is queried
-    web3: obj
-        optional, already instantiated web3 object
-    decimals: bool
-        specifies whether balances are returned as int if set to False, or float with the appropriate decimals if set to True
-    reward: bool
-        if True adds the balances of unclaimed rewards to the result
+    Args:
+        wallet (str): Address of the wallet holding the position.
+        block (int or 'latest'): Block number at which the data is queried.
+        web3 (obj, optional): Already instantiated web3 object.
+        decimals (bool): Specifies whether balances are returned as int if set to False, or float with the appropriate decimals if set to True.
+        reward (bool): If True, adds the balances of unclaimed rewards to the result.
 
-    Returns
-    ----------
-    dict
+    Returns:
+        dict: A dictionary containing the following keys:
+            - 'blockchain' (str): The blockchain name ('ethereum').
+            - 'block' (int): The block number.
+            - 'protocol' (str): The protocol name ('Stakewise').
+            - 'positions_key' (None): The positions key (None).
+            - 'decimals' (bool): Specifies whether balances are returned as int or float.
+            - 'version' (int): The version number (0).
+            - 'wallet' (str): The wallet address.
+            - 'positions' (dict): A dictionary containing the staking and underlying token balances.
+            - 'unclaimed_rewards' (list): A list of dictionaries containing the unclaimed reward token balances.
+
+    Example:
         {
             'blockchain': 'ethereum',
             'block': 17693094,
@@ -207,22 +211,26 @@ def underlying(
             'wallet': '0x05E61adDCef87ad8548236eb5Cbf2f699C834935',
             'positions': {
                 'staking_ETH': {
-                    'holdings': [{
+                    'holdings': [
+                        {
                             'token': '0xFe2e637202056d30016725477c5da089Ab0A043A',
                             'balance': Decimal('0.849414886512576674')
                         }
                     ],
-                    'underlying': [{
+                    'underlying': [
+                        {
                             'token': '0x0000000000000000000000000000000000000000',
                             'balance': Decimal('0.849414886512576674')
                         }
                     ]
                 }
             },
-            'unclaimed_rewards': [{
+            'unclaimed_rewards': [
+                {
                     'token': '0x20BC832ca081b91433ff6c17f85701B6e92486c5',
                     'balance': Decimal('854744963544512')
-                }, {
+                },
+                {
                     'token': '0x48C3399719B582dD63eB5AADf12A40B4C3f52FA2',
                     'balance': Decimal('203099406601438885')
                 }

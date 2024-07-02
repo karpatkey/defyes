@@ -1,5 +1,4 @@
 from decimal import Decimal
-from typing import Union
 
 from karpatkit.constants import Address, Chain
 
@@ -11,14 +10,15 @@ StakedToken.default_addresses = {Chain.ETHEREUM: "0xBe9895146f7AF43049ca1c1AE358
 
 
 def reduce_cbETH(
-    amount: Union[int | float], blockchain: Union[str | Chain], block: Union[int, str], decimals: bool = True
+    amount: int | float, blockchain: str | Chain, block: int | str, decimals: bool = True
 ) -> tuple[str, int]:
     """Reduce cbETH to ETH.
     Currently the only available blockchain is Ethereum.
     Get the exchange rate from the StakedToken contract (cbETH) and reduce the amount of cbETH to ETH.
+
     Args:
         amount (float): Amount of osETH to reduce
-        block (Union[int, str]): Block number or "latest"
+        block (int, str): Block number or "latest"
         teu (bool, optional): If the amount is in teu. Defaults to False.
     """
     if blockchain != Chain.ETHEREUM:

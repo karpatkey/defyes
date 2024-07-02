@@ -44,21 +44,15 @@ def underlying(
 
 
 def unwrap(amount: int | float | Decimal, block: int | str, blockchain: str, web3: object = None) -> list:
-    """
-    Returns the balance of the underlying ETH corresponding to the inputted amount of ankrETH.
-    Parameters
-    ----------
-    amount : int or float or Decimal
-        amount of ankrETH;
-    block : int or 'latest'
-        block number at which the data is queried
-    web3: obj
-        optional, already instantiated web3 object
+    """Returns the balance of the underlying ETH corresponding to the inputted amount of ankrETH.
 
-    Returns
-    ----------
-    list
-        a list where the first element is the underlying token address and the second one is the balance
+    Args:
+        amount (int | float | Decimal): amount of ankrETH
+        block (int | str): block number at which the data is queried
+        web3 (object, optional):  web3 object. Defaults to None.
+
+    Returns:
+        list: a list where the first element is the underlying token address and the second one is the balance
     """
     # The blockchain argument is not used but it could be in the future if Ankr deploys on other ETHEREUM
     if web3 is None:

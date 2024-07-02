@@ -11,7 +11,7 @@ Agave is a fork of Aave, built by the
 
 import logging
 from decimal import Decimal
-from typing import Dict, List, Union
+from typing import Dict, List
 
 from defabipedia.tokens import GnosisTokenAddr
 from karpatkit.cache import const_call
@@ -22,38 +22,22 @@ from defyes.functions import balance_of, get_contract, to_token_amount
 
 logger = logging.getLogger(__name__)
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# PROTOCOL DATA PROVIDER
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Protocol Data Provider - GNOSIS
 # PDP_GNOSIS = '0x75e5cF901f3A576F72AB6bCbcf7d81F1619C6a12'
 PDP_GNOSIS = "0x24dCbd376Db23e4771375092344f5CbEA3541FC0"
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# LENDING POOL ADDRESSES PROVIDER REGISTRY
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Lending Pool Addresses Provider Registry - GNOSIS
 LPAPR_GNOSIS = "0x3673C22153E363B1da69732c4E0aA71872Bbb87F"
 # 0x5E15d5E33d318dCEd84Bfe3F4EACe07909bE6d9c
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# EXTRA REWARDER CONTRACT
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Rewarder contract - GNOSIS
 REWARDER_ADDRESS = "0xfa255f5104f129B78f477e9a6D050a02f31A5D86"
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# CHAINLINK PRICE FEEDS
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# GNOSIS
-# XDAI/USD Price Feed
+# GNOSIS XDAI/USD Price Feed
 CHAINLINK_XDAI_USD = "0x678df3415fc31947dA4324eC63212874be5a82f8"
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ABIs
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Protocol Data Provider ABI - getAllReservesTokens, getUserReserveData, getReserveConfigurationData, getReserveTokensAddresses
 ABI_PDP = '[{"inputs":[],"name":"getAllReservesTokens","outputs":[{"components":[{"internalType":"string","name":"symbol","type":"string"},{"internalType":"address","name":"tokenAddress","type":"address"}],"internalType":"struct AaveProtocolDataProvider.TokenData[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"asset","type":"address"},{"internalType":"address","name":"user","type":"address"}],"name":"getUserReserveData","outputs":[{"internalType":"uint256","name":"currentATokenBalance","type":"uint256"},{"internalType":"uint256","name":"currentStableDebt","type":"uint256"},{"internalType":"uint256","name":"currentVariableDebt","type":"uint256"},{"internalType":"uint256","name":"principalStableDebt","type":"uint256"},{"internalType":"uint256","name":"scaledVariableDebt","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"uint256","name":"liquidityRate","type":"uint256"},{"internalType":"uint40","name":"stableRateLastUpdated","type":"uint40"},{"internalType":"bool","name":"usageAsCollateralEnabled","type":"bool"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"asset","type":"address"}],"name":"getReserveConfigurationData","outputs":[{"internalType":"uint256","name":"decimals","type":"uint256"},{"internalType":"uint256","name":"ltv","type":"uint256"},{"internalType":"uint256","name":"liquidationThreshold","type":"uint256"},{"internalType":"uint256","name":"liquidationBonus","type":"uint256"},{"internalType":"uint256","name":"reserveFactor","type":"uint256"},{"internalType":"bool","name":"usageAsCollateralEnabled","type":"bool"},{"internalType":"bool","name":"borrowingEnabled","type":"bool"},{"internalType":"bool","name":"stableBorrowRateEnabled","type":"bool"},{"internalType":"bool","name":"isActive","type":"bool"},{"internalType":"bool","name":"isFrozen","type":"bool"}],"stateMutability":"view","type":"function"}, {"inputs":[{"internalType":"address","name":"asset","type":"address"}],"name":"getReserveTokensAddresses","outputs":[{"internalType":"address","name":"aTokenAddress","type":"address"},{"internalType":"address","name":"stableDebtTokenAddress","type":"address"},{"internalType":"address","name":"variableDebtTokenAddress","type":"address"}],"stateMutability":"view","type":"function"}]'
 
@@ -77,17 +61,17 @@ ABI_STKAGAVE = '[{"inputs":[],"name":"REWARD_TOKEN","outputs":[{"internalType":"
 REWARDER_ABI = '[{"inputs":[{"internalType":"contract IERC20","name":"rewardToken","type":"address"},{"internalType":"address","name":"emissionManager","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"asset","type":"address"},{"indexed":false,"internalType":"uint8","name":"decimals","type":"uint8"},{"indexed":false,"internalType":"uint256","name":"emission","type":"uint256"}],"name":"AssetConfigUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"asset","type":"address"},{"indexed":false,"internalType":"uint256","name":"index","type":"uint256"}],"name":"AssetIndexUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"newBulkClaimer","type":"address"}],"name":"BulkClaimerUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":true,"internalType":"address","name":"claimer","type":"address"}],"name":"ClaimerSet","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newDistributionEnd","type":"uint256"}],"name":"DistributionEndUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"token","type":"address"}],"name":"RewardTokenUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardsAccrued","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":true,"internalType":"address","name":"claimer","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardsClaimed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"vault","type":"address"}],"name":"RewardsVaultUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":true,"internalType":"address","name":"asset","type":"address"},{"indexed":false,"internalType":"uint256","name":"index","type":"uint256"}],"name":"UserIndexUpdated","type":"event"},{"inputs":[],"name":"BULK_CLAIMER","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"DISTRIBUTION_END","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"EMISSION_MANAGER","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"PRECISION","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"PROXY_ADMIN","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"REVISION","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"REWARD_TOKEN","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"assets","outputs":[{"internalType":"uint104","name":"emissionPerSecond","type":"uint104"},{"internalType":"uint104","name":"index","type":"uint104"},{"internalType":"uint40","name":"lastUpdateTimestamp","type":"uint40"},{"internalType":"uint8","name":"decimals","type":"uint8"},{"internalType":"bool","name":"disabled","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"assets","type":"address[]"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"address","name":"user","type":"address"},{"internalType":"address","name":"to","type":"address"}],"name":"bulkClaimRewardsOnBehalf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address[]","name":"assets","type":"address[]"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"address","name":"to","type":"address"}],"name":"claimRewards","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address[]","name":"assets","type":"address[]"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"address","name":"user","type":"address"},{"internalType":"address","name":"to","type":"address"}],"name":"claimRewardsOnBehalf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address[]","name":"assets","type":"address[]"},{"internalType":"uint256[]","name":"emissionsPerSecond","type":"uint256[]"},{"internalType":"uint256[]","name":"assetDecimals","type":"uint256[]"}],"name":"configureAssets","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address[]","name":"assets","type":"address[]"}],"name":"disableAssets","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"asset","type":"address"}],"name":"getAssetData","outputs":[{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint8","name":"","type":"uint8"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getClaimer","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getDistributionEnd","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"assets","type":"address[]"},{"internalType":"address","name":"user","type":"address"}],"name":"getRewardsBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getRewardsVault","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"},{"internalType":"address","name":"asset","type":"address"}],"name":"getUserAssetData","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_user","type":"address"}],"name":"getUserUnclaimedRewards","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"},{"internalType":"uint256","name":"totalSupply","type":"uint256"},{"internalType":"uint256","name":"userBalance","type":"uint256"}],"name":"handleAction","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"rewardsVault","type":"address"}],"name":"initialize","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"newRewardTokenAdjustmentAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"newRewardTokenAdjustmentMultiplier","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"bulkClaimer","type":"address"}],"name":"setBulkClaimer","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"},{"internalType":"address","name":"caller","type":"address"}],"name":"setClaimer","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"distributionEnd","type":"uint256"}],"name":"setDistributionEnd","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"rewardToken","type":"address"}],"name":"setRewardToken","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bool","name":"RewardTokenAdjustmentMultiplier","type":"bool"},{"internalType":"uint256","name":"RewardTokenAdjustmentAmount","type":"uint256"}],"name":"setRewardTokenAdjustment","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"rewardsVault","type":"address"}],"name":"setRewardsVault","outputs":[],"stateMutability":"nonpayable","type":"function"}]'
 
 
-def get_reserves_tokens(pdp_contract, block: Union[int, str]) -> List[str]:
+def get_reserves_tokens(pdp_contract, block: int | str) -> List[str]:
     rt = pdp_contract.functions.getAllReservesTokens().call(block_identifier=block)
     return [e[1] for e in rt]
 
 
 def get_reserves_tokens_balances(
-    web3, wallet: str, block: Union[int, str], blockchain: str, decimals: bool = True
+    web3, wallet: str, block: int | str, blockchain: str, decimals: bool = True
 ) -> List[List]:
     balances = []
 
-    pdp_contract = get_contract(PDP_GNOSIS, blockchain, web3=web3, abi=ABI_PDP, block=block)
+    pdp_contract = get_contract(PDP_GNOSIS, blockchain, web3=web3, abi=ABI_PDP)
     reserves_tokens = get_reserves_tokens(pdp_contract, block)
     cs_wallet = Web3.to_checksum_address(wallet)
 
@@ -102,7 +86,7 @@ def get_reserves_tokens_balances(
     return balances
 
 
-def get_data(wallet: str, block: Union[int, str], blockchain: str, web3=None, decimals: bool = True) -> Dict:
+def get_data(wallet: str, block: int | str, blockchain: str, web3=None, decimals: bool = True) -> Dict:
     agave_data = {}
     collaterals = []
     debts = []
@@ -112,14 +96,12 @@ def get_data(wallet: str, block: Union[int, str], blockchain: str, web3=None, de
 
     wallet = Web3.to_checksum_address(wallet)
 
-    lpapr_contract = get_contract(LPAPR_GNOSIS, blockchain, web3=web3, abi=ABI_LPAPR, block=block)
+    lpapr_contract = get_contract(LPAPR_GNOSIS, blockchain, web3=web3, abi=ABI_LPAPR)
 
     lending_pool_address = const_call(lpapr_contract.functions.getLendingPool())
-    lending_pool_contract = get_contract(lending_pool_address, blockchain, web3=web3, abi=ABI_LENDING_POOL, block=block)
+    lending_pool_contract = get_contract(lending_pool_address, blockchain, web3=web3, abi=ABI_LENDING_POOL)
 
-    chainlink_eth_usd_contract = get_contract(
-        CHAINLINK_XDAI_USD, blockchain, web3=web3, abi=ABI_CHAINLINK_XDAI_USD, block=block
-    )
+    chainlink_eth_usd_contract = get_contract(CHAINLINK_XDAI_USD, blockchain, web3=web3, abi=ABI_CHAINLINK_XDAI_USD)
     chainlink_eth_usd_decimals = const_call(chainlink_eth_usd_contract.functions.decimals())
     xdai_usd_price = chainlink_eth_usd_contract.functions.latestAnswer().call(block_identifier=block)
     xdai_usd_price = Decimal(xdai_usd_price) / Decimal(10**chainlink_eth_usd_decimals)
@@ -128,9 +110,7 @@ def get_data(wallet: str, block: Union[int, str], blockchain: str, web3=None, de
 
     if balances:
         price_oracle_address = lpapr_contract.functions.getPriceOracle().call(block_identifier=block)
-        price_oracle_contract = get_contract(
-            price_oracle_address, blockchain, web3=web3, abi=ABI_PRICE_ORACLE, block=block
-        )
+        price_oracle_contract = get_contract(price_oracle_address, blockchain, web3=web3, abi=ABI_PRICE_ORACLE)
 
         for balance in balances:
             asset = {"token_address": balance[0], "token_amount": abs(balance[1])}
@@ -181,9 +161,7 @@ def get_data(wallet: str, block: Union[int, str], blockchain: str, web3=None, de
     return agave_data
 
 
-def get_all_rewards(
-    wallet: str, block: Union[int, str], blockchain: str, web3=None, decimals: bool = True
-) -> List[List]:
+def get_all_rewards(wallet: str, block: int | str, blockchain: str, web3=None, decimals: bool = True) -> List[List]:
     """
     Output: List of 2-element lists: [[reward_token_1_address, balance_1], [t2, b2], ... ]
     """
@@ -195,7 +173,7 @@ def get_all_rewards(
 
     wallet = Web3.to_checksum_address(wallet)
 
-    stkagave_contract = get_contract(GnosisTokenAddr.STKAGAVE, blockchain, web3=web3, abi=ABI_STKAGAVE, block=block)
+    stkagave_contract = get_contract(GnosisTokenAddr.STKAGAVE, blockchain, web3=web3, abi=ABI_STKAGAVE)
 
     reward_token = const_call(stkagave_contract.functions.REWARD_TOKEN())
 
@@ -207,7 +185,7 @@ def get_all_rewards(
 
 
 def underlying_all(
-    wallet: str, block: Union[int, str], blockchain: str, web3=None, decimals: bool = True, reward: bool = False
+    wallet: str, block: int | str, blockchain: str, web3=None, decimals: bool = True, reward: bool = False
 ) -> List[List]:
     """
     Output: a list of 2-element lists: [[token_1_address, balance_1], [t2, b2], ... ].
@@ -228,7 +206,7 @@ def underlying_all(
     return result
 
 
-def get_apr(token_address: str, block: Union[int, str], blockchain: str, web3=None, apy: bool = False) -> List[Dict]:
+def get_apr(token_address: str, block: int | str, blockchain: str, web3=None, apy: bool = False) -> List[Dict]:
     """
     Output:
         [{'metric': 'apr'/'apy', 'type': 'supply', 'value': supply_apr/supply_apy},
@@ -239,10 +217,10 @@ def get_apr(token_address: str, block: Union[int, str], blockchain: str, web3=No
     if web3 is None:
         web3 = get_node(blockchain)
 
-    lpapr_contract = get_contract(LPAPR_GNOSIS, blockchain, web3=web3, abi=ABI_LPAPR, block=block)
+    lpapr_contract = get_contract(LPAPR_GNOSIS, blockchain, web3=web3, abi=ABI_LPAPR)
 
     lending_pool_address = const_call(lpapr_contract.functions.getLendingPool())
-    lending_pool_contract = get_contract(lending_pool_address, blockchain, web3=web3, abi=ABI_LENDING_POOL, block=block)
+    lending_pool_contract = get_contract(lending_pool_address, blockchain, web3=web3, abi=ABI_LENDING_POOL)
 
     reserve_data = lending_pool_contract.functions.getReserveData(token_address).call(block_identifier=block)
 
@@ -275,13 +253,13 @@ def get_apr(token_address: str, block: Union[int, str], blockchain: str, web3=No
         ]
 
 
-def get_staking_apr(block: Union[int, str], blockchain: str, web3=None, apy: bool = False) -> List[Dict]:
+def get_staking_apr(block: int | str, blockchain: str, web3=None, apy: bool = False) -> List[Dict]:
     if web3 is None:
         web3 = get_node(blockchain)
 
     seconds_per_year = 365 * 24 * 60 * 60
 
-    stkagave_contract = get_contract(GnosisTokenAddr.STKAGAVE, blockchain, web3=web3, abi=ABI_STKAGAVE, block=block)
+    stkagave_contract = get_contract(GnosisTokenAddr.STKAGAVE, blockchain, web3=web3, abi=ABI_STKAGAVE)
     emission_per_second = stkagave_contract.functions.assets(GnosisTokenAddr.STKAGAVE).call(block_identifier=block)[0]
     agave_token_address = const_call(stkagave_contract.functions.REWARD_TOKEN())
     current_stakes = balance_of(
@@ -295,7 +273,7 @@ def get_staking_apr(block: Union[int, str], blockchain: str, web3=None, apy: boo
 
 
 def get_staked(
-    wallet: str, block: Union[int, str], blockchain: str, stkagve: bool = False, web3=None, decimals: bool = True
+    wallet: str, block: int | str, blockchain: str, stkagve: bool = False, web3=None, decimals: bool = True
 ) -> List[List]:
     balances = []
 
@@ -304,7 +282,7 @@ def get_staked(
 
     agave_wallet = Web3.to_checksum_address(wallet)
 
-    stkagave_contract = get_contract(GnosisTokenAddr.STKAGAVE, blockchain, web3=web3, abi=ABI_STKAGAVE, block=block)
+    stkagave_contract = get_contract(GnosisTokenAddr.STKAGAVE, blockchain, web3=web3, abi=ABI_STKAGAVE)
     stkagave_balance = stkagave_contract.functions.balanceOf(agave_wallet).call(block_identifier=block)
 
     stkagave_balance = to_token_amount(GnosisTokenAddr.STKAGAVE, stkagave_balance, blockchain, web3, decimals)
@@ -321,7 +299,7 @@ def get_agave_tokens(blockchain: str, block: int | str, web3: Web3 = None) -> di
     if web3 is None:
         web3 = get_node(blockchain)
 
-    pdp_contract = get_contract(PDP_GNOSIS, blockchain, web3=web3, abi=ABI_PDP, block=block)
+    pdp_contract = get_contract(PDP_GNOSIS, blockchain, web3=web3, abi=ABI_PDP)
     reserve_tokens = pdp_contract.functions.getAllReservesTokens().call(block_identifier=block)
     agave_tokens = []
     for token in reserve_tokens:

@@ -98,7 +98,7 @@ def get_rate(token_src, block, blockchain, web3=None, use_wrappers=False, token_
         token_dst = Web3.to_checksum_address(token_dst)
 
     oracle_address = get_oracle_address(blockchain)
-    oracle_contract = get_contract(oracle_address, blockchain, web3=web3, abi=ABI_ORACLE, block=block)
+    oracle_contract = get_contract(oracle_address, blockchain, web3=web3, abi=ABI_ORACLE)
 
     token_src_decimals = get_decimals(token_src, blockchain, web3=web3)
 

@@ -58,9 +58,11 @@ def test_protocol_data(decimals):
                     "anual_interest_rate": Decimal("0.004987542475021200498864000"),
                     "available_to_borrow": {
                         "address": "0x1a7e4e63778B4f12a199C062f3eFdD288afCBce8",
-                        "balance": Decimal("431692.91115667917318028225")
-                        if decimals
-                        else Decimal("431692911156679173180282.2500"),
+                        "balance": (
+                            Decimal("431692.91115667917318028225")
+                            if decimals
+                            else Decimal("431692911156679173180282.2500")
+                        ),
                     },
                     "collateral_ratio": Decimal("3.684106784023604012084994729"),
                     "liquidation_price_in_stablecoin_fiat": Decimal("642.5954462304000723178755981"),

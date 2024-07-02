@@ -24,7 +24,7 @@ def underlying(token_address: str, wallet: str, block: int, blockchain: str, web
 
     wallet = Web3.to_checksum_address(wallet)
     token_address = Web3.to_checksum_address(token_address)
-    meta_vault_contract = get_contract(token_address, blockchain, web3=web3, abi=BASIC_META_VAULT_ABI, block=block)
+    meta_vault_contract = get_contract(token_address, blockchain, web3=web3, abi=BASIC_META_VAULT_ABI)
     balance_of_vault = meta_vault_contract.functions.balanceOf(wallet).call(block_identifier=block)
     underlying_asset = const_call(meta_vault_contract.functions.asset())
     asset_scale = const_call(meta_vault_contract.functions.assetScale()) if decimals else 1

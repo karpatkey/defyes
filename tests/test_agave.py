@@ -96,7 +96,7 @@ RESERVES_TOKENS = [
 
 
 def test_get_reserves_tokens():
-    pdp_contract = get_contract(Agave.PDP_GNOSIS, Chain.GNOSIS, web3=WEB3, abi=Agave.ABI_PDP, block=TEST_BLOCK)
+    pdp_contract = get_contract(Agave.PDP_GNOSIS, Chain.GNOSIS, web3=WEB3, abi=Agave.ABI_PDP)
     reserves_tokens = Agave.get_reserves_tokens(pdp_contract, TEST_BLOCK)
     assert reserves_tokens == [e[1] for e in RESERVES_TOKENS]
 

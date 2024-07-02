@@ -1,6 +1,6 @@
 import json
 from decimal import Decimal
-from typing import Dict, List, Union
+from typing import Dict, List
 
 import requests
 from defabipedia import Chain
@@ -14,7 +14,7 @@ CHAINS_ID = {
 }
 
 
-def get_api_results(wallet: str, blockchain: str) -> Union[List[dict], str]:
+def get_api_results(wallet: str, blockchain: str) -> List[dict] | str:
     try:
         chain_id = CHAINS_ID[blockchain]
     except KeyError:

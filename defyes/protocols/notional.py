@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import List, Tuple
 
 from defabipedia import Chain
 from defabipedia.tokens import EthereumTokenAddr
@@ -31,22 +32,7 @@ def get_snote_address(blockchain):
         return EthereumTokenAddr.SNOTE
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_markets_data
-# 'web3' = web3 (Node) -> Improves performance
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# 'nproxy_contract' = nproxy_contract -> Improves performance
-# 'token_address' = token_address -> retrieves the data of an specific token
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_markets_data(block, blockchain, web3=None, decimals=True, nproxy_contract=None, token_address=None):
-    """
-
-    :param block:
-    :param blockchain:
-    :param web3:
-    :return:
-    """
-
     if web3 is None:
         web3 = get_node(blockchain)
 
@@ -54,7 +40,7 @@ def get_markets_data(block, blockchain, web3=None, decimals=True, nproxy_contrac
 
     if nproxy_contract is None:
         nproxy_address = get_nproxy_address(blockchain)
-        nproxy_contract = get_contract(nproxy_address, blockchain, web3=web3, abi=ABI_NPROXY, block=block)
+        nproxy_contract = get_contract(nproxy_address, blockchain, web3=web3, abi=ABI_NPROXY)
 
     for i in range(nproxy_contract.functions.getMaxCurrencyId().call(block_identifier=block)):
         market_data = {}
@@ -80,7 +66,7 @@ def get_markets_data(block, blockchain, web3=None, decimals=True, nproxy_contrac
 
         # TODO: check if const_call can be used
         ntoken_address = nproxy_contract.functions.nTokenAddress(i + 1).call(block_identifier=block)
-        ntoken_contract = get_contract(ntoken_address, blockchain, web3=web3, abi=ABI_NTOKEN, block=block)
+        ntoken_contract = get_contract(ntoken_address, blockchain, web3=web3, abi=ABI_NTOKEN)
         market_data["nToken"] = {
             "address": ntoken_address,
             # in 10^decimals format
@@ -97,24 +83,10 @@ def get_markets_data(block, blockchain, web3=None, decimals=True, nproxy_contrac
     return markets_data
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# all_note_rewards
-# 'web3' = web3 (Node) -> Improves performance
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# 'nproxy_contract' = nproxy_contract -> Improves performance
-# Output:
-# 1 - List of Tuples: [reward_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def all_note_rewards(wallet, block, blockchain, web3=None, decimals=True, nproxy_contract=None):
+def all_note_rewards(wallet, block, blockchain, web3=None, decimals=True, nproxy_contract=None) -> List[Tuple]:
     """
-    :param wallet:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param execution:
-    :param index:
-    :param decimals:
-    :return:
+    Returns:
+        List[Tuple]: List of (reward_token_address, balance)
     """
     all_rewards = []
 
@@ -125,7 +97,7 @@ def all_note_rewards(wallet, block, blockchain, web3=None, decimals=True, nproxy
 
     if nproxy_contract is None:
         nproxy_address = get_nproxy_address(blockchain)
-        nproxy_contract = get_contract(nproxy_address, blockchain, web3=web3, abi=ABI_NPROXY, block=block)
+        nproxy_contract = get_contract(nproxy_address, blockchain, web3=web3, abi=ABI_NPROXY)
 
     note_token_address = const_call(nproxy_contract.functions.getNoteToken())
     note_rewards = nproxy_contract.functions.nTokenGetClaimableIncentives(
@@ -139,26 +111,13 @@ def all_note_rewards(wallet, block, blockchain, web3=None, decimals=True, nproxy
     return all_rewards
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_staked
-# 'execution' = the current iteration, as the function goes through the different Full/Archival nodes of the blockchain attempting a successfull execution
-# 'index' = specifies the index of the Archival or Full Node that will be retrieved by the getNode() function
-# 'web3' = web3 (Node) -> Improves performance
-# 'reward' = True -> retrieves the rewards / 'reward' = False or not passed onto the function -> no reward retrieval
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# Output: a list with 2 elements:
-# 1 - List of Tuples: [token_address, balance]
-# 2 - List of Tuples: [reward_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_staked(wallet, block, blockchain, web3=None, decimals=True, reward=False):
     """
-    :param wallet:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param decimals:
-    :param reward:
-    :return:
+    Returns:
+        - result (list): A list containing the staked balances and rewards (if reward=True).
+            - balances (list): A list of token balances, where each balance is represented as [token_address, balance].
+            - all_rewards (list): A list of all note rewards for the wallet address.
+
     """
     balances = []
     result = []
@@ -169,10 +128,10 @@ def get_staked(wallet, block, blockchain, web3=None, decimals=True, reward=False
     wallet = Web3.to_checksum_address(wallet)
 
     nproxy_address = get_nproxy_address(blockchain)
-    nproxy_contract = get_contract(nproxy_address, blockchain, web3=web3, abi=ABI_NPROXY, block=block)
+    nproxy_contract = get_contract(nproxy_address, blockchain, web3=web3, abi=ABI_NPROXY)
 
     snote_token_address = get_snote_address(blockchain)
-    snote_contract = get_contract(snote_token_address, blockchain, web3=web3, abi=ABI_SNOTE, block=block)
+    snote_contract = get_contract(snote_token_address, blockchain, web3=web3, abi=ABI_SNOTE)
 
     weth_balance, note_balance = snote_contract.functions.tokenClaimOf(wallet).call(block_identifier=block)
 
@@ -230,25 +189,12 @@ def _get_balances(markets_data, account_data, decimals):
     return balances
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# underlying_all
-# 'web3' = web3 (Node) -> Improves performance
-# 'reward' = True -> retrieves the rewards / 'reward' = False or not passed onto the function -> no reward retrieval
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# Output: a list with 2 elements:
-# 1 - List of Tuples: [token_address, balance]
-# 2 - List of Tuples: [reward_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=False):
+def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=False) -> List[Tuple]:
     """
-    :param wallet:
-    :para token_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param decimals:
-    :param reward:
-    :return:
+    Get the underlying balances of all markets for a given wallet address.
+
+    Returns:
+        list or tuple: The underlying balances of all markets for the given wallet address. If reward is True, a tuple containing the balances and the rewards will be returned.
     """
     if web3 is None:
         web3 = get_node(blockchain)
@@ -256,7 +202,7 @@ def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=F
     wallet = Web3.to_checksum_address(wallet)
 
     nproxy_address = get_nproxy_address(blockchain)
-    nproxy_contract = get_contract(nproxy_address, blockchain, web3=web3, abi=ABI_NPROXY, block=block)
+    nproxy_contract = get_contract(nproxy_address, blockchain, web3=web3, abi=ABI_NPROXY)
 
     markets_data = get_markets_data(block, blockchain, web3=web3, nproxy_contract=nproxy_contract)
     account_data = nproxy_contract.functions.getAccount(wallet).call(block_identifier=block)
@@ -272,23 +218,12 @@ def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=F
     return result
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# underlying
-# 'web3' = web3 (Node) -> Improves performance
-# 'reward' = True -> retrieves the rewards / 'reward' = False or not passed onto the function -> no reward retrieval
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# Output: a list with 1 elements:
-# 1 - List of Tuples: [token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def underlying(wallet, token_address, block, blockchain, web3=None, decimals=True):
+def underlying(wallet, token_address, block, blockchain, web3=None, decimals=True) -> List[Tuple]:
     """
-    :param wallet:
-    :para token_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param decimals:
-    :return:
+    Retrieves the underlying balances of a wallet for a specific token on the Notional protocol.
+
+    Returns:
+        dict: A dictionary containing the underlying balances of the wallet for the specified token.
     """
     if web3 is None:
         web3 = get_node(blockchain)
@@ -297,7 +232,7 @@ def underlying(wallet, token_address, block, blockchain, web3=None, decimals=Tru
     token_address = Web3.to_checksum_address(token_address)
 
     nproxy_address = get_nproxy_address(blockchain)
-    nproxy_contract = get_contract(nproxy_address, blockchain, web3=web3, abi=ABI_NPROXY, block=block)
+    nproxy_contract = get_contract(nproxy_address, blockchain, web3=web3, abi=ABI_NPROXY)
 
     markets_data = get_markets_data(
         block, blockchain, web3=web3, nproxy_contract=nproxy_contract, token_address=token_address

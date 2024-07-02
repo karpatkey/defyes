@@ -28,7 +28,7 @@ import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import IntEnum
-from typing import ClassVar, Union
+from typing import ClassVar
 
 from karpatkit.node import get_node
 from web3 import Web3
@@ -57,27 +57,35 @@ class FeeAmount(IntEnum):
 
 
 # Uniswap v3 Factory ABI - getPool
-ABI_FACTORY: str = '[{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint24","name":"","type":"uint24"}],"name":"getPool","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutablower_tickity":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutablower_tickity":"view","type":"function"}]'
+ABI_FACTORY: str = (
+    '[{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint24","name":"","type":"uint24"}],"name":"getPool","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutablower_tickity":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutablower_tickity":"view","type":"function"}]'
+)
 
 # Uniswap v3 Pools ABI - slot0, token0, token1
-ABI_POOL: str = '[{"inputs":[],"name":"slot0","outputs":[{"internalType":"uint160","name":"sqrtPriceX96","type":"uint160"},{"internalType":"int24","name":"tick","type":"int24"},{"internalType":"uint16","name":"observationIndex","type":"uint16"},{"internalType":"uint16","name":"observationCardinality","type":"uint16"},{"internalType":"uint16","name":"observationCardinalityNext","type":"uint16"},{"internalType":"uint8","name":"feeProtocol","type":"uint8"},{"internalType":"bool","name":"unlocked","type":"bool"}],"stateMutablower_tickity":"view","type":"function"}, \
+ABI_POOL: str = (
+    '[{"inputs":[],"name":"slot0","outputs":[{"internalType":"uint160","name":"sqrtPriceX96","type":"uint160"},{"internalType":"int24","name":"tick","type":"int24"},{"internalType":"uint16","name":"observationIndex","type":"uint16"},{"internalType":"uint16","name":"observationCardinality","type":"uint16"},{"internalType":"uint16","name":"observationCardinalityNext","type":"uint16"},{"internalType":"uint8","name":"feeProtocol","type":"uint8"},{"internalType":"bool","name":"unlocked","type":"bool"}],"stateMutablower_tickity":"view","type":"function"}, \
             {"inputs":[],"name":"token0","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutablower_tickity":"view","type":"function"},\
             {"inputs":[],"name":"token1","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutablower_tickity":"view","type":"function"}, \
             {"inputs":[],"name":"feeGrowthGlobal0X128","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutablower_tickity":"view","type":"function"},\
             {"inputs":[],"name":"feeGrowthGlobal1X128","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutablower_tickity":"view","type":"function"}, \
             {"inputs":[{"internalType":"int24","name":"","type":"int24"}],"name":"ticks","outputs":[{"internalType":"uint128","name":"liquidityGross","type":"uint128"},{"internalType":"int128","name":"liquidityNet","type":"int128"},{"internalType":"uint256","name":"feeGrowthOutside0X128","type":"uint256"},{"internalType":"uint256","name":"feeGrowthOutside1X128","type":"uint256"},{"internalType":"int56","name":"tickCumulativeOutside","type":"int56"},{"internalType":"uint160","name":"secondsPerLiquidityOutsideX128","type":"uint160"},{"internalType":"uint32","name":"secondsOutside","type":"uint32"},{"internalType":"bool","name":"initialized","type":"bool"}],"stateMutablower_tickity":"view","type":"function"}]'
+)
 
 # Uniswap v3 NFT manager - balanceOf, tokenofownerbyindex, positions, ownerof
-ABI_POSITIONS_NFT: str = '[{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutablower_tickity":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"uint256","name":"index","type":"uint256"}],"name":"tokenOfOwnerByIndex","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutablower_tickity":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"positions","outputs":[{"internalType":"uint96","name":"nonce","type":"uint96"},{"internalType":"address","name":"operator","type":"address"},{"internalType":"address","name":"token0","type":"address"},{"internalType":"address","name":"token1","type":"address"},{"internalType":"uint24","name":"fee","type":"uint24"},{"internalType":"int24","name":"tickLower","type":"int24"},{"internalType":"int24","name":"tickUpper","type":"int24"},{"internalType":"uint128","name":"liquidity","type":"uint128"},{"internalType":"uint256","name":"feeGrowthInside0LastX128","type":"uint256"},{"internalType":"uint256","name":"feeGrowthInside1LastX128","type":"uint256"},{"internalType":"uint128","name":"tokensOwed0","type":"uint128"},{"internalType":"uint128","name":"tokensOwed1","type":"uint128"}],"stateMutablower_tickity":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutablower_tickity":"view","type":"function"}]'
+ABI_POSITIONS_NFT: str = (
+    '[{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutablower_tickity":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"uint256","name":"index","type":"uint256"}],"name":"tokenOfOwnerByIndex","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutablower_tickity":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"positions","outputs":[{"internalType":"uint96","name":"nonce","type":"uint96"},{"internalType":"address","name":"operator","type":"address"},{"internalType":"address","name":"token0","type":"address"},{"internalType":"address","name":"token1","type":"address"},{"internalType":"uint24","name":"fee","type":"uint24"},{"internalType":"int24","name":"tickLower","type":"int24"},{"internalType":"int24","name":"tickUpper","type":"int24"},{"internalType":"uint128","name":"liquidity","type":"uint128"},{"internalType":"uint256","name":"feeGrowthInside0LastX128","type":"uint256"},{"internalType":"uint256","name":"feeGrowthInside1LastX128","type":"uint256"},{"internalType":"uint128","name":"tokensOwed0","type":"uint128"},{"internalType":"uint128","name":"tokensOwed1","type":"uint128"}],"stateMutablower_tickity":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutablower_tickity":"view","type":"function"}]'
+)
 
 # Uniswap v3 Quoter ABI
-ABI_QUOTER_V3: str = '[{"inputs":[{"internalType":"address","name":"tokenIn","type":"address"},{"internalType":"address","name":"tokenOut","type":"address"},{"internalType":"uint24","name":"fee","type":"uint24"},{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint160","name":"sqrtPriceLimitX96","type":"uint160"}],"name":"quoteExactInputSingle","outputs":[{"internalType":"uint256","name":"amountOut","type":"uint256"}],"stateMutablower_tickity":"nonpayable","type":"function"}]'
+ABI_QUOTER_V3: str = (
+    '[{"inputs":[{"internalType":"address","name":"tokenIn","type":"address"},{"internalType":"address","name":"tokenOut","type":"address"},{"internalType":"uint24","name":"fee","type":"uint24"},{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint160","name":"sqrtPriceLimitX96","type":"uint160"}],"name":"quoteExactInputSingle","outputs":[{"internalType":"uint256","name":"amountOut","type":"uint256"}],"stateMutablower_tickity":"nonpayable","type":"function"}]'
+)
 
 
 @dataclass
 class Pool:
     blockchain: str
-    block: Union[int | str]
+    block: int | str
     web3: object
     tokenA: str
     tokenB: str
@@ -93,12 +101,12 @@ class Pool:
 
     def __post_init__(self) -> None:
         # From the factory address we get the pool address
-        factory_address = get_contract(FACTORY, self.blockchain, self.web3, ABI_FACTORY, self.block)
+        factory_address = get_contract(FACTORY, self.blockchain, self.web3, ABI_FACTORY)
         self.addr = factory_address.functions.getPool(self.tokenA, self.tokenB, self.fee).call(
             block_identifier=self.block
         )
         # We then initialize the pool contract to get the info about the tick, price and tokens.
-        self.pool_contract = get_contract(self.addr, self.blockchain, self.web3, ABI_POOL, self.block)
+        self.pool_contract = get_contract(self.addr, self.blockchain, self.web3, ABI_POOL)
         self.sqrt_price_x96, self.current_tick = self.pool_contract.functions.slot0().call(block_identifier=self.block)[
             0:2
         ]
@@ -134,7 +142,7 @@ class NFTPosition:
 
     nftid: int
     blockchain: str
-    block: Union[int | str]
+    block: int | str
     web3: object
     decimals: bool
     token0: str = field(init=False)
@@ -149,9 +157,7 @@ class NFTPosition:
     decimals1: int = field(init=False)
 
     def __post_init__(self) -> None:
-        self._nft_contract = get_contract(
-            POSITIONS_NFT, self.blockchain, web3=self.web3, abi=ABI_POSITIONS_NFT, block=self.block
-        )
+        self._nft_contract = get_contract(POSITIONS_NFT, self.blockchain, web3=self.web3, abi=ABI_POSITIONS_NFT)
         (
             self.token0,
             self.token1,
@@ -247,36 +253,25 @@ class NFTPosition:
 def underlying(
     wallet: str,
     nftid: int,
-    block: Union[int, str],
+    block: int | str,
     blockchain: str,
     web3=None,
     decimals: bool = True,
     fee: bool = False,
 ) -> list:
     """Returns the balances of the underlying assets corresponding to a position held by a wallet.
-    Parameters
-    ----------
-    wallet : str
-        address of the wallet holding the position
-    nftid : int
-        address of the token identifying the position in the protocol
-    block : int or 'latest'
-        block number at which the data is queried
-    blockchain : str
-        blockchain in which the position is held
-    web3: obj
-        optional, already instantiated web3 object
-    decimals: bool
-        specifies whether balances are returned as int if set to False, or float with the appropriate decimals if set
-        to True
-    fee: bool
-        ¿f set to True, the balances of the unclaimed fees corresponding to the position are appended to the returned
-        list
 
-    Returns
-    ----------
-    list
-        a list where each element is a list with two elements, the underlying token address and its corresponding amount
+    Args:
+        wallet (str): Address of the wallet holding the position.
+        nftid (int): Address of the token identifying the position in the protocol.
+        block (int or 'latest'): Block number at which the data is queried.
+        blockchain (str): Blockchain in which the position is held.
+        web3 (obj, optional): Already instantiated web3 object.
+        decimals (bool, optional): Specifies whether balances are returned as int if set to False, or float with the appropriate decimals if set to True.
+        fee (bool, optional): If set to True, the balances of the unclaimed fees corresponding to the position are appended to the returned list.
+
+    Returns:
+        list: A list where each element is a list with two elements, the underlying token address and its corresponding amount.
     """
     balances = []
     if web3 is None:
@@ -296,24 +291,18 @@ def underlying(
     return balances
 
 
-def get_fee(nftid: int, block: Union[int, str], blockchain: str, web3=None, decimals: bool = True) -> list:
+def get_fee(nftid: int, block: int | str, blockchain: str, web3=None, decimals: bool = True) -> list:
     """Returns the unclaimed fees corresponding to a nft id.
-    Parameters
-    ----------
-    nftid : int
-        number corresponding to a nftid
-    block : int or 'latest'
-        block number at which the data is queried
-    blockchain : str
-        blockchain in which the position is held
-    web3: obj
-        optional, already instantiated web3 object
-    decimals: bool
-        specifies whether balances are returned as int if set to False, or float with the appropriate decimals if set to True
-    Returns
-    ----------
-    list
-        a list where each element is a list with two elements, the underlying token address and its corresponding unclaimed fee
+
+    Args:
+        nftid (int): Number corresponding to a nftid.
+        block (int or 'latest'): Block number at which the data is queried.
+        blockchain (str): Blockchain in which the position is held.
+        web3 (obj, optional): Already instantiated web3 object.
+        decimals (bool, optional): Specifies whether balances are returned as int if set to False, or float with the appropriate decimals if set to True.
+
+    Returns:
+        list: A list where each element is a list with two elements, the underlying token address and its corresponding unclaimed fee.
     """
     if web3 is None:
         web3 = get_node(blockchain)
@@ -330,28 +319,20 @@ def get_fee(nftid: int, block: Union[int, str], blockchain: str, web3=None, deci
 
 
 def get_rate_uniswap_v3(
-    token_src: str, token_dst: str, block: Union[int, str], blockchain: str, web3=None, fee: int = FeeAmount.LOWEST
+    token_src: str, token_dst: str, block: int | str, blockchain: str, web3=None, fee: int = FeeAmount.LOWEST
 ) -> Decimal:
-    """Returns the price of a token .
-    Parameters
-    ----------
-    token_src : str
-        address of the source token of the pool
-    token_dst : str
-        address of the destination token of the pool
-    block : int or 'latest'
-        block number at which the data is queried
-    blockchain : str
-        blockchain in which the position is held
-    web3: obj
-        optional, already instantiated web3 object
-    fee: int
-        fee which is set for this pool
+    """Returns the price of a token.
 
-    Returns
-    ----------
-    float
-        the token price of the source token (token_src) quoted in destination token
+    Args:
+        token_src (str): Address of the source token of the pool.
+        token_dst (str): Address of the destination token of the pool.
+        block (int or 'latest'): Block number at which the data is queried.
+        blockchain (str): Blockchain in which the position is held.
+        web3 (obj, optional): Already instantiated web3 object.
+        fee (int, optional): Fee which is set for this pool.
+
+    Returns:
+        Decimal: The token price of the source token (token_src) quoted in destination token.
     """
     if web3 is None:
         web3 = get_node(blockchain)
@@ -371,30 +352,24 @@ def get_rate_uniswap_v3(
     return factor / Decimal(10 ** (token_dst_decimals - token_src_decimals))
 
 
-def allnfts(wallet: str, block: Union[int, str], blockchain: str, web3=None) -> list:
+def allnfts(wallet: str, block: int | str, blockchain: str, web3=None) -> list:
     """Returns all nft ids owned by a wallet.
-    Parameters
-    ----------
-    wallet : str
-        address of the wallet holding the position
-    block : int or 'latest'
-        block number at which the data is queried
-    blockchain : str
-        blockchain in which the position is held
-    web3: obj
-        optional, already instantiated web3 object
 
-    Returns
-    ----------
-    list
-        a list where each element is the nft id that is owned by the wallet (open and closed nfts)
+    Args:
+        wallet (str): Address of the wallet holding the position.
+        block (int or 'latest'): Block number at which the data is queried.
+        blockchain (str): Blockchain in which the position is held.
+        web3 (obj, optional): Already instantiated web3 object.
+
+    Returns:
+        list: A list where each element is the nft id that is owned by the wallet (open and closed nfts).
     """
     nftids = []
 
     if web3 is None:
         web3 = get_node(blockchain)
 
-    nft_contract = get_contract(POSITIONS_NFT, blockchain, web3=web3, abi=ABI_POSITIONS_NFT, block=block)
+    nft_contract = get_contract(POSITIONS_NFT, blockchain, web3=web3, abi=ABI_POSITIONS_NFT)
     nfts = nft_contract.functions.balanceOf(wallet).call(block_identifier=block)
     for nft_index in range(nfts):
         nft_id = nft_contract.functions.tokenOfOwnerByIndex(wallet, nft_index).call(block_identifier=block)
@@ -402,26 +377,18 @@ def allnfts(wallet: str, block: Union[int, str], blockchain: str, web3=None) -> 
     return nftids
 
 
-def underlying_all(wallet: str, block: Union[int, str], blockchain: str, decimals: bool = True, fee: bool = False):
+def underlying_all(wallet: str, block: int | str, blockchain: str, decimals: bool = True, fee: bool = False):
     """Returns the balances of the underlying assets corresponding to all positions held by a wallet.
-    Parameters
-    ----------
-    wallet : str
-        address of the wallet holding the position
-    block : int or 'latest'
-        block number at which the data is queried
-    blockchain : str
-        blockchain in which the position is held
-    decimals: bool
-        specifies whether balances are returned as int if set to False, or float with the appropriate decimals if set
-        to True
-    fee: bool
 
-    Returns
-    ----------
-    list
-        a list where each element is a list with two elements, the underlying token address and its corresponding amount
-        (with optional unclaimed fee)
+    Args:
+        wallet (str): Address of the wallet holding the position.
+        block (int or 'latest'): Block number at which the data is queried.
+        blockchain (str): Blockchain in which the position is held.
+        decimals (bool, optional): Specifies whether balances are returned as int if set to False, or float with the appropriate decimals if set to True. Defaults to True.
+        fee (bool, optional): Specifies whether to include unclaimed fee. Defaults to False.
+
+    Returns:
+        list: A list where each element is a list with two elements, the underlying token address and its corresponding amount (with optional unclaimed fee).
     """
 
     balances = []

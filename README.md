@@ -10,6 +10,25 @@ Some protocols supported: Aave v2 and v3, Lido, Compound v2 and v3, Balancer, Cu
 While cross-chain functionalities are supported, currently most integrations are focused on Ethereum
 and Gnosis Chain.
 
+## Install
+
+When using `defyes` as a library, you have two ways to install it:
+```sh
+pip install . 'defyes[all]'
+```
+or, if you experiment dependencies conflicts, you can take control over some dependencies version by removing `[all]`
+but specifying each missing dependency.
+```sh
+pip install . 'defyes'
+pip install "karpatkit @ git+https://github.com/karpatkey/karpatkit.git@another_specific_version"
+```
+where `another_specific_version` should be a git reference (tag, hash, branch).
+
+Have a look at `all` in the [pyproject.toml](pyproject.toml) file, `[project.optional-dependencies]` section.
+
+> Take into account that installing just `defyes` without `defyes[all]` is an incompleted instalation.
+
+
 ## Configuration 
 
 - First you will have to copy, rename and modify the [config.json](https://github.com/karpatkey/defyes/blob/main/example_config.json)

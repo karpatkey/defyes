@@ -270,7 +270,7 @@ def get_balance(blockchain: str, address: str, block="latest") -> float:
     """
     BONDER_address = "0x9298dfD8A0384da62643c2E98f437E820029E75E"
     # Connect to the provider and create the contract
-    contract = get_contract(address, blockchain=blockchain, block=block, abi="abi")  # provide hop_dai_bridge_abi.json
+    contract = get_contract(address, blockchain=blockchain)  # provide hop_dai_bridge_abi.json
 
     # Get the credit and raw debit
     credit = contract.functions.getCredit(BONDER_address).call(block_identifier=block)

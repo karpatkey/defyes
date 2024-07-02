@@ -12,3 +12,13 @@ config.json
 .home/
 .vscode/
 .venv
+
+# Ignore the build directory from sphinx
+docs/build/
+
+# Ignore mac files 
+**/.DS_Store
+
+# Ignore the local file
+local.py
+

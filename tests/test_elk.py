@@ -47,7 +47,7 @@ def test_get_elk_rewards():
     block = 27713194
     node = get_node(Chain.POLYGON)
     pool_address = "0xd7D71e4BC981B50696fa536D330bf745aE563E25"
-    pool_contract = get_contract(pool_address, Chain.POLYGON, node, abi=Elk.ABI_POOL, block=block)
+    pool_contract = get_contract(pool_address, Chain.POLYGON, node, abi=Elk.ABI_POOL)
     rewards = Elk.get_elk_rewards(node, pool_contract, WALLET_N1, block, Chain.POLYGON, decimals=True)
     assert rewards == [PolygonTokenAddr.ELK, Decimal("16.065293278501301744")]
 
@@ -56,7 +56,7 @@ def test_get_booster_rewards():
     block = 41902330
     node = get_node(Chain.POLYGON)
     pool_address = "0xDb59EF120FF1FA5013Bb5047e513162003034723"
-    pool_contract = get_contract(pool_address, Chain.POLYGON, node, abi=Elk.ABI_POOL, block=block)
+    pool_contract = get_contract(pool_address, Chain.POLYGON, node, abi=Elk.ABI_POOL)
     rewards = Elk.get_booster_rewards(node, pool_contract, WALLET_N2, block, Chain.POLYGON, decimals=True)
     assert rewards == ["0x8A953CfE442c5E8855cc6c61b1293FA648BAE472", Decimal("0")]
 

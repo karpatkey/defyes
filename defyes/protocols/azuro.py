@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Union
 
 from karpatkit.node import get_node
 from web3 import Web3
@@ -45,7 +44,8 @@ class AzuroPools:
 
 # AZURO token contract ABI
 # balanceOf, nodeWithdrawView, ownerOf, tokenOfOwnerByIndex, token, withdrawals, withdrawPayout, withdrawLiquidity
-AZURO_POOL_ABI: str = '[{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},\
+AZURO_POOL_ABI: str = (
+    '[{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},\
                         {"inputs":[{"internalType":"uint48","name":"leaf","type":"uint48"}],"name":"nodeWithdrawView","outputs":[{"internalType":"uint128","name":"withdrawAmount","type":"uint128"}],"stateMutability":"view","type":"function"},\
                         {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"ownerOf","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},\
                         {"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"uint256","name":"index","type":"uint256"}],"name":"tokenOfOwnerByIndex","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},\
@@ -53,10 +53,11 @@ AZURO_POOL_ABI: str = '[{"inputs":[{"internalType":"address","name":"owner","typ
                         {"inputs":[{"internalType":"uint48","name":"","type":"uint48"}],"name":"withdrawals","outputs":[{"internalType":"uint64","name":"","type":"uint64"}],"stateMutability":"view","type":"function"},\
                         {"inputs":[{"internalType":"uint48","name":"depNum","type":"uint48"},{"internalType":"uint40","name":"percent","type":"uint40"}],"name":"withdrawLiquidity","outputs":[],"stateMutability":"nonpayable","type":"function"},\
                         {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"withdrawPayout","outputs":[],"stateMutability":"nonpayable","type":"function"}]'
+)
 
 
 def get_deposit(
-    wallet: str, nftid: int, contract_address: str, block: Union[int, str], blockchain: str, web3: Web3 = None
+    wallet: str, nftid: int, contract_address: str, block: int | str, blockchain: str, web3: Web3 = None
 ) -> list:
     if web3 is None:
         web3 = get_node(blockchain)
@@ -98,7 +99,7 @@ def get_deposit(
 def underlying(
     wallet: str,
     nftid: int,
-    block: Union[int, str],
+    block: int | str,
     blockchain: str,
     web3: Web3 = None,
     decimals: bool = True,
@@ -109,8 +110,8 @@ def underlying(
 
     wallet = Web3.to_checksum_address(wallet)
 
-    pool_v1_contract = get_contract(POOL_ADDR_V1, blockchain, web3=web3, abi=AZURO_POOL_ABI, block=block)
-    pool_v2_contract = get_contract(POOL_ADDR_V2, blockchain, web3=web3, abi=AZURO_POOL_ABI, block=block)
+    pool_v1_contract = get_contract(POOL_ADDR_V1, blockchain, web3=web3, abi=AZURO_POOL_ABI)
+    pool_v2_contract = get_contract(POOL_ADDR_V2, blockchain, web3=web3, abi=AZURO_POOL_ABI)
 
     balance = 0
     reward = 0
@@ -138,7 +139,7 @@ def underlying(
 
 def underlying_all(
     wallet: str,
-    block: Union[int, str],
+    block: int | str,
     blockchain: str,
     web3: Web3 = None,
     decimals: bool = True,
@@ -148,10 +149,10 @@ def underlying_all(
         web3 = get_node(blockchain)
 
     wallet = Web3.to_checksum_address(wallet)
-    pool_v1_contract = get_contract(POOL_ADDR_V1, blockchain, web3=web3, abi=AZURO_POOL_ABI, block=block)
+    pool_v1_contract = get_contract(POOL_ADDR_V1, blockchain, web3=web3, abi=AZURO_POOL_ABI)
     assets_pool1 = pool_v1_contract.functions.balanceOf(wallet).call(block_identifier=block)
 
-    pool_v2_contract = get_contract(POOL_ADDR_V2, blockchain, web3=web3, abi=AZURO_POOL_ABI, block=block)
+    pool_v2_contract = get_contract(POOL_ADDR_V2, blockchain, web3=web3, abi=AZURO_POOL_ABI)
     assets_pool2 = pool_v2_contract.functions.balanceOf(wallet).call(block_identifier=block)
 
     results = []

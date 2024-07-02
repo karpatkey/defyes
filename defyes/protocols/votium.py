@@ -101,8 +101,3 @@ def check_claimed_or_unclaimed(wallet, index_number):
     claimed = contract.functions.isClaimed(wallet, index_number).call()
 
     return claimed
-
-
-if __name__ == "__main__":
-    print(get_rewards_per_token("0x849d52316331967b6ff1198e5e32a0eb168d039d", "LDO", 18, "0013"))
-    print(get_all_rewards(wallet="0x849d52316331967b6ff1198e5e32a0eb168d039d"))

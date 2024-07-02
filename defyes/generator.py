@@ -130,12 +130,42 @@ def construct_method_string(
 
 
 def generate_methods_from_abi(abi_path, const_call_methods=[], always_include_methods=[]):
+    """
+    Generates Python methods from a given ABI (Application Binary Interface) file.
+
+    The function reads the ABI file, processes the methods defined in it, and generates corresponding Python methods.
+    The generated methods are returned as a string, with each method separated by a newline.
+
+    Args:
+        abi_path (str): The path to the ABI file.
+        const_call_methods (list, optional): A list of method names that should be treated as constant call methods.
+            These methods will be generated with a decorator that makes them read-only. Defaults to an empty list.
+        always_include_methods (list, optional): A list of method names that should always be included in the generated
+            methods, even if they are not present in the ABI file. Defaults to an empty list.
+
+    Returns:
+        str: A string containing the generated Python methods, each separated by a newline.
+
+    Raises:
+        FileNotFoundError: If the ABI file cannot be found at the given path.
+        json.JSONDecodeError: If the ABI file cannot be parsed as JSON.
+    """
     TYPE_CONVERSION = {
+        "int16": "int",
+        "int24": "int",
+        "int56": "int",
+        "int128": "int",
         "uint8": "int",
         "uint64": "int",
+        "uint48": "int",
         "uint16": "int",
         "uint32": "int",
+        "uint88": "int",
         "uint96": "int",
+        "uint112": "int",
+        "uint144": "int",
+        "uint160": "int",
+        "uint192": "int",
         "uint256": "int",
         "uint112": "int",
         "int104": "int",
@@ -143,13 +173,19 @@ def generate_methods_from_abi(abi_path, const_call_methods=[], always_include_me
         "uint128": "int",
         "uint208": "int",
         "uint40": "int",
+        "uint32[]": "list[int]",
         "uint64[]": "list[int]",
+        "uint112[]": "list[int]",
+        "uint160[]": "list[int]",
         "uint256[]": "list[int]",
+        "int56[]": "list[int]",
         "int256[]": "list[int]",
         "address": "str",
         "address[]": "list[str]",
         "string": "str",
+        "bytes16": "bytes",
         "bytes32": "bytes",
+        "bytes[]": "list[bytes]",
         "bytes32[]": "list[bytes]",
         "bytes4": "bytes",
         "tuple[]": "list[tuple]",

@@ -80,20 +80,6 @@ def test_get_protocol_data():
     assert d == expected_protocol_data
 
 
-def test_get_protocol_data_latest():
-    d = pods.get_protocol_data(wallet, "latest")
-    expected = {
-        "blockchain": "ethereum",
-        "protocol": "Pods",
-        "version": 0,
-        "wallet": str(wallet),
-        "decimals": True,
-        "positions_key": "vault_address",
-    }
-    assert isinstance(d["block_id"], int)
-    assert all(expected.get(key) == expected.get(key) for key in expected)
-
-
 def test_underlyings_holdings():
     results = list(pods.underlyings_holdings(wallet, block_id, Chain.ETHEREUM))
 

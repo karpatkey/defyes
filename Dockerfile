@@ -23,7 +23,7 @@ RUN pip install --upgrade pip \
 WORKDIR /repo
 
 COPY . /repo
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir . 'defyes[all]'
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
 ENV PYTHONPATH /repo

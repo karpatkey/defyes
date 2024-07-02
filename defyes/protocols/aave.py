@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 from decimal import Decimal
-from typing import List, Union
+from typing import List
 
 from defabipedia import Chain
 from defabipedia.tokens import EthereumTokenAddr
@@ -96,7 +96,7 @@ def get_reserves_tokens_balances(
 
     pdp_address = PROTOCOL_DATA_PROVIDER[blockchain]
     if pdp_address:
-        pdp_contract = get_contract(pdp_address, blockchain, web3=web3, abi=ABI_PDP, block=block)
+        pdp_contract = get_contract(pdp_address, blockchain, web3=web3, abi=ABI_PDP)
         reserves_tokens = get_reserves_tokens(pdp_contract, block)
 
         for reserves_token in reserves_tokens:
@@ -127,13 +127,13 @@ def get_data(wallet, block, blockchain, web3=None, decimals=True):
     wallet = Web3.to_checksum_address(wallet)
 
     lpapr_address = POOL_ADDRESSES_PROVIDER[blockchain]
-    lpapr_contract = get_contract(lpapr_address, blockchain, web3=web3, abi=ABI_LPAPR, block=block)
+    lpapr_contract = get_contract(lpapr_address, blockchain, web3=web3, abi=ABI_LPAPR)
 
     lending_pool_address = const_call(lpapr_contract.functions.getLendingPool())
-    lending_pool_contract = get_contract(lending_pool_address, blockchain, web3=web3, abi=ABI_LENDING_POOL, block=block)
+    lending_pool_contract = get_contract(lending_pool_address, blockchain, web3=web3, abi=ABI_LENDING_POOL)
 
     chainlink_eth_usd_contract = get_contract(
-        CHAINLINK_NATIVE_USD[blockchain], blockchain, web3=web3, abi=ABI_CHAINLINK_ETH_USD, block=block
+        CHAINLINK_NATIVE_USD[blockchain], blockchain, web3=web3, abi=ABI_CHAINLINK_ETH_USD
     )
     chainlink_eth_usd_decimals = const_call(chainlink_eth_usd_contract.functions.decimals())
     eth_usd_price = chainlink_eth_usd_contract.functions.latestAnswer().call(block_identifier=block) / Decimal(
@@ -143,9 +143,7 @@ def get_data(wallet, block, blockchain, web3=None, decimals=True):
 
     if balances:
         price_oracle_address = lpapr_contract.functions.getPriceOracle().call(block_identifier=block)
-        price_oracle_contract = get_contract(
-            price_oracle_address, blockchain, web3=web3, abi=ABI_PRICE_ORACLE, block=block
-        )
+        price_oracle_contract = get_contract(price_oracle_address, blockchain, web3=web3, abi=ABI_PRICE_ORACLE)
 
         for balance in balances:
             asset = {"token_address": balance[0], "token_amount": abs(balance[1])}
@@ -215,10 +213,10 @@ def get_all_rewards(wallet, block, blockchain, web3=None, decimals=True):
     ]:
         if stk_address:
             if isinstance(stk_address, tuple):
-                contract = get_contract_proxy_abi(stk_address[0], stk_address[1], blockchain, web3=web3, block=block)
+                contract = get_contract_proxy_abi(stk_address[0], stk_address[1], blockchain, web3=web3)
                 reward_balance = contract.functions.getUserUnclaimedRewards(wallet).call(block_identifier=block)
             else:
-                contract = get_contract(stk_address, blockchain, web3=web3, abi=ABI_STKAAVE, block=block)
+                contract = get_contract(stk_address, blockchain, web3=web3, abi=ABI_STKAAVE)
                 reward_balance = contract.functions.getTotalRewardsBalance(wallet).call(block_identifier=block)
 
             reward_token = const_call(contract.functions.REWARD_TOKEN())
@@ -276,10 +274,10 @@ def get_apr(token_address, block, blockchain, web3=None, apy=False):
         web3 = get_node(blockchain)
 
     lpapr_address = POOL_ADDRESSES_PROVIDER[blockchain]
-    lpapr_contract = get_contract(lpapr_address, blockchain, web3=web3, abi=ABI_LPAPR, block=block)
+    lpapr_contract = get_contract(lpapr_address, blockchain, web3=web3, abi=ABI_LPAPR)
 
     lending_pool_address = const_call(lpapr_contract.functions.getLendingPool())
-    lending_pool_contract = get_contract(lending_pool_address, blockchain, web3=web3, abi=ABI_LENDING_POOL, block=block)
+    lending_pool_contract = get_contract(lending_pool_address, blockchain, web3=web3, abi=ABI_LENDING_POOL)
 
     reserve_data = lending_pool_contract.functions.getReserveData(token_address).call(block_identifier=block)
 
@@ -326,7 +324,7 @@ def get_staking_apr(block, blockchain, web3=None, apy=False):
 
     seconds_per_year = 31536000
     stk_aave_address = get_stkaave_address(blockchain)
-    stkaave_contract = get_contract(stk_aave_address, blockchain, web3=web3, abi=ABI_STKAAVE, block=block)
+    stkaave_contract = get_contract(stk_aave_address, blockchain, web3=web3, abi=ABI_STKAAVE)
     aave_token_address = const_call(stkaave_contract.functions.REWARD_TOKEN())
     current_stakes = balance_of(stk_aave_address, aave_token_address, block, blockchain, web3=web3, decimals=False)
 
@@ -343,7 +341,7 @@ def get_staking_apr(block, blockchain, web3=None, apy=False):
 
 
 def get_staked(
-    wallet: str, block: Union[int, str], blockchain: str, stkaave: bool = False, web3=None, decimals: bool = True
+    wallet: str, block: int | str, blockchain: str, stkaave: bool = False, web3=None, decimals: bool = True
 ) -> list:
     balances = []
 

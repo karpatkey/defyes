@@ -1,0 +1,9 @@
+{
+    "lp_token": {
+        "const_call": [
+            "token0",
+            "token1",
+            "decimals"
+        ]
+    }
+}

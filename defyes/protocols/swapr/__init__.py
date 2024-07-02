@@ -1,6 +1,7 @@
 import json
 from decimal import Decimal
 from pathlib import Path
+from typing import List, Tuple
 
 from defabipedia import Chain
 from karpatkit.cache import const_call
@@ -11,18 +12,12 @@ from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 
 from defyes.functions import get_contract, get_decimals, get_logs_web3
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# STAKING REWARDS CONTRACT ADDRESSES
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ETHEREUM
+# Staking Rewards Contract ETHEREUM
 SRC_ETHEREUM = "0x156F0568a6cE827e5d39F6768A5D24B694e1EA7b"
 
-# GNOSIS
+# Staking Rewards Contract GNOSIS
 SRC_GNOSIS = "0xa039793Af0bb060c597362E8155a0327d9b8BEE8"
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ABIs
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Staking Rewards Contract ABI - distributions, getDistributionsAmount
 ABI_SRC = '[{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"distributions","outputs":[{"internalType":"contract IERC20StakingRewardsDistribution","name":"","type":"address"}],"stateMutability":"view","type":"function"}, {"inputs":[],"name":"getDistributionsAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]'
 
@@ -32,11 +27,7 @@ ABI_DISTRIBUTION = '[{"type":"function","stateMutability":"view","outputs":[{"ty
 # LP Token ABI - decimals, totalSupply, getReserves, balanceOf, token0, token1, kLast, swapFee
 ABI_LPTOKEN = '[{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint8","name":"","internalType":"uint8"}],"name":"decimals","inputs":[],"constant":true}, {"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"totalSupply","inputs":[],"constant":true}, {"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint112","name":"_reserve0","internalType":"uint112"},{"type":"uint112","name":"_reserve1","internalType":"uint112"},{"type":"uint32","name":"_blockTimestampLast","internalType":"uint32"}],"name":"getReserves","inputs":[],"constant":true}, {"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"balanceOf","inputs":[{"type":"address","name":"","internalType":"address"}],"constant":true}, {"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"address","name":"","internalType":"address"}],"name":"token0","inputs":[],"constant":true}, {"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"address","name":"","internalType":"address"}],"name":"token1","inputs":[],"constant":true}, {"inputs":[],"name":"kLast","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint32","name":"","internalType":"uint32"}],"name":"swapFee","inputs":[],"constant":true}]'
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# EVENT SIGNATURES
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Swap Event Signature
-
 SWAP_EVENT_SIGNATURE = "Swap(address,uint256,uint256,uint256,uint256,address)"
 
 
@@ -45,10 +36,10 @@ DB_FILE = Path(__file__).parent / "db.json"
 
 def get_staking_rewards_contract(web3, block, blockchain):
     if blockchain == Chain.ETHEREUM:
-        staking_rewards_contract = get_contract(SRC_ETHEREUM, blockchain, web3=web3, abi=ABI_SRC, block=block)
+        staking_rewards_contract = get_contract(SRC_ETHEREUM, blockchain, web3=web3, abi=ABI_SRC)
 
     elif blockchain == Chain.GNOSIS:
-        staking_rewards_contract = get_contract(SRC_GNOSIS, blockchain, web3=web3, abi=ABI_SRC, block=block)
+        staking_rewards_contract = get_contract(SRC_GNOSIS, blockchain, web3=web3, abi=ABI_SRC)
 
     return staking_rewards_contract
 
@@ -72,7 +63,6 @@ def get_distribution_contracts(web3, lptoken_address, staking_rewards_contract, 
                                 blockchain,
                                 web3=web3,
                                 abi=ABI_DISTRIBUTION,
-                                block=block,
                             )
                         )
                     except (ContractLogicError, BadFunctionCallOutput):
@@ -91,9 +81,7 @@ def get_distribution_contracts(web3, lptoken_address, staking_rewards_contract, 
                 distribution_address = staking_rewards_contract.functions.distributions(
                     distributions_amount - (i + 1)
                 ).call(block_identifier=block)
-                distribution_contract = get_contract(
-                    distribution_address, blockchain, web3=web3, abi=ABI_DISTRIBUTION, block=block
-                )
+                distribution_contract = get_contract(distribution_address, blockchain, web3=web3, abi=ABI_DISTRIBUTION)
                 stakable_token = distribution_contract.functions.stakableToken().call(block_identifier=block)
 
                 if stakable_token.lower() == lptoken_address.lower():
@@ -115,7 +103,7 @@ def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
 
     lptoken_data = {}
 
-    lptoken_data["contract"] = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
+    lptoken_data["contract"] = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
 
     lptoken_data["decimals"] = const_call(lptoken_data["contract"].functions.decimals())
     lptoken_data["totalSupply"] = lptoken_data["contract"].functions.totalSupply().call(block_identifier=block)
@@ -135,11 +123,6 @@ def get_lptoken_data(lptoken_address, block, blockchain, web3=None):
     return lptoken_data
 
 
-# 'campaigns' = number of campaigns from which the data is retrieved /
-# 'campaigns' = 0 it does not search for any campaign nor distribution contract
-# 'campaigns' = 'all' retrieves the data from all campaigns
-# Output:
-# 1 - List of Tuples: [reward_token_address, balance]
 def get_all_rewards(
     wallet,
     lptoken_address,
@@ -150,7 +133,17 @@ def get_all_rewards(
     campaigns=1,
     distribution_contracts=None,
     db=True,
-):
+) -> List[Tuple]:
+    """Get all Rewards
+
+    Args:
+        campaigns (int, optional): Number of campaigns from which the data is retrieved.
+            if 0 it does not search for any campaign nor distribution contract.
+            if "all" retrieves data from all campaigns Defaults to 1.
+
+    Returns:
+        List: List of (reward_token_address, balance)
+    """
     all_rewards = []
     rewards = {}
 
@@ -188,15 +181,19 @@ def get_all_rewards(
         return all_rewards
 
 
-# 'campaigns' = number of campaigns from which the data is retrieved /
-# 'campaigns' = 0 it does not search for any campaign nor distribution contract
-# 'campaigns' = 'all' retrieves the data from all campaigns
-# Output: a list with 2 elements:
-# 1 - List of Tuples: [liquidity_token_address, balance, staked_balance]
-# 2 - List of Tuples: [reward_token_address, balance]
 def underlying(
     wallet, lptoken_address, block, blockchain, web3=None, decimals=True, reward=False, campaigns=1, db=True
-):
+) -> List[Tuple]:
+    """Get balances for liquidity tokens (staked and unstaked) and reward token.
+
+    Args:
+        campaigns (int, optional): Number of campaigns from which the data is retrieved.
+            if 0 it does not search for any campaign nor distribution contract.
+            if "all" retrieves data from all campaigns Defaults to 1.
+
+    Returns:
+        List[Tuple]: List of lists-> (liquidity_token_address, balance, staked_balance), (reward_token_address, balance)
+    """
     balances = []
     distribution_contracts = []
 
@@ -261,9 +258,8 @@ def underlying(
     return result
 
 
-# Output: a list with 1 element:
-# 1 - List of Tuples: [liquidity_token_address, balance]
-def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
+def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True) -> List[Tuple]:
+    """Returns: List of (liquidity_token_address, balance)"""
     balances = []
 
     if web3 is None:
@@ -271,7 +267,7 @@ def pool_balances(lptoken_address, block, blockchain, web3=None, decimals=True):
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
-    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
+    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
 
     reserves = lptoken_contract.functions.getReserves().call(block_identifier=block)
 
@@ -300,7 +296,7 @@ def swap_fees(lptoken_address, block_start, block_end, blockchain, web3=None, de
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
-    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block_start)
+    lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
 
     token0 = const_call(lptoken_contract.functions.token0())
     token1 = const_call(lptoken_contract.functions.token1())

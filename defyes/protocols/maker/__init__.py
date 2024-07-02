@@ -1,7 +1,7 @@
 import logging
 from contextlib import suppress
 from decimal import Decimal
-from typing import Tuple, Union
+from typing import Tuple
 
 from defabipedia import Chain
 from defabipedia.tokens import EthereumTokenAddr, GnosisTokenAddr
@@ -155,7 +155,7 @@ def underlying(vault_id: int, block: int | str) -> tuple[list]:
 
 
 # TODO: deprecate
-def get_delegated_MKR(wallet: str, block: Union[int, str], web3=None, decimals=True) -> Union[int, float]:
+def get_delegated_MKR(wallet: str, block: int | str, web3=None, decimals=True) -> int | float:
     if web3 is None:
         web3 = get_node(Chain.ETHEREUM)
 

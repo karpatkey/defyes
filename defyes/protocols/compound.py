@@ -1,4 +1,9 @@
+"""
+For more info about the V2 of compound protocol refer to: https://docs.compound.finance/v2/
+"""
+
 from decimal import Decimal
+from typing import Dict, List, Tuple
 
 from defabipedia import Chain
 from defabipedia.tokens import EthereumTokenAddr
@@ -10,21 +15,12 @@ from web3 import Web3
 from defyes.functions import balance_of, get_contract, get_decimals, to_token_amount
 from defyes.prices import prices
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# COMPTROLLER
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Ethereum - Comptroller Address
 COMPTROLLER_Chain = "0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B"
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# COMPOUND LENS
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Ethereum - Compound Lens Address
 COMPOUND_LENS_Chain = "0xdCbDb7306c6Ff46f77B349188dC18cEd9DF30299"
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ABIs
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # cToken ABI - decimals, balanceOf, totalSupply, exchangeRateStored, underlying, borrowBalanceStored, supplyRatePerBlock, borrowRatePerBlock, totalBorrows
 ABI_CTOKEN = '[{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}, {"constant":true,"inputs":[{"name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}, {"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}, {"constant":true,"inputs":[],"name":"exchangeRateStored","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}, {"constant":true,"inputs":[],"name":"underlying","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"}, {"constant":true,"inputs":[{"name":"account","type":"address"}],"name":"borrowBalanceStored","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}, {"constant":true,"inputs":[],"name":"supplyRatePerBlock","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}, {"constant":true,"inputs":[],"name":"borrowRatePerBlock","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}, {"inputs":[],"name":"totalBorrows","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"}]'
 
@@ -34,34 +30,17 @@ ABI_COMPTROLLER = '[{"constant":true,"inputs":[],"name":"getAllMarkets","outputs
 # Compound Lens ABI - getCompBalanceMetadataExt
 ABI_COMPOUND_LENS = '[{"constant":false,"inputs":[{"internalType":"contract Comp","name":"comp","type":"address"},{"internalType":"contract ComptrollerLensInterface","name":"comptroller","type":"address"},{"internalType":"address","name":"account","type":"address"}],"name":"getCompBalanceMetadataExt","outputs":[{"components":[{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"votes","type":"uint256"},{"internalType":"address","name":"delegate","type":"address"},{"internalType":"uint256","name":"allocated","type":"uint256"}],"internalType":"struct CompoundLens.CompBalanceMetadataExt","name":"","type":"tuple"}],"payable":false,"stateMutability":"nonpayable","type":"function"}]'
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# WEB DOCS
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-"""
-https://docs.compound.finance/v2/
-"""
-
-
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_comptoller_address
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_comptoller_address(blockchain):
     if blockchain == Chain.ETHEREUM:
         return COMPTROLLER_Chain
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_compound_lens_address
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_compound_lens_address(blockchain):
     if blockchain == Chain.ETHEREUM:
         return COMPOUND_LENS_Chain
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_compound_token_address
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_compound_token_address(blockchain):
     if blockchain == Chain.ETHEREUM:
         return EthereumTokenAddr.COMP
@@ -69,31 +48,17 @@ def get_compound_token_address(blockchain):
 
 def get_ctokens_contract_list(blockchain, web3, block):
     comptroller_address = get_comptoller_address(blockchain)
-    comptroller_contract = get_contract(comptroller_address, blockchain, web3=web3, abi=ABI_COMPTROLLER, block=block)
+    comptroller_contract = get_contract(comptroller_address, blockchain, web3=web3, abi=ABI_COMPTROLLER)
 
     return comptroller_contract.functions.getAllMarkets().call(block_identifier=block)
 
 
 def get_comptroller_contract(blockchain, web3, block):
     comptroller_address = get_comptoller_address(blockchain)
-    return get_contract(comptroller_address, blockchain, web3=web3, abi=ABI_COMPTROLLER, block=block)
+    return get_contract(comptroller_address, blockchain, web3=web3, abi=ABI_COMPTROLLER)
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_ctoken_data
-# 'web3' = web3 (Node) -> Improves performance
-# 'ctoken_contract' = ctoken_contract -> Improves performance
-# 'underlying_token' = underlying_token -> Improves performance
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def get_ctoken_data(ctoken_address, wallet, block, blockchain, web3=None, ctoken_contract=None, underlying_token=None):
-    """
-    :param ctoken_address:
-    :param wallet:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :return:
-    """
     if web3 is None:
         web3 = get_node(blockchain)
 
@@ -103,7 +68,7 @@ def get_ctoken_data(ctoken_address, wallet, block, blockchain, web3=None, ctoken
     if ctoken_contract:
         ctoken_data["contract"] = ctoken_contract
     else:
-        ctoken_data["contract"] = get_contract(ctoken_address, blockchain, web3=web3, abi=ABI_CTOKEN, block=block)
+        ctoken_data["contract"] = get_contract(ctoken_address, blockchain, web3=web3, abi=ABI_CTOKEN)
 
     if underlying_token:
         ctoken_data["underlying"] = underlying_token
@@ -127,7 +92,7 @@ def get_ctoken_data(ctoken_address, wallet, block, blockchain, web3=None, ctoken
 
 
 def _get_token_balance(ctoken_data, token_address, block, blockchain, web3, decimals):
-    underlying_token_decimals = get_decimals(token_address, block=block, blockchain=blockchain, web3=web3)
+    underlying_token_decimals = get_decimals(token_address, blockchain=blockchain, web3=web3)
 
     mantissa = 18 - ctoken_data["decimals"] + underlying_token_decimals
     exchange_rate = ctoken_data["exchangeRateStored"] / Decimal(10**mantissa)
@@ -141,22 +106,10 @@ def _get_token_balance(ctoken_data, token_address, block, blockchain, web3, deci
     return [token_address, underlying_token_balance]
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# underlying
-# 'web3' = web3 (Node) -> Improves performance
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# Output: a list with 1 elements:
-# 1 - List of Tuples: [token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def underlying(wallet, token_address, block, blockchain, web3=None, decimals=True):
+def underlying(wallet, token_address, block, blockchain, web3=None, decimals=True) -> List[Tuple]:
     """
-    :param wallet:
-    :param token_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param decimals:
-    :return:
+    Returns:
+        List[Tuples]: list of (token_address, balance)
     """
     balances = []
 
@@ -167,7 +120,7 @@ def underlying(wallet, token_address, block, blockchain, web3=None, decimals=Tru
 
     ctoken_list = get_ctokens_contract_list(blockchain, web3, block)
     for ctoken_address in ctoken_list:
-        ctoken_contract = get_contract(ctoken_address, blockchain, web3=web3, abi=ABI_CTOKEN, block=block)
+        ctoken_contract = get_contract(ctoken_address, blockchain, web3=web3, abi=ABI_CTOKEN)
 
         symbol = const_call(ctoken_contract.functions.symbol())
         if symbol == "cETH":
@@ -191,24 +144,12 @@ def underlying(wallet, token_address, block, blockchain, web3=None, decimals=Tru
     return balances
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# underlying_all
-# 'web3' = web3 (Node) -> Improves performance
-# 'reward' = True -> retrieves the rewards / 'reward' = False or not passed onto the function -> no reward retrieval
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# Output: a list with 2 elements:
-# 1 - List of Tuples: [liquidity_token_address, balance]
-# 2 - List of Tuples: [reward_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=False):
+def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=False) -> List[List[Tuple]]:
     """
-    :param wallet:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param decimals:
-    :param reward:
-    :return:
+    Args:
+        decimals(bool, optional): True if you want to retrieve the rewards as well.
+    Returns:
+        List[List[Tuple]] : List of Lists with (liquidity_token_address, balance), (reward_token_address, balance)
     """
     balances = []
 
@@ -221,7 +162,7 @@ def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=F
 
     for ctoken_address in ctoken_list:
         if balance_of(wallet, ctoken_address, block, blockchain, web3=web3) > 0:
-            ctoken_contract = get_contract(ctoken_address, blockchain, web3=web3, abi=ABI_CTOKEN, block=block)
+            ctoken_contract = get_contract(ctoken_address, blockchain, web3=web3, abi=ABI_CTOKEN)
 
             symbol = const_call(ctoken_contract.functions.symbol())
             if symbol == "cETH":
@@ -249,21 +190,10 @@ def underlying_all(wallet, block, blockchain, web3=None, decimals=True, reward=F
     return balances
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# all_comp_rewards
-# 'web3' = web3 (Node) -> Improves performance
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# Output:
-# 1 - List of Tuples: [reward_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def all_comp_rewards(wallet, block, blockchain, web3=None, decimals=True):
+def all_comp_rewards(wallet, block, blockchain, web3=None, decimals=True) -> List[Tuple]:
     """
-    :param wallet:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param decimals:
-    :return:
+    Returns:
+        List[Tuple]: List of (reward_token_address, balance)
     """
 
     all_rewards = []
@@ -276,9 +206,7 @@ def all_comp_rewards(wallet, block, blockchain, web3=None, decimals=True):
     comp_token_address = get_compound_token_address(blockchain)
     comptroller_address = get_comptoller_address(blockchain)
     if compound_lens_address and comp_token_address and comptroller_address:
-        compound_lens_contract = get_contract(
-            compound_lens_address, blockchain, web3=web3, abi=ABI_COMPOUND_LENS, block=block
-        )
+        compound_lens_contract = get_contract(compound_lens_address, blockchain, web3=web3, abi=ABI_COMPOUND_LENS)
         meta_data = compound_lens_contract.functions.getCompBalanceMetadataExt(
             comp_token_address, comptroller_address, wallet
         ).call(block_identifier=block)
@@ -291,27 +219,15 @@ def all_comp_rewards(wallet, block, blockchain, web3=None, decimals=True):
     return all_rewards
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# unwrap
-# 'web3' = web3 (Node) -> Improves performance
-# 'decimals' = True -> retrieves the results considering the decimals / 'decimals' = False or not passed onto the function -> decimals are not considered
-# Output: a list with 1 elements:
-# 1 - List of Tuples: [liquidity_token_address, balance]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def unwrap(ctoken_amount: float | Decimal, ctoken_address, block, blockchain, web3=None, decimals=True):
+def unwrap(ctoken_amount: float | Decimal, ctoken_address, block, blockchain, web3=None, decimals=True) -> List[Tuple]:
     """
-    :param ctoken_amount:
-    :param ctoken_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param decimals:
-    :return:
+    Returns:
+        List of Tuples: List of (liquidity_token_address, balance)
     """
     if web3 is None:
         web3 = get_node(blockchain)
 
-    ctoken_contract = get_contract(ctoken_address, blockchain, abi=ABI_CTOKEN, web3=web3, block=block)
+    ctoken_contract = get_contract(ctoken_address, blockchain, abi=ABI_CTOKEN, web3=web3)
     ctoken_decimals = const_call(ctoken_contract.functions.decimals())
     exchange_rate = ctoken_contract.functions.exchangeRateStored().call(block_identifier=block)
 
@@ -329,25 +245,14 @@ def unwrap(ctoken_amount: float | Decimal, ctoken_address, block, blockchain, we
     return [underlying_token, underlying_token_balance]
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_apr
-# IMPORTANT: the apr/apy are aproximations since the number of blocks per day is hard-coded to 7200 (Compound does the same)
-# 'web3' = web3 (Node) -> Improves performance
-# 'ctoken_address' = ctoken_address -> Improves performance
-# 'apy' = True/False -> True = returns APY / False = returns APR
-# Output: Tuple:
-# 1 - Tuple: [{'metric': 'apr'/'apy', 'type': 'supply', 'value': supply_apr/supply_apy},
-#             {'metric': 'apr'/'apy', 'type': 'borrow', 'value': borrow_apr/borrow_apy}]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def get_apr(token_address, block, blockchain, web3=None, ctoken_address=None, apy=False):
-    """
-    :param token_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param ctoken_address:
-    :param apy:
-    :return:
+def get_apr(token_address, block, blockchain, web3=None, ctoken_address=None, apy=False) -> List[Dict]:
+    """The APR/APY are aproximations since the number of blocks per day is hard-coded to 7200 (compound does the same)
+    Args:
+        ctoken_address(str, optional): Improves performance if given.
+        apy(bool, optional): True to return APY, False to return APR.
+    Returns:
+        List of Dict: [{'metric': 'apr'/'apy', 'type': 'supply', 'value': supply_apr/supply_apy},
+             {'metric': 'apr'/'apy', 'type': 'borrow', 'value': borrow_apr/borrow_apy}]
     """
     if web3 is None:
         web3 = get_node(blockchain)
@@ -360,7 +265,7 @@ def get_apr(token_address, block, blockchain, web3=None, ctoken_address=None, ap
         ctoken_list = get_ctokens_contract_list(blockchain, web3, block)
 
     for ctoken_address in ctoken_list:
-        ctoken_contract = get_contract(ctoken_address, blockchain, web3=web3, abi=ABI_CTOKEN, block=block)
+        ctoken_contract = get_contract(ctoken_address, blockchain, web3=web3, abi=ABI_CTOKEN)
 
         symbol = const_call(ctoken_contract.functions.symbol())
         if symbol == "cETH":
@@ -397,25 +302,14 @@ def get_apr(token_address, block, blockchain, web3=None, ctoken_address=None, ap
     return result
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# get_comp_apr
-# IMPORTANT: the apr/apy are aproximations since the number of blocks per day is hard-coded to 7200 (Compound does the same)
-# 'web3' = web3 (Node) -> Improves performance
-# 'ctoken_address' = ctoken_address -> Improves performance
-# 'apy' = True/False -> True = returns APY / False = returns APR
-# Output: Tuple:
-# 1 - Tuple: [{'metric': 'apr'/'apy', 'type': 'supply', 'value': supply_apr/supply_apy},
-#             {'metric': 'apr'/'apy', 'type': 'borrow', 'value': borrow_apr/borrow_apy}]
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def get_comp_apr(token_address, block, blockchain, web3=None, ctoken_address=None, apy=False):
-    """
-    :param token_address:
-    :param block:
-    :param blockchain:
-    :param web3:
-    :param ctoken_address:
-    :param apy:
-    :return:
+def get_comp_apr(token_address, block, blockchain, web3=None, ctoken_address=None, apy=False) -> List[Dict]:
+    """The APR/APY are aproximations since the number of blocks per day is hard-coded to 7200 (compound does the same)
+    Args:
+        ctoken_address(str, optional): Improves performance if given.
+        apy(bool, optional): True to return APY, False to return APR.
+    Returns:
+        List of Dict: [{'metric': 'apr'/'apy', 'type': 'supply', 'value': supply_apr/supply_apy},
+                       {'metric': 'apr'/'apy', 'type': 'borrow', 'value': borrow_apr/borrow_apy}]
     """
     if web3 is None:
         web3 = get_node(blockchain)
@@ -428,7 +322,7 @@ def get_comp_apr(token_address, block, blockchain, web3=None, ctoken_address=Non
         ctoken_list = get_ctokens_contract_list(blockchain, web3, block)
 
     for ctoken_address in ctoken_list:
-        ctoken_contract = get_contract(ctoken_address, blockchain, web3=web3, abi=ABI_CTOKEN, block=block)
+        ctoken_contract = get_contract(ctoken_address, blockchain, web3=web3, abi=ABI_CTOKEN)
 
         symbol = const_call(ctoken_contract.functions.symbol())
         if symbol == "cETH":

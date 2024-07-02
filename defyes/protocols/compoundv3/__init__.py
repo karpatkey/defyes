@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import List, Union
+from typing import List
 
 from defabipedia import Chain
 from defabipedia.tokens import EthereumTokenAddr
@@ -128,15 +128,13 @@ def get_protocol_data(blockchain: str, wallet: str, block: int | str = "latest",
 
 
 # TODO: deprecate
-def underlying(
-    wallet: str, comet_address: str, block: Union[str, int], blockchain: str, decimals: bool = True
-) -> List[List]:
+def underlying(wallet: str, comet_address: str, block: str | int, blockchain: str, decimals: bool = True) -> List[List]:
     """give the underlying token and amounts of this protocol
 
     Args:
         wallet (str): _description_
         comet_address (str): _description_
-        block (Union[str,int]): _description_
+        block (str | int): _description_
         blockchain (str): _description_
         decimals (bool, optional): _description_. Defaults to True.
     """
@@ -151,13 +149,13 @@ def underlying(
 
 
 def get_all_rewards(
-    wallet: str, comet_address: str, block: Union[int, str], blockchain: str, decimals: bool = True
+    wallet: str, comet_address: str, block: int | str, blockchain: str, decimals: bool = True
 ) -> List[List]:
     """_summary_
 
     Args:
         wallet (str): _description_
-        block (Union[int, str]): _description_
+        block (int | str): _description_
         blockchain (str): _description_
         decimals (bool, optional): _description_. Defaults to True.
 

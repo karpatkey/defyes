@@ -83,41 +83,43 @@ def get_all_rewards(
     wallet: str, lptoken_address: str, block: int | str, blockchain: str, web3: Web3 = None, decimals: bool = True
 ) -> dict:
     """
-    Returns the unclaimed rewards accrued by the wallet holding funds in pool with LP token address lptoken_address.
+    Returns the unclaimed rewards accrued by the wallet holding funds in the pool with the LP token address.
 
-    Parameters
-    ----------
-    wallet : str
-        address of the wallet holding the position
-    lptoken_address:
-        LP token address of the pool
-    block : int or 'latest'
-        block number at which the data is queried
-    blockchain : bool
-        if True the address of the underlying token returned is the Zero address, if False it is the stETH's address
-    web3: obj
-        optional, already instantiated web3 object
-    decimals: bool
-        specifies whether balances are returned as int if set to False, or Decimal type with the appropriate decimals if set to True
+    Args:
+        wallet (str): The address of the wallet holding the position.
+        lptoken_address (str): The LP token address of the pool.
+        block (int or str): The block number at which the data is queried.
+        blockchain (str): The blockchain name.
+        web3 (Web3, optional): An already instantiated web3 object.
+        decimals (bool, optional): Specifies whether balances are returned as int if set to False, or Decimal type with the appropriate decimals if set to True.
 
-    Returns
-    ----------
-    dict
+    Returns:
+        dict: A dictionary containing the following information:
+            - 'protocol' (str): The protocol name.
+            - 'blockchain' (str): The blockchain name.
+            - 'lptoken_address' (str): The LP token address.
+            - 'block' (int or str): The block number.
+            - 'rewards' (list): A list of dictionaries representing the rewards. Each dictionary contains:
+                - 'token' (str): The token address.
+                - 'balance' (Decimal): The reward balance.
+
+    Example:
         {
             'protocol': 'Symmetric',
             'blockchain': Chain.GNOSIS,
             'lptoken_address': '0x650f5d96E83d3437bf5382558cB31F0ac5536684',
             'block': 26502427,
-            'rewards': [{
+            'rewards': [
+                {
                     'token': '0xC45b3C1c24d5F54E7a2cF288ac668c74Dd507a84',
                     'balance': Decimal('97.408879919684859779')
-                }, {
+                },
+                {
                     'token': '0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb',
                     'balance': Decimal('0')
                 }
             ]
         }
-
     """
     if blockchain != Chain.GNOSIS:
         raise BlockchainError(f"{blockchain} not {Chain.GNOSIS}")
@@ -148,9 +150,7 @@ def get_all_rewards(
 
     rewarder_contract_address = const_call(chef_contract.functions.rewarder(pool_id_farming))
     if rewarder_contract_address != Address.ZERO:
-        rewarder_contract = get_contract(
-            rewarder_contract_address, blockchain, web3=web3, abi=ABI_REWARDER, block=block
-        )
+        rewarder_contract = get_contract(rewarder_contract_address, blockchain, web3=web3, abi=ABI_REWARDER)
 
         pending_tokens_info = rewarder_contract.functions.pendingTokens(pool_id_farming, wallet, 1).call(
             block_identifier=block
@@ -180,43 +180,47 @@ def underlying(
 ) -> dict:
     """
     Returns the balances of the underlying tokens held by the wallet in the pool with LP token address lptoken_address.
-    Parameters
-    ----------
-    wallet : str
-        address of the wallet holding the position
-    lptoken_address:
-        LP token address of the pool
-    block : int or 'latest'
-        block number at which the data is queried
-    blockchain : bool
-        if True the address of the underlying token returned is the Zero address, if False it is the stETH's address
-    web3: obj
-        optional, already instantiated web3 object
-    decimals: bool
-        specifies whether balances are returned as int if set to False, or Decimal type with the appropriate decimals if set to True
-    reward: bool
-        if True it also includes in the dictionary the balances of unclaimed rewards
 
-    Returns
-    ----------
-    dict
+    Parameters:
+        wallet (str): Address of the wallet holding the position.
+        lptoken_address (str): LP token address of the pool.
+        block (int or 'latest'): Block number at which the data is queried.
+        blockchain (str): Blockchain identifier.
+        web3 (Web3, optional): Already instantiated web3 object.
+        decimals (bool): Specifies whether balances are returned as int if set to False, or Decimal type with the appropriate decimals if set to True.
+        reward (bool): If True, it also includes in the dictionary the balances of unclaimed rewards.
+
+    Returns:
+        dict: A dictionary containing the following keys:
+            - 'protocol': 'Symmetric'
+            - 'blockchain': The blockchain identifier.
+            - 'lptoken_address': The LP token address.
+            - 'block': The block number.
+            - 'unstaked': A list of dictionaries representing the balances of unstaked tokens, each containing the 'token' and 'balance' keys.
+            - 'staked': A list of dictionaries representing the balances of staked tokens, each containing the 'token' and 'balance' keys.
+
+    Example:
         {
             'protocol': 'Symmetric',
             'blockchain': Chain.GNOSIS,
             'lptoken_address': '0x650f5d96E83d3437bf5382558cB31F0ac5536684',
             'block': 28440966,
-            'unstaked': [{
+            'unstaked': [
+                {
                     'token': '0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb',
                     'balance': Decimal('0.5151561795132954373125167419')
-                }, {
+                },
+                {
                     'token': '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
                     'balance': Decimal('14.04470517028213093498360963')
                 }
             ],
-            'staked': [{
+            'staked': [
+                {
                     'token': '0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb',
                     'balance': Decimal('0E-18')
-                }, {
+                },
+                {
                     'token': '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
                     'balance': Decimal('0E-18')
                 }
@@ -233,7 +237,7 @@ def underlying(
     wallet = Web3.to_checksum_address(wallet)
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
-    factory_contract = get_contract(SYMFACTORY_GNOSIS, blockchain, block=block, web3=web3, abi=ABI_BPOOL)
+    factory_contract = get_contract(SYMFACTORY_GNOSIS, blockchain, web3=web3, abi=ABI_BPOOL)
 
     result = {
         "protocol": "Symmetric",
@@ -244,7 +248,7 @@ def underlying(
     }
 
     if factory_contract.functions.isBPool(lptoken_address).call(block_identifier=block):
-        lptoken_contract = get_contract(lptoken_address, blockchain, block=block, web3=web3, abi=ABI_LPTOKENV1)
+        lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKENV1)
         balance = lptoken_contract.functions.balanceOf(wallet).call(block_identifier=block)
         totalsupply = lptoken_contract.functions.totalSupply().call(block_identifier=block)
         current_tokens = const_call(lptoken_contract.functions.getCurrentTokens())
@@ -254,7 +258,7 @@ def underlying(
             result["unstaked"].append({"token": token, "balance": amount})
         return result
     else:
-        lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
+        lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
         pool_id = const_call(lptoken_contract.functions.getPoolId())
         pool_id = "0x" + pool_id.hex()
         try:
@@ -298,41 +302,45 @@ def pool_balances(
     """
     Returns the balances of the tokens in the pool with LP token address lptoken_address.
 
-    Parameters
-    ----------
-    wallet : str
-        address of the wallet holding the position
-    lptoken_address:
-        LP token address of the pool
-    block : int or 'latest'
-        block number at which the data is queried
-    blockchain : bool
-        if True the address of the underlying token returned is the Zero address, if False it is the stETH's address
-    web3: obj
-        optional, already instantiated web3 object
-    decimals: bool
-        specifies whether balances are returned as int if set to False, or Decimal type with the appropriate decimals if set to True
+    Args:
+        wallet (str): Address of the wallet holding the position.
+        lptoken_address (str): LP token address of the pool.
+        block (int or 'latest'): Block number at which the data is queried.
+        blockchain (bool): If True, the address of the underlying token returned is the Zero address. If False, it is the stETH's address.
+        web3 (obj, optional): Already instantiated web3 object.
+        decimals (bool): Specifies whether balances are returned as int if set to False, or Decimal type with the appropriate decimals if set to True.
 
-    Returns
-    ----------
-    dict
+    Returns:
+        dict: A dictionary containing the following keys:
+            - 'protocol' (str): Name of the protocol ('Symmetric').
+            - 'blockchain' (str): Name of the blockchain (Chain.GNOSIS).
+            - 'lptoken_address' (str): LP token address.
+            - 'block' (int): Block number.
+            - 'unstaked' (list): List of dictionaries containing the token address and balance of unstaked tokens.
+            - 'staked' (list): List of dictionaries containing the token address and balance of staked tokens.
+
+    Example:
         {
             'protocol': 'Symmetric',
             'blockchain': Chain.GNOSIS,
             'lptoken_address': '0x650f5d96E83d3437bf5382558cB31F0ac5536684',
             'block': 28440966,
-            'unstaked': [{
+            'unstaked': [
+                {
                     'token': '0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb',
                     'balance': Decimal('0.5151561795132954373125167419')
-                }, {
+                },
+                {
                     'token': '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
                     'balance': Decimal('14.04470517028213093498360963')
                 }
             ],
-            'staked': [{
+            'staked': [
+                {
                     'token': '0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb',
                     'balance': Decimal('0E-18')
-                }, {
+                },
+                {
                     'token': '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
                     'balance': Decimal('0E-18')
                 }
@@ -348,7 +356,7 @@ def pool_balances(
 
     lptoken_address = Web3.to_checksum_address(lptoken_address)
 
-    factory_contract = get_contract(SYMFACTORY_GNOSIS, blockchain, block=block, web3=web3, abi=ABI_BPOOL)
+    factory_contract = get_contract(SYMFACTORY_GNOSIS, blockchain, web3=web3, abi=ABI_BPOOL)
 
     result = {
         "protocol": "Symmetric",
@@ -360,7 +368,7 @@ def pool_balances(
 
     # Checking if it's a V1 pool
     if factory_contract.functions.isBPool(lptoken_address).call(block_identifier=block):
-        lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKENV1, block=block)
+        lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKENV1)
         current_tokens = const_call(lptoken_contract.functions.getCurrentTokens())
         for token in current_tokens:
             balance_token = lptoken_contract.functions.getBalance(token).call(block_identifier=block)
@@ -372,7 +380,7 @@ def pool_balances(
             )
         return result
     else:
-        lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN, block=block)
+        lptoken_contract = get_contract(lptoken_address, blockchain, web3=web3, abi=ABI_LPTOKEN)
     pool_id = const_call(lptoken_contract.functions.getPoolId())
     pool_id = "0x" + pool_id.hex()
     try:
@@ -402,37 +410,40 @@ def get_rewards_per_second(
     """
     Returns the rewards per second accrued by staking the LP token with address lptoken_address.
 
-    Parameters
-    ----------
-    lptoken_address:
-        LP token address of the pool
-    block : int or 'latest'
-        block number at which the data is queried
-    blockchain : bool
-        if True the address of the underlying token returned is the Zero address, if False it is the stETH's address
-    web3: obj
-        optional, already instantiated web3 object
-    decimals: bool
-        specifies whether balances are returned as int if set to False, or Decimal type with the appropriate decimals if set to True
+    Args:
+        lptoken_address (str): LP token address of the pool.
+        block (int or str): Block number at which the data is queried.
+        blockchain (str): Blockchain name.
+        web3 (Web3, optional): Already instantiated web3 object.
+        decimals (bool): Specifies whether balances are returned as int if set to False, or Decimal type with the appropriate decimals if set to True.
 
-    Returns
-    ----------
-    dict
+    Returns:
+        dict: A dictionary containing the following keys:
+            - 'protocol' (str): Protocol name.
+            - 'blockchain' (str): Blockchain name.
+            - 'lptoken_address' (str): LP token address.
+            - 'block' (int or str): Block number.
+            - 'reward_rates' (list): A list of dictionaries containing the following keys:
+                - 'token' (str): Token address.
+                - 'rewards_per_second' (Decimal): Rewards per second.
+
+    Example:
         {
             'protocol': 'Symmetric',
             'blockchain': Chain.GNOSIS,
             'lptoken_address': '0x650f5d96E83d3437bf5382558cB31F0ac5536684',
             'block': 25502427,
-            'reward_rates': [{
+            'reward_rates': [
+                {
                     'token': '0xC45b3C1c24d5F54E7a2cF288ac668c74Dd507a84',
                     'rewards_per_second': Decimal('0.00006326935536119204081632653061')
-                }, {
+                },
+                {
                     'token': '0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb',
                     'rewards_per_second': Decimal('0')
                 }
             ]
         }
-
     """
 
     if blockchain != Chain.GNOSIS:
@@ -471,9 +482,7 @@ def get_rewards_per_second(
     rewarder_contract_address = chef_contract.functions.rewarder(pool_id_farming).call(block_identifier=block)
 
     if rewarder_contract_address != Address.ZERO:
-        rewarder_contract = get_contract(
-            rewarder_contract_address, blockchain, web3=web3, abi=ABI_REWARDER, block=block
-        )
+        rewarder_contract = get_contract(rewarder_contract_address, blockchain, web3=web3, abi=ABI_REWARDER)
 
         rewarder_pool_info = rewarder_contract.functions.poolInfo(pool_id_farming).call(block_identifier=block)
         rewarder_alloc_point = rewarder_pool_info[2]
