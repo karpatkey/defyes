@@ -1,3 +1,10 @@
+"""
+This module provides a JSONSerializer class for serializing and deserializing objects to and from JSON.
+
+The JSONSerializer class defines methods for converting objects to dictionaries (`asdict`),
+creating objects from dictionaries (`fromdict`), and generating objects from a JSON file (`generate_objs`).
+"""
+
 import json
 import logging
 from pathlib import Path
@@ -11,6 +18,22 @@ logger = logging.getLogger(__name__)
 
 
 class JSONSerializer:
+    """
+    A class for serializing and deserializing objects to and from JSON.
+    It is a generic class that must be subclassed to be used.
+
+    This class provides methods to convert an object to a dictionary (`asdict`),
+    create an object from a dictionary (`fromdict`), and generate objects from a JSON file (`generate_objs`).
+
+    Attributes:
+        filename (str | Path): The name or path of the JSON file to read from.
+
+    Methods:
+        asdict(obj): Convert an object to a dictionary. Must be overridden by subclasses.
+        fromdict(d): Create an object from a dictionary. Must be overridden by subclasses.
+        generate_objs(): Generate objects from a JSON file.
+    """
+
     filename: str | Path
 
     @staticmethod
@@ -36,6 +59,11 @@ class JSONSerializer:
 
 
 class TokenSerializer(JSONSerializer):
+    """
+    A class for serializing and deserializing Token objects to and from JSON.
+    It is an ad_hoc class used for the Token class found in the portfolio module.
+    """
+
     token_class = models.Token
 
     @staticmethod
@@ -55,7 +83,8 @@ class TokenSerializer(JSONSerializer):
     @classmethod
     def load_replacing(cls):
         """
-        Replace if chain and address is the same.
+        Load tokens from a JSON file and replace the existing tokens in the database
+        in case the chain and symbol are the same.
         """
         for token in cls.generate_objs():
             cls.token_class.objs.add_or_replace(token)
@@ -66,6 +95,13 @@ class TokenSerializer(JSONSerializer):
 
     @classmethod
     def save(cls):
+        """
+        Save all objects of the token class to a JSON file.
+
+        This method retrieves all objects of the token class, sorts them according to the `orderby` attribute,
+        and converts them to dictionaries using the `asdict` method.
+        The dictionaries are then serialized to JSON and written to the file specified by the `filename` attribute.
+        """
         token_list = sorted(cls.token_class.objs.all, key=cls.orderby)
         token_dict_list = [cls.asdict(token) for token in token_list]
         json_str = json.dumps(token_dict_list, indent=2)
@@ -75,6 +111,8 @@ class TokenSerializer(JSONSerializer):
 
 
 class DeployedTokenSerializer(TokenSerializer):
+    """Subclass of TokenSerializer for DeployedToken objects."""
+
     token_class = models.DeployedToken
 
     @staticmethod
@@ -100,8 +138,14 @@ class DeployedTokenSerializer(TokenSerializer):
     @classmethod
     def load_replacing_but_distinguishing_symbols(cls):
         """
-        Replace if chain and address is the same, but change symbol name, by adding part of the address as a suffix, if
-        the chain and symbol is the same to an existing token.
+        Load tokens from a JSON file, replacing existing tokens with the same chain and address,
+        but distinguishing tokens with the same chain and symbol.
+
+        This method generates token objects from a JSON file using the `generate_objs` method. For each generated token,
+        it checks if a token with the same chain and symbol already exists.
+        If such a token exists and its address is different from the generated token's address,
+        the method modifies the generated token's symbol by adding a suffix derived from its address.
+        This ensures that tokens with the same chain and symbol but different addresses can be distinguished.
         """
         for token in cls.generate_objs():
             try:
@@ -120,4 +164,9 @@ class DeployedTokenSerializer(TokenSerializer):
 
 
 def short_addr(addr: str):
+    """
+    Shorten a blockchain address for display purposes.
+    Example:
+        short_addr("0x1234567890abcdef") -> "345..def"
+    """
     return f"{addr[2:5]}..{addr[-3:]}"
