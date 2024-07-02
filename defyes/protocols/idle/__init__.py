@@ -36,7 +36,8 @@ IDLE_TOKEN: str = "0x875773784Af8135eA0ef43b5a374AaD105c5D39e"
 # ABIs
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # IDLE CDO ABI - AAStaking, AATranche, BBStaking, BBTranche, getAPR, getIncentiveTokens, priceAA, priceBB, token, unclaimedFees, virtualPrice
-ABI_CDO_IDLE: str = '[{"inputs":[],"name":"AAStaking","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},\
+ABI_CDO_IDLE: str = (
+    '[{"inputs":[],"name":"AAStaking","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},\
             {"inputs":[],"name":"AATranche","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},\
             {"inputs":[],"name":"BBStaking","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},\
             {"inputs":[],"name":"BBTranche","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},\
@@ -47,21 +48,28 @@ ABI_CDO_IDLE: str = '[{"inputs":[],"name":"AAStaking","outputs":[{"internalType"
             {"inputs":[],"name":"token","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},\
             {"inputs":[],"name":"unclaimedFees","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},\
             {"inputs":[{"internalType":"address","name":"_tranche","type":"address"}],"name":"virtualPrice","outputs":[{"internalType":"uint256","name":"_virtualPrice","type":"uint256"}],"stateMutability":"view","type":"function"}]'
+)
 
 # IDLE GAUGE CONTROLLER - n_gauges, gauges
-ABI_GAUGE_CONTROLLER: str = '[{"stateMutability":"view","type":"function","name":"n_gauges","inputs":[],"outputs":[{"name":"","type":"int128"}],"gas":2988},\
+ABI_GAUGE_CONTROLLER: str = (
+    '[{"stateMutability":"view","type":"function","name":"n_gauges","inputs":[],"outputs":[{"name":"","type":"int128"}],"gas":2988},\
                         {"stateMutability":"view","type":"function","name":"gauges","inputs":[{"name":"arg0","type":"uint256"}],"outputs":[{"name":"","type":"address"}],"gas":3093}]'
+)
 
 # IDLE GAUGE ABI - decimals, claimed_reward, claimable_reward_write, claimabe_tokens, lp_token, balanceOf, reward_tokens
-ABI_GAUGE: str = '[{"stateMutability":"view","type":"function","name":"decimals","inputs":[],"outputs":[{"name":"","type":"uint256"}],"gas":288},\
+ABI_GAUGE: str = (
+    '[{"stateMutability":"view","type":"function","name":"decimals","inputs":[],"outputs":[{"name":"","type":"uint256"}],"gas":288},\
             {"stateMutability":"view","type":"function","name":"claimed_reward","inputs":[{"name":"_addr","type":"address"},{"name":"_token","type":"address"}],"outputs":[{"name":"","type":"uint256"}],"gas":3066},\
             {"stateMutability":"view","type":"function","name":"claimable_reward_write","inputs":[{"name":"_addr","type":"address"},{"name":"_token","type":"address"}],"outputs":[{"name":"","type":"uint256"}],"gas":1209922},\
             {"stateMutability":"view","type":"function","name":"claimable_tokens","inputs":[{"name":"addr","type":"address"}],"outputs":[{"name":"","type":"uint256"}],"gas":3046449},\
             {"stateMutability":"view","type":"function","name":"lp_token","inputs":[],"outputs":[{"name":"","type":"address"}],"gas":3138},\
             {"stateMutability":"view","type":"function","name":"balanceOf","inputs":[{"name":"arg0","type":"address"}],"outputs":[{"name":"","type":"uint256"}],"gas":3473},\
             {"stateMutability":"view","type":"function","name":"reward_tokens","inputs":[{"name":"arg0","type":"uint256"}],"outputs":[{"name":"","type":"address"}],"gas":3723}]'
+)
 
-ABI_CDO_PROXY: str = '[{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"proxy","type":"address"}],"name":"CDODeployed","type":"event"},{"inputs":[{"internalType":"address","name":"implementation","type":"address"},{"internalType":"address","name":"admin","type":"address"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"deployCDO","outputs":[],"stateMutability":"nonpayable","type":"function"}]'
+ABI_CDO_PROXY: str = (
+    '[{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"proxy","type":"address"}],"name":"CDODeployed","type":"event"},{"inputs":[{"internalType":"address","name":"implementation","type":"address"},{"internalType":"address","name":"admin","type":"address"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"deployCDO","outputs":[],"stateMutability":"nonpayable","type":"function"}]'
+)
 
 
 def get_addresses_subgraph(block: int | str, blockchain: str, web3=None) -> dict:
