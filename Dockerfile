@@ -28,3 +28,4 @@ RUN pip install --no-cache-dir -r requirements-dev.txt
 
 ENV PYTHONPATH /repo
 ENV HOME /repo/.home
+ENV KKIT_CACHE_DIR=/repo/.home

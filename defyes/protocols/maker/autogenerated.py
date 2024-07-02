@@ -382,6 +382,12 @@ class DsrManager:
     def dai(self) -> str:
         return self.contract.functions.dai().call(block_identifier=self.block)
 
+    def dai_balance(self, usr: str) -> int:
+        """
+        Output: wad
+        """
+        return self.contract.functions.daiBalance(usr).call(block_identifier=self.block)
+
     @property
     def dai_join(self) -> str:
         return self.contract.functions.daiJoin().call(block_identifier=self.block)

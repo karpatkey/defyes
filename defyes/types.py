@@ -7,7 +7,7 @@ from web3 import Web3
 
 from .contracts import Erc20
 
-simple_repr = True
+simple_repr = True  # TODO: from environ with default True
 
 
 class Addr(str):
@@ -55,7 +55,7 @@ class Token(Addr):
     @cached_property
     def symbol(self):
         if self == Address.ZERO or self == Address.E:
-            return "ETH"
+            return "ETH"  # TODO: Not true always (MATIC, etc.). It depends on the native coin
         return self.contract.symbol
 
     def __repr__(self):
@@ -66,7 +66,7 @@ class Token(Addr):
     @cached_property
     def contract(self):
         """Get the token ERC20 contract."""
-        return Erc20(self.chain, self.block, self)
+        return Erc20(self.chain, self.block, address=self)
 
     @cached_property
     def decimals(self):
@@ -123,11 +123,14 @@ def format_amount(amount: Decimal) -> str:
 
 class TokenAmount:
     def __init__(self, amount: int | Decimal, token: Token):
-        # amount is expressed in the Token units
-        # 1 Token = 1e^(token.decimals) teuToken
+        """
+        amount is expressed in the Token units
+        1 Token = 1e^(token.decimals) teuToken
+        """
         self.amount = Decimal(amount)
         self.token = token
         self.teu = Decimal(10**self.token.decimals)
+        # TODO: use scaleb instead. TEU is even relative to Token, not to TokenAmount
 
     @classmethod
     def from_teu(cls, amount: int | Decimal, token: Token):
@@ -135,12 +138,14 @@ class TokenAmount:
         return cls(amount=amount, token=token)
 
     def as_dict(self, not_in_teu: bool = False) -> dict:
+        # TODO: This should be part of the serialization proces used by ETL to write tables.
+        # We don't need low levels here.
         return {
             "balance": self.balance(not_in_teu),
             "address": str(self.token),
         }
 
-    def balance(self, not_in_teu: bool = False) -> int | Decimal:
+    def balance(self, not_in_teu: bool = False) -> int | Decimal:  # TODO: negative arg is ugly `not_in_teu`
         """Return the balance multiplied by decimals(False) or as it is(True)."""
         return self.amount if not_in_teu else self.amount * self.teu
 
